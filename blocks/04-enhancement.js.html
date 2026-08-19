@@ -1,0 +1,117 @@
+<!-- ==========================================================================
+     BLOC 04 — AMELIORATION PROGRESSIVE (optionnel)
+     --------------------------------------------------------------------------
+     A coller dans UN SEUL HTML Module, en DERNIERE position de la page.
+     --------------------------------------------------------------------------
+     Ce script n'est jamais indispensable : sans lui, les onglets fonctionnent
+     (CSS pur), les cartes flottent (CSS pur), la page est complete. Il ajoute
+     seulement :
+       1. l'apparition au defilement des elements .jls-reveal
+       2. la navigation clavier fleches gauche/droite dans les onglets
+       3. les attributs ARIA que le HTML statique ne peut pas porter
+     Tout est encapsule dans un IIFE avec try/catch : une erreur eventuelle
+     ne peut pas interrompre le reste de la page Confluence.
+     ========================================================================== -->
+
+<script>
+(function () {
+  "use strict";
+
+  try {
+    var reduced = window.matchMedia &&
+                  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ---- 1. Apparition au defilement --------------------------------------
+       On n'active l'etat initial (opacite 0) QUE si IntersectionObserver
+       existe. Sinon on ne touche a rien et tout reste visible : pas de
+       contenu invisible en cas d'echec.                                    */
+    var targets = document.querySelectorAll(".jls-reveal");
+
+    /* Filet de securite : tout element encore masque est revele de force.
+       Sans ca, un saut de scroll (ancre #, restauration de position par le
+       navigateur, defilement tres rapide) peut faire manquer l'intersection
+       et laisser du contenu invisible EN PERMANENCE. Sur un portail
+       d'entreprise c'est le pire echec possible : on l'exclut par
+       construction. */
+    function revealAll() {
+      Array.prototype.forEach.call(targets, function (el) {
+        el.classList.add("is-visible");
+      });
+    }
+
+    if (targets.length && !reduced && "IntersectionObserver" in window) {
+      document.documentElement.setAttribute("data-jls-reveal", "on");
+
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          io.unobserve(entry.target);
+        });
+      }, { rootMargin: "200px 0px 0px 0px", threshold: 0.01 });
+
+      Array.prototype.forEach.call(targets, function (el) { io.observe(el); });
+
+      /* 1. garde-fou temporel */
+      window.setTimeout(revealAll, 2500);
+      /* 2. garde-fou impression : jamais de blanc sur un PDF */
+      if (window.addEventListener) window.addEventListener("beforeprint", revealAll);
+    }
+
+    /* ---- 2. + 3. Onglets : ARIA et clavier -------------------------------- */
+    Array.prototype.forEach.call(
+      document.querySelectorAll("[data-jls-tabs]"),
+      function (root) {
+        var radios = root.querySelectorAll(".jls-tabs__radio");
+        var tabs   = root.querySelectorAll(".jls-tabs__tab");
+        var panels = root.querySelectorAll(".jls-tabs__panel");
+
+        Array.prototype.forEach.call(tabs, function (tab, i) {
+          tab.setAttribute("role", "tab");
+          tab.setAttribute("tabindex", "0");
+          tab.setAttribute("aria-selected", radios[i] && radios[i].checked ? "true" : "false");
+          if (panels[i] && panels[i].id) tab.setAttribute("aria-controls", panels[i].id);
+
+          /* Espace / Entree activent le libelle comme un vrai bouton.
+             (Un <label> ne repond nativement qu'au clic souris.)          */
+          tab.addEventListener("keydown", function (e) {
+            var key = e.key;
+
+            if (key === " " || key === "Enter") {
+              e.preventDefault();
+              if (radios[i]) radios[i].click();
+              return;
+            }
+
+            if (key !== "ArrowRight" && key !== "ArrowLeft") return;
+            e.preventDefault();
+
+            var next = key === "ArrowRight"
+              ? (i + 1) % tabs.length
+              : (i - 1 + tabs.length) % tabs.length;
+
+            if (radios[next]) radios[next].click();
+            tabs[next].focus();
+          });
+        });
+
+        /* Maintien de aria-selected en phase avec l'etat CSS */
+        Array.prototype.forEach.call(radios, function (radio, i) {
+          radio.addEventListener("change", function () {
+            Array.prototype.forEach.call(tabs, function (t, j) {
+              t.setAttribute("aria-selected", j === i ? "true" : "false");
+            });
+          });
+        });
+      }
+    );
+
+  } catch (err) {
+    /* Silencieux par choix : la page doit rester utilisable meme si une
+       API manque. On trace uniquement en console pour le debug.          */
+    if (window.console && console.warn) {
+      console.warn("[JLS] amelioration progressive desactivee :", err);
+    }
+  }
+})();
+</script>

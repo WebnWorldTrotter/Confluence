@@ -1,0 +1,1046 @@
+/* ==========================================================================
+   JLS — Program Management Office  ·  Space Stylesheet
+   --------------------------------------------------------------------------
+   Confluence Data Center / Server — Space tools > Look and Feel > Stylesheet
+   Theme : Linchpin Enterprise News
+   --------------------------------------------------------------------------
+   Ce fichier contient DEUX parties :
+     PARTIE A — habillage du "chrome" Confluence (fond de page, titres,
+                liens, tableaux, panels, boutons AUI, conteneurs de macro)
+     PARTIE B — bibliotheque de composants .jls-* utilisee par les blocs HTML
+                colles dans le "HTML Module" de la Content Layout Macro
+   --------------------------------------------------------------------------
+   Palette   #2D3142  encre / fonds profonds
+             #4F5D75  ardoise / texte secondaire
+             #BFC0C0  argent / filets et separateurs
+             #FFFFFF  papier / surfaces
+             #EF8354  corail / accent, focus, etats actifs
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. JETONS DE DESIGN
+   ========================================================================== */
+
+:root {
+  /* --- Palette brute ---------------------------------------------------- */
+  --jls-ink:            #2D3142;
+  --jls-slate:          #4F5D75;
+  --jls-silver:         #BFC0C0;
+  --jls-paper:          #FFFFFF;
+  --jls-accent:         #EF8354;
+
+  /* Corail assombri : le corail pur n'atteint pas 4.5:1 sur blanc.
+     On l'utilise des qu'il y a du TEXTE (lien, libelle, texte sur aplat). */
+  --jls-accent-deep:    #B8501C;
+  --jls-accent-soft:    #FDF0E9;
+
+  /* --- Couleurs derivees ------------------------------------------------ */
+  --jls-bg:             #F4F5F7;
+  --jls-bg-sunken:      #EDEFF2;
+  --jls-muted:          #5F6B80;
+  --jls-line:           rgba(45, 49, 66, .12);
+  --jls-line-strong:    rgba(45, 49, 66, .22);
+  --jls-ink-grad:       linear-gradient(145deg, #363B50 0%, #2D3142 55%, #23283a 100%);
+
+  /* --- Rayons ------------------------------------------------------------ */
+  --jls-r-xs:  6px;
+  --jls-r-sm: 10px;
+  --jls-r-md: 14px;
+  --jls-r-lg: 20px;
+  --jls-r-xl: 28px;
+
+  /* --- Elevations "flottantes" ------------------------------------------
+     Deux couches : une ombre de contact serree + une ombre ambiante large.
+     C'est ce double niveau qui donne la sensation de flottaison.           */
+  --jls-lift-0: 0 1px 1px rgba(45,49,66,.05),
+                0 1px 3px rgba(45,49,66,.06);
+  --jls-lift-1: 0 1px 2px rgba(45,49,66,.06),
+                0 4px 12px rgba(45,49,66,.09);
+  --jls-lift-2: 0 4px 8px rgba(45,49,66,.07),
+                0 14px 32px rgba(45,49,66,.13);
+  --jls-lift-3: 0 10px 20px rgba(45,49,66,.09),
+                0 28px 60px rgba(45,49,66,.18);
+  --jls-glow:   0 6px 20px rgba(239,131,84,.38);
+
+  /* Liseré spéculaire : simule la lumière qui frappe le bord haut d'une
+     surface surélevée. A poser en inset sur les cartes claires.            */
+  --jls-specular: inset 0 1px 0 rgba(255,255,255,.85);
+
+  /* --- Mouvement --------------------------------------------------------- */
+  --jls-ease:      cubic-bezier(.2, .8, .25, 1);
+  --jls-ease-out:  cubic-bezier(.16, 1, .3, 1);
+  --jls-fast:      140ms;
+  --jls-base:      240ms;
+  --jls-slow:      420ms;
+
+  /* --- Typographie -------------------------------------------------------- */
+  --jls-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+              "Helvetica Neue", Arial, sans-serif;
+  --jls-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* --- TEXTURES ----------------------------------------------------------
+     Toutes les textures sont des data-URI SVG ou des gradients CSS :
+     aucune requete reseau, aucun asset a heberger, compatible CSP stricte. */
+
+  /* Grain fin — a poser en overlay tres faible opacite sur les grands aplats */
+  --jls-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E");
+
+  /* Grille de points — fond de section discret */
+  --jls-dots: radial-gradient(circle at 1px 1px,
+              rgba(45,49,66,.14) 1px, transparent 0);
+
+  /* Hachures diagonales — bandeaux et zones "techniques" */
+  --jls-hatch: repeating-linear-gradient(135deg,
+               rgba(255,255,255,.05) 0 1px,
+               transparent 1px 7px);
+
+  /* Voile de lumiere colore — donne de la profondeur au hero */
+  --jls-mesh: radial-gradient(1100px 420px at 12% -10%, rgba(239,131,84,.22), transparent 62%),
+              radial-gradient(760px 420px at 96% 8%,  rgba(79,93,117,.45),  transparent 60%),
+              radial-gradient(560px 360px at 62% 118%, rgba(191,192,192,.16), transparent 65%);
+}
+
+
+/* ==========================================================================
+   PARTIE A — HABILLAGE DU CHROME CONFLUENCE
+   --------------------------------------------------------------------------
+   Regles volontairement ciblees sur le mode LECTURE. On ne touche ni au
+   header global, ni a l'editeur, pour ne rien casser en edition.
+   ========================================================================== */
+
+/* --- A.1 Fond de page ------------------------------------------------------
+   Fond neutre + grain + halo corail tres dilue. Le `fixed` evite que la
+   texture ne "defile" avec le contenu : la page semble posee sur une surface. */
+body#com-atlassian-confluence {
+  background-color: var(--jls-bg);
+  background-image:
+    var(--jls-grain),
+    radial-gradient(900px 500px at 88% -6%, rgba(239,131,84,.07), transparent 60%),
+    radial-gradient(700px 500px at 4% 4%,  rgba(79,93,117,.08),  transparent 55%);
+  background-size: 160px 160px, auto, auto;
+  background-attachment: fixed;
+  font-family: var(--jls-font);
+  color: var(--jls-ink);
+}
+
+/* --- A.2 Panneau de contenu principal --------------------------------------
+   On transforme le bloc plat par defaut en une "feuille" surelevee. */
+body#com-atlassian-confluence #main .aui-page-panel {
+  background: var(--jls-paper);
+  border: 1px solid var(--jls-line);
+  border-radius: var(--jls-r-lg);
+  box-shadow: var(--jls-lift-2), var(--jls-specular);
+  overflow: hidden;
+}
+
+/* Le titre de page recoit un filet corail : repere visuel constant du space. */
+body#com-atlassian-confluence #title-text,
+body#com-atlassian-confluence #title-text a {
+  color: var(--jls-ink);
+  font-weight: 700;
+  letter-spacing: -.012em;
+  text-decoration: none;
+}
+
+body#com-atlassian-confluence #title-heading {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+body#com-atlassian-confluence #title-heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 56px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--jls-accent), rgba(239,131,84,0));
+}
+
+/* --- A.3 Typographie du contenu wiki --------------------------------------- */
+body#com-atlassian-confluence .wiki-content {
+  color: var(--jls-ink);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+body#com-atlassian-confluence .wiki-content h1,
+body#com-atlassian-confluence .wiki-content h2,
+body#com-atlassian-confluence .wiki-content h3,
+body#com-atlassian-confluence .wiki-content h4 {
+  color: var(--jls-ink);
+  letter-spacing: -.01em;
+  font-weight: 700;
+}
+
+body#com-atlassian-confluence .wiki-content h2 {
+  margin-top: 2.1em;
+  padding-left: 14px;
+  border-left: 3px solid var(--jls-accent);
+  line-height: 1.25;
+}
+
+body#com-atlassian-confluence .wiki-content h3 {
+  margin-top: 1.7em;
+  color: var(--jls-slate);
+}
+
+/* --- A.4 Liens : soulignement anime, pas de saut de mise en page ------------ */
+body#com-atlassian-confluence .wiki-content a:not(.aui-button):not(.jls-btn) {
+  color: var(--jls-accent-deep);
+  text-decoration: none;
+  background-image: linear-gradient(var(--jls-accent), var(--jls-accent));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 2px;
+  transition: background-size var(--jls-base) var(--jls-ease),
+              color var(--jls-fast) linear;
+}
+
+body#com-atlassian-confluence .wiki-content a:not(.aui-button):not(.jls-btn):hover,
+body#com-atlassian-confluence .wiki-content a:not(.aui-button):not(.jls-btn):focus-visible {
+  color: var(--jls-ink);
+  background-size: 100% 2px;
+}
+
+/* --- A.5 Anneau de focus unifie (accessibilite clavier) --------------------- */
+body#com-atlassian-confluence a:focus-visible,
+body#com-atlassian-confluence button:focus-visible,
+body#com-atlassian-confluence .aui-button:focus-visible,
+body#com-atlassian-confluence [tabindex]:focus-visible {
+  outline: 2px solid var(--jls-accent);
+  outline-offset: 2px;
+  border-radius: var(--jls-r-xs);
+}
+
+/* --- A.6 Tableaux : lisibilite + en-tete ardoise ---------------------------- */
+body#com-atlassian-confluence .wiki-content table.confluenceTable {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--jls-line);
+  border-radius: var(--jls-r-md);
+  overflow: hidden;
+  box-shadow: var(--jls-lift-1);
+}
+
+body#com-atlassian-confluence .wiki-content table.confluenceTable th.confluenceTh {
+  background: var(--jls-ink-grad);
+  color: #EEF0F4;
+  border: 0;
+  border-bottom: 2px solid var(--jls-accent);
+  font-weight: 650;
+  font-size: 12.5px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 11px 14px;
+}
+
+body#com-atlassian-confluence .wiki-content table.confluenceTable td.confluenceTd {
+  border: 0;
+  border-bottom: 1px solid var(--jls-line);
+  padding: 11px 14px;
+  transition: background-color var(--jls-fast) linear;
+}
+
+body#com-atlassian-confluence .wiki-content table.confluenceTable tr:hover td.confluenceTd {
+  background: var(--jls-accent-soft);
+}
+
+body#com-atlassian-confluence .wiki-content table.confluenceTable tr:last-child td.confluenceTd {
+  border-bottom: 0;
+}
+
+/* --- A.7 Boutons AUI : affordance de flottaison -----------------------------
+   Au repos le bouton porte deja une ombre => il "plane".
+   Au survol il monte, a l'appui il se pose. C'est ce cycle qui rend le
+   composant tactile plutot que decoratif. */
+body#com-atlassian-confluence .aui-button.aui-button-primary {
+  background: linear-gradient(180deg, #F59468 0%, var(--jls-accent) 100%);
+  border: 1px solid rgba(184,80,28,.5);
+  border-radius: var(--jls-r-sm);
+  color: var(--jls-ink);
+  font-weight: 650;
+  text-shadow: none;
+  box-shadow: var(--jls-lift-1), var(--jls-specular);
+  transition: transform var(--jls-base) var(--jls-ease),
+              box-shadow var(--jls-base) var(--jls-ease),
+              filter var(--jls-fast) linear;
+}
+
+body#com-atlassian-confluence .aui-button.aui-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--jls-lift-2), var(--jls-glow), var(--jls-specular);
+  filter: saturate(1.06);
+}
+
+body#com-atlassian-confluence .aui-button.aui-button-primary:active {
+  transform: translateY(1px);
+  box-shadow: var(--jls-lift-0);
+}
+
+/* --- A.8 Panels / info-macros : surfaces posees, pas encadrees --------------- */
+body#com-atlassian-confluence .wiki-content .panel,
+body#com-atlassian-confluence .wiki-content .confluence-information-macro {
+  border: 1px solid var(--jls-line);
+  border-radius: var(--jls-r-md);
+  box-shadow: var(--jls-lift-1), var(--jls-specular);
+  background: var(--jls-paper);
+}
+
+body#com-atlassian-confluence .wiki-content .panel .panelHeader {
+  background: var(--jls-bg-sunken);
+  border-bottom: 1px solid var(--jls-line);
+  font-weight: 650;
+  color: var(--jls-ink);
+}
+
+/* --- A.9 Code inline et blocs ----------------------------------------------- */
+body#com-atlassian-confluence .wiki-content code,
+body#com-atlassian-confluence .wiki-content tt {
+  font-family: var(--jls-mono);
+  font-size: .9em;
+  background: var(--jls-bg-sunken);
+  border: 1px solid var(--jls-line);
+  border-radius: var(--jls-r-xs);
+  padding: .1em .38em;
+  color: var(--jls-accent-deep);
+}
+
+/* --- A.10 Barre laterale du space ------------------------------------------- */
+body#com-atlassian-confluence .acs-side-bar {
+  background: var(--jls-bg-sunken);
+  border-right: 1px solid var(--jls-line);
+}
+
+body#com-atlassian-confluence .acs-side-bar .acs-nav-wrapper .acs-nav .acs-nav-item.current-item > .acs-nav-item-label {
+  box-shadow: inset 3px 0 0 var(--jls-accent);
+  background: var(--jls-accent-soft);
+  color: var(--jls-ink);
+  font-weight: 650;
+}
+
+/* --- A.11 Conteneurs de la Content Layout Macro ------------------------------
+   On neutralise les marges internes du module HTML pour que nos blocs
+   controlent eux-memes leur gouttiere. Sans ca, les blocs "double-paddent". */
+body#com-atlassian-confluence .wiki-content .content-layout-macro .html-module,
+body#com-atlassian-confluence .wiki-content .cl-module-html {
+  padding: 0;
+  margin: 0;
+}
+
+
+/* ==========================================================================
+   PARTIE B — BIBLIOTHEQUE DE COMPOSANTS .jls-*
+   --------------------------------------------------------------------------
+   Tout est scope sous `.jls` : aucune regle ne peut fuir vers l'UI
+   Confluence. Chaque bloc HTML colle dans un HTML Module doit avoir
+   `class="jls"` sur son element racine.
+   ========================================================================== */
+
+.jls,
+.jls *,
+.jls *::before,
+.jls *::after { box-sizing: border-box; }
+
+.jls {
+  font-family: var(--jls-font);
+  color: var(--jls-ink);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.jls p { margin: 0 0 .85em; }
+.jls p:last-child { margin-bottom: 0; }
+
+
+/* --------------------------------------------------------------------------
+   B.1  HERO — bandeau d'accueil du space
+   -------------------------------------------------------------------------- */
+
+.jls-hero {
+  position: relative;
+  isolation: isolate;          /* confine les pseudo-elements de texture */
+  overflow: hidden;
+  border-radius: var(--jls-r-xl);
+  padding: clamp(28px, 4.4vw, 56px);
+  background-color: var(--jls-ink);
+  background-image: var(--jls-mesh);
+  box-shadow: var(--jls-lift-3);
+  color: #F2F4F8;
+}
+
+/* Couche 1 : grain film — casse le degrade et evite le banding */
+.jls-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--jls-grain);
+  background-size: 160px 160px;
+  opacity: .18;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Couche 2 : hachures diagonales — texture "technique", tres discrete */
+.jls-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--jls-hatch);
+  pointer-events: none;
+}
+
+.jls-hero__inner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: clamp(20px, 3vw, 44px);
+}
+
+.jls-hero__main { flex: 1 1 min(100%, 420px); }
+
+.jls-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 5px 13px 5px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.20);
+  backdrop-filter: blur(6px);
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: #FFD9C6;
+}
+
+/* Pastille corail pulsante : signale que l'espace est "vivant". */
+.jls-hero__eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--jls-accent);
+  box-shadow: 0 0 0 0 rgba(239,131,84,.7);
+  animation: jls-pulse 2.6s var(--jls-ease) infinite;
+}
+
+@keyframes jls-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(239,131,84,.65); }
+  70%  { box-shadow: 0 0 0 9px rgba(239,131,84,0);   }
+  100% { box-shadow: 0 0 0 0   rgba(239,131,84,0);   }
+}
+
+.jls-hero__title {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 3.9vw, 46px);
+  line-height: 1.08;
+  font-weight: 750;
+  letter-spacing: -.024em;
+  color: #FFFFFF;
+}
+
+.jls-hero__title em {
+  font-style: normal;
+  background: linear-gradient(180deg, #FFC7AB, var(--jls-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.jls-hero__lead {
+  margin: 0;
+  max-width: 54ch;
+  font-size: clamp(14.5px, 1.35vw, 17px);
+  color: rgba(233,237,244,.80);
+}
+
+.jls-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+/* Carte "responsable" ancree a droite du hero */
+.jls-hero__aside {
+  flex: 0 1 260px;
+  padding: 16px 18px;
+  border-radius: var(--jls-r-lg);
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.jls-hero__aside-label {
+  margin: 0 0 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+}
+
+
+/* --------------------------------------------------------------------------
+   B.2  BOUTONS FLOTTANTS
+   -------------------------------------------------------------------------- */
+
+.jls-btn {
+  --_y: 0px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 20px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transform: translateY(var(--_y));
+  transition: transform var(--jls-base) var(--jls-ease),
+              box-shadow var(--jls-base) var(--jls-ease),
+              background-color var(--jls-fast) linear;
+}
+
+/* Bouton principal — corail. Texte en encre : le blanc sur corail
+   ne passe pas le contraste 4.5:1, l'encre monte a ~4.9:1. */
+.jls-btn--primary {
+  background: linear-gradient(180deg, #F79A6F 0%, var(--jls-accent) 100%);
+  color: var(--jls-ink);
+  box-shadow: var(--jls-lift-2), var(--jls-glow), var(--jls-specular);
+}
+
+.jls-btn--primary:hover  { --_y: -3px; box-shadow: var(--jls-lift-3), 0 12px 30px rgba(239,131,84,.5), var(--jls-specular); }
+.jls-btn--primary:active { --_y: 1px;  box-shadow: var(--jls-lift-0); }
+
+/* Bouton secondaire — verre depoli, lisible sur fond sombre */
+.jls-btn--ghost {
+  background: rgba(255,255,255,.10);
+  color: #FFFFFF;
+  border: 1px solid rgba(255,255,255,.26);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--jls-lift-1);
+}
+
+.jls-btn--ghost:hover  { --_y: -3px; background: rgba(255,255,255,.17); box-shadow: var(--jls-lift-2); }
+.jls-btn--ghost:active { --_y: 1px;  box-shadow: var(--jls-lift-0); }
+
+/* Bouton sur fond clair */
+.jls-btn--solid {
+  background: var(--jls-paper);
+  color: var(--jls-ink);
+  border: 1px solid var(--jls-line-strong);
+  box-shadow: var(--jls-lift-1), var(--jls-specular);
+}
+
+.jls-btn--solid:hover  { --_y: -3px; box-shadow: var(--jls-lift-2), var(--jls-specular); border-color: var(--jls-accent); }
+.jls-btn--solid:active { --_y: 1px;  box-shadow: var(--jls-lift-0); }
+
+/* Fleche qui glisse au survol — micro-signal de direction */
+.jls-btn__arrow {
+  transition: transform var(--jls-base) var(--jls-ease);
+}
+.jls-btn:hover .jls-btn__arrow { transform: translateX(4px); }
+
+
+/* --------------------------------------------------------------------------
+   B.3  SECTIONS ET EN-TETES
+   -------------------------------------------------------------------------- */
+
+.jls-section { margin: clamp(26px, 3.6vw, 46px) 0 0; }
+
+.jls-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.jls-section__title {
+  margin: 0;
+  font-size: clamp(16px, 1.7vw, 20px);
+  font-weight: 700;
+  letter-spacing: -.008em;
+  color: var(--jls-ink);
+  white-space: nowrap;
+}
+
+.jls-section__count {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--jls-accent-soft);
+  border: 1px solid rgba(239,131,84,.35);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--jls-accent-deep);
+}
+
+/* Filet degrade qui remplit l'espace restant : structure la page sans
+   ajouter de bordure lourde. */
+.jls-section__rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--jls-line-strong), transparent);
+}
+
+
+/* --------------------------------------------------------------------------
+   B.4  GRILLE
+   -------------------------------------------------------------------------- */
+
+.jls-grid {
+  display: grid;
+  gap: clamp(12px, 1.4vw, 18px);
+  /* `--jls-max` plafonne la largeur d'une carte. Sans plafond, deux cartes
+     sur un ecran large s'etirent a 650px pour 3 lignes de texte : la carte
+     se lit alors comme une zone vide. Le surplus part en fin de rangee. */
+  grid-template-columns: repeat(auto-fit,
+                         minmax(min(100%, var(--jls-col, 210px)), var(--jls-max, 1fr)));
+  justify-content: start;
+  align-content: start;
+}
+
+.jls-grid--2 { --jls-col: 230px; --jls-max: 330px; }
+.jls-grid--5 { --jls-col: 148px; --jls-max: 210px; }
+
+/* Deux colonnes principales : synthese a gauche, onglets a droite */
+.jls-split {
+  display: grid;
+  gap: clamp(16px, 2vw, 26px);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: start;   /* chaque colonne garde sa hauteur propre */
+}
+
+@media (max-width: 900px) {
+  .jls-split { grid-template-columns: 1fr; }
+}
+
+
+/* --------------------------------------------------------------------------
+   B.5  NOEUD D'ORGANIGRAMME  (.jls-node)
+   Remplace les "Navigation Cards" : accepte un intitule d'entite, un
+   titulaire, un lien, et se comporte comme une carte flottante.
+   -------------------------------------------------------------------------- */
+
+.jls-node {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 16px 15px;
+  border-radius: var(--jls-r-md);
+  background: var(--jls-paper);
+  border: 1px solid var(--jls-line);
+  box-shadow: var(--jls-lift-1), var(--jls-specular);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition: transform var(--jls-base) var(--jls-ease),
+              box-shadow var(--jls-base) var(--jls-ease),
+              border-color var(--jls-base) var(--jls-ease);
+}
+
+/* Texture de fond : grille de points tres pale, revelee au survol.
+   C'est ce qui donne la "matiere" sans charger la carte au repos. */
+.jls-node::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--jls-dots);
+  background-size: 14px 14px;
+  opacity: 0;
+  transition: opacity var(--jls-slow) var(--jls-ease);
+  pointer-events: none;
+}
+
+/* Liseré corail qui se deroule sur le bord haut */
+.jls-node::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--jls-accent), #F7B08C);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--jls-slow) var(--jls-ease-out);
+}
+
+.jls-node:hover,
+.jls-node:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: var(--jls-lift-3), var(--jls-specular);
+  border-color: rgba(239,131,84,.42);
+}
+
+.jls-node:hover::before,
+.jls-node:focus-visible::before { opacity: .55; }
+
+.jls-node:hover::after,
+.jls-node:focus-visible::after  { transform: scaleX(1); }
+
+.jls-node:active { transform: translateY(-1px); box-shadow: var(--jls-lift-1); }
+
+.jls-node__label {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.006em;
+  color: var(--jls-ink);
+}
+
+.jls-node__meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: auto;
+}
+
+.jls-node__owner {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--jls-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Variante compacte pour la rangee des focal points JLV / JLE / ... */
+.jls-node--compact { padding: 14px 12px; align-items: center; text-align: center; }
+.jls-node--compact .jls-node__label { font-size: 18px; letter-spacing: .02em; }
+.jls-node--compact .jls-node__meta  { flex-direction: column; gap: 6px; }
+
+/* Variante mise en avant (Portail interne) */
+.jls-node--feature {
+  background: var(--jls-ink-grad);
+  border-color: transparent;
+  color: #EDEFF4;
+  box-shadow: var(--jls-lift-2);
+}
+.jls-node--feature .jls-node__label { color: #FFFFFF; }
+.jls-node--feature .jls-node__owner { color: rgba(233,237,244,.68); }
+.jls-node--feature::before { background-image: var(--jls-hatch); opacity: 1; }
+
+
+/* --------------------------------------------------------------------------
+   B.6  PASTILLE D'INITIALES  (remplace les cercles vides du PowerPoint)
+   -------------------------------------------------------------------------- */
+
+.jls-avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #6B7891, var(--jls-slate));
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  overflow: hidden;   /* garde-fou : une valeur trop longue ne deforme pas le cercle */
+  box-shadow: 0 0 0 2px var(--jls-paper), 0 2px 6px rgba(45,49,66,.28);
+  transition: box-shadow var(--jls-base) var(--jls-ease),
+              transform var(--jls-base) var(--jls-ease);
+}
+
+.jls-node:hover .jls-avatar {
+  transform: translateY(-1px) scale(1.06);
+  box-shadow: 0 0 0 2px var(--jls-paper), 0 0 0 4px rgba(239,131,84,.30),
+              0 4px 10px rgba(45,49,66,.3);
+}
+
+.jls-avatar--accent { background: linear-gradient(145deg, #F79A6F, var(--jls-accent)); color: var(--jls-ink); }
+.jls-avatar--lg     { width: 40px; height: 40px; font-size: 13.5px; }
+
+
+/* --------------------------------------------------------------------------
+   B.7  ONGLETS  (Group PMO / Transversal)
+   Implementation 100% CSS via input[type=radio] : fonctionne meme si le
+   JavaScript est filtre par le module HTML. Le script d'amelioration
+   n'ajoute que le clavier et l'ARIA.
+   -------------------------------------------------------------------------- */
+
+.jls-tabs {
+  position: relative;
+  border-radius: var(--jls-r-lg);
+  background: var(--jls-paper);
+  border: 1px solid var(--jls-line);
+  box-shadow: var(--jls-lift-2), var(--jls-specular);
+  overflow: hidden;
+}
+
+/* Les radios pilotent l'etat ; on les sort du flux sans les cacher au
+   lecteur d'ecran (`clip` plutot que `display:none`). */
+.jls-tabs__radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.jls-tabs__list {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: var(--jls-bg-sunken);
+  border-bottom: 1px solid var(--jls-line);
+}
+
+.jls-tabs__tab {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--jls-r-sm);
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--jls-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--jls-base) var(--jls-ease);
+}
+
+.jls-tabs__tab:hover { color: var(--jls-ink); }
+
+/* Curseur glissant : un seul element anime en translateX, jamais de
+   reflow. `--jls-tab-n` = nombre d'onglets, defini sur .jls-tabs. */
+.jls-tabs__slider {
+  position: absolute;
+  z-index: 0;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 12px - (var(--jls-tab-n) - 1) * 4px) / var(--jls-tab-n));
+  border-radius: var(--jls-r-sm);
+  background: var(--jls-paper);
+  box-shadow: var(--jls-lift-1), var(--jls-specular);
+  transform: translateX(calc(var(--jls-tab-i, 0) * (100% + 4px)));
+  transition: transform var(--jls-slow) var(--jls-ease-out);
+  pointer-events: none;
+}
+
+/* Etat actif : l'index du slider et la couleur du libelle */
+.jls-tabs__radio:nth-of-type(1):checked ~ .jls-tabs__list { --jls-tab-i: 0; }
+.jls-tabs__radio:nth-of-type(2):checked ~ .jls-tabs__list { --jls-tab-i: 1; }
+.jls-tabs__radio:nth-of-type(3):checked ~ .jls-tabs__list { --jls-tab-i: 2; }
+.jls-tabs__radio:nth-of-type(4):checked ~ .jls-tabs__list { --jls-tab-i: 3; }
+
+.jls-tabs__radio:nth-of-type(1):checked ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(1),
+.jls-tabs__radio:nth-of-type(2):checked ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(2),
+.jls-tabs__radio:nth-of-type(3):checked ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(3),
+.jls-tabs__radio:nth-of-type(4):checked ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(4) {
+  color: var(--jls-ink);
+}
+
+/* Anneau de focus reporte du radio (invisible) vers son libelle */
+.jls-tabs__radio:nth-of-type(1):focus-visible ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(1),
+.jls-tabs__radio:nth-of-type(2):focus-visible ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(2),
+.jls-tabs__radio:nth-of-type(3):focus-visible ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(3),
+.jls-tabs__radio:nth-of-type(4):focus-visible ~ .jls-tabs__list .jls-tabs__tab:nth-of-type(4) {
+  outline: 2px solid var(--jls-accent);
+  outline-offset: -2px;
+}
+
+.jls-tabs__panels { padding: clamp(16px, 2vw, 24px); }
+.jls-tabs__panel  { display: none; }
+
+.jls-tabs__radio:nth-of-type(1):checked ~ .jls-tabs__panels > .jls-tabs__panel:nth-of-type(1),
+.jls-tabs__radio:nth-of-type(2):checked ~ .jls-tabs__panels > .jls-tabs__panel:nth-of-type(2),
+.jls-tabs__radio:nth-of-type(3):checked ~ .jls-tabs__panels > .jls-tabs__panel:nth-of-type(3),
+.jls-tabs__radio:nth-of-type(4):checked ~ .jls-tabs__panels > .jls-tabs__panel:nth-of-type(4) {
+  display: block;
+  animation: jls-fade-up var(--jls-slow) var(--jls-ease-out) both;
+}
+
+@keyframes jls-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+
+/* --------------------------------------------------------------------------
+   B.8  LISTE HIERARCHIQUE  (SYSTEM / Launcher / LIOD / Decoupling / SPRO)
+   -------------------------------------------------------------------------- */
+
+.jls-stack { display: grid; gap: 8px; }
+
+/* Retrait des elements de second niveau, avec le filet de rattachement */
+.jls-stack--nested {
+  position: relative;
+  margin-top: 8px;
+  padding-left: 26px;
+}
+
+.jls-stack--nested::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: -4px;
+  bottom: 18px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--jls-line-strong), transparent);
+}
+
+.jls-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 14px;
+  border-radius: var(--jls-r-sm);
+  background: var(--jls-paper);
+  border: 1px solid var(--jls-line);
+  box-shadow: var(--jls-lift-0);
+  text-decoration: none;
+  color: inherit;
+  font-size: 13.5px;
+  transition: transform var(--jls-base) var(--jls-ease),
+              box-shadow var(--jls-base) var(--jls-ease),
+              border-color var(--jls-base) var(--jls-ease),
+              background-color var(--jls-fast) linear;
+}
+
+/* Petite encoche qui relie la ligne au filet vertical */
+.jls-stack--nested .jls-row::before {
+  content: "";
+  position: absolute;
+  left: -17px;
+  width: 13px;
+  height: 1px;
+  background: var(--jls-line-strong);
+}
+
+.jls-row:hover,
+.jls-row:focus-visible {
+  transform: translateX(4px);
+  border-color: rgba(239,131,84,.45);
+  background: var(--jls-accent-soft);
+  box-shadow: var(--jls-lift-1);
+}
+
+.jls-row:active { transform: translateX(1px); }
+
+.jls-row__label { font-weight: 600; }
+
+/* Ligne de titre de niveau 1 : plus dense visuellement */
+.jls-row--lead {
+  background: var(--jls-ink-grad);
+  border-color: transparent;
+  color: #EDEFF4;
+  font-weight: 650;
+  box-shadow: var(--jls-lift-1);
+}
+.jls-row--lead:hover { background: var(--jls-ink-grad); color: #FFFFFF; }
+
+
+/* --------------------------------------------------------------------------
+   B.9  PUCE / TAG
+   -------------------------------------------------------------------------- */
+
+.jls-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--jls-bg-sunken);
+  border: 1px solid var(--jls-line);
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--jls-muted);
+  white-space: nowrap;
+}
+
+.jls-chip--accent {
+  background: var(--jls-accent-soft);
+  border-color: rgba(239,131,84,.35);
+  color: var(--jls-accent-deep);
+}
+
+
+/* --------------------------------------------------------------------------
+   B.10  APPARITION AU DEFILEMENT
+   Progressive enhancement : sans JS, `.jls-reveal` reste visible. Le script
+   pose `data-jls-reveal="on"` sur la racine, ce qui active l'etat initial.
+   -------------------------------------------------------------------------- */
+
+[data-jls-reveal="on"] .jls-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity var(--jls-slow) var(--jls-ease-out),
+              transform var(--jls-slow) var(--jls-ease-out);
+  transition-delay: var(--jls-delay, 0ms);
+}
+
+[data-jls-reveal="on"] .jls-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   B.11  ACCESSIBILITE — mouvement reduit
+   Obligatoire : les effets de flottaison et de reveal sont desactives pour
+   les utilisateurs qui le demandent au niveau systeme.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .jls *,
+  .jls *::before,
+  .jls *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .jls-node:hover,
+  .jls-btn:hover,
+  .jls-row:hover { transform: none; }
+
+  [data-jls-reveal="on"] .jls-reveal { opacity: 1; transform: none; }
+}
+
+
+/* --------------------------------------------------------------------------
+   B.12  IMPRESSION — on retire ombres et textures, on garde la structure
+   -------------------------------------------------------------------------- */
+
+@media print {
+  .jls-hero {
+    background: none !important;
+    color: var(--jls-ink);
+    border: 1px solid var(--jls-silver);
+    box-shadow: none;
+  }
+  .jls-hero__title, .jls-hero__title em { color: var(--jls-ink); -webkit-text-fill-color: var(--jls-ink); }
+  .jls-node, .jls-row, .jls-tabs { box-shadow: none !important; border: 1px solid var(--jls-silver); }
+  .jls-tabs__panel { display: block !important; }
+  .jls-btn { display: none; }
+}
