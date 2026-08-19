@@ -349,6 +349,11 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
   color: var(--jls-ink);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  /* Chaque bloc peut atterrir dans un quadrant etroit de la Content Layout
+     Macro : il doit reagir a SA propre largeur, pas a celle du navigateur.
+     Necessite un navigateur recent (Chrome/Edge/Firefox 2023+). */
+  container-type: inline-size;
+  container-name: jls;
 }
 
 .jls p { margin: 0 0 .85em; }
@@ -462,16 +467,18 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
   color: rgba(233,237,244,.80);
 }
 
-.jls-hero__actions {
+/* Colonne de droite du hero : empile le CTA et la carte "responsable"
+   sur la meme largeur. */
+.jls-hero__rail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 26px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  flex: 0 1 300px;
 }
 
 /* Carte "responsable" ancree a droite du hero */
 .jls-hero__aside {
-  flex: 0 1 260px;
   padding: 16px 18px;
   border-radius: var(--jls-r-lg);
   background: rgba(255,255,255,.08);
@@ -515,6 +522,14 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
               background-color var(--jls-fast) linear;
 }
 
+/* Variante grand format — CTA seul dans la colonne de droite du hero */
+.jls-btn--xl {
+  width: 100%;
+  justify-content: center;
+  padding: 18px 26px;
+  font-size: 16.5px;
+}
+
 /* Bouton principal — corail. Texte en encre : le blanc sur corail
    ne passe pas le contraste 4.5:1, l'encre monte a ~4.9:1. */
 .jls-btn--primary {
@@ -525,18 +540,6 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
 
 .jls-btn--primary:hover  { --_y: -3px; box-shadow: var(--jls-lift-3), 0 12px 30px rgba(239,131,84,.5), var(--jls-specular); }
 .jls-btn--primary:active { --_y: 1px;  box-shadow: var(--jls-lift-0); }
-
-/* Bouton secondaire — verre depoli, lisible sur fond sombre */
-.jls-btn--ghost {
-  background: rgba(255,255,255,.10);
-  color: #FFFFFF;
-  border: 1px solid rgba(255,255,255,.26);
-  backdrop-filter: blur(8px);
-  box-shadow: var(--jls-lift-1);
-}
-
-.jls-btn--ghost:hover  { --_y: -3px; background: rgba(255,255,255,.17); box-shadow: var(--jls-lift-2); }
-.jls-btn--ghost:active { --_y: 1px;  box-shadow: var(--jls-lift-0); }
 
 /* Bouton sur fond clair */
 .jls-btn--solid {
@@ -601,20 +604,43 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
    B.4  GRILLE
    -------------------------------------------------------------------------- */
 
+/* Flexbox plutot que CSS Grid auto-fit : deux comportements de
+   grid-template-columns: repeat(auto-fit, minmax(min, max)) se sont reveles
+   incompatibles avec ce qu'on veut ici —
+     1) si `max` est une valeur fixe, le nombre de colonnes qui tiennent se
+        calcule sur `max`, pas sur `min` : plafonner la largeur d'une carte
+        reduit alors les chances d'obtenir 2 colonnes dans un quadrant etroit ;
+     2) si `max` vaut 1fr pour eviter ca, les tracks vides se "collapsent"
+        mais les tracks REELLEMENT peuples s'etirent pour absorber tout
+        l'espace libre — avec `justify-items` a autre chose que stretch,
+        la carte se retrouve minuscule et centree dans un track enorme,
+        creant un grand vide entre 2 cartes au lieu de les rapprocher.
+   Flexbox + flex-wrap fait exactement ce qu'on veut nativement : grandir
+   depuis --jls-col jusqu'a --jls-node-max, partager l'espace UNIQUEMENT
+   entre les elements de la meme ligne, et passer a la ligne suivante des
+   que ça ne rentre plus plutot que d'ecraser les colonnes. */
 .jls-grid {
-  display: grid;
-  gap: clamp(12px, 1.4vw, 18px);
-  /* `--jls-max` plafonne la largeur d'une carte. Sans plafond, deux cartes
-     sur un ecran large s'etirent a 650px pour 3 lignes de texte : la carte
-     se lit alors comme une zone vide. Le surplus part en fin de rangee. */
-  grid-template-columns: repeat(auto-fit,
-                         minmax(min(100%, var(--jls-col, 210px)), var(--jls-max, 1fr)));
-  justify-content: start;
+  display: flex;
+  flex-wrap: wrap;
   align-content: start;
+  gap: clamp(12px, 1.4vw, 18px);
+  justify-content: start;
 }
 
-.jls-grid--2 { --jls-col: 230px; --jls-max: 330px; }
-.jls-grid--5 { --jls-col: 148px; --jls-max: 210px; }
+.jls-grid > * {
+  flex: 1 1 var(--jls-col, 210px);
+  max-width: var(--jls-node-max, 100%);
+}
+
+/* Chief of PMO : seulement 2 cartes, on les agrandit et on centre la
+   paire — chacune prend toute sa ligne si le quadrant est trop etroit
+   pour les deux cote a cote. */
+.jls-grid--2 {
+  --jls-col: 240px;
+  --jls-node-max: 380px;
+  justify-content: center;
+}
+.jls-grid--5 { --jls-col: 148px; --jls-node-max: 220px; }
 
 /* Deux colonnes principales : synthese a gauche, onglets a droite */
 .jls-split {
@@ -624,7 +650,7 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
   align-items: start;   /* chaque colonne garde sa hauteur propre */
 }
 
-@media (max-width: 900px) {
+@container jls (max-width: 680px) {
   .jls-split { grid-template-columns: 1fr; }
 }
 
@@ -721,6 +747,12 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Variante grand format — utilisee pour une paire de cartes qui doit
+   dominer visuellement (Chief of PMO : A6 Dev / A6 Exploit). */
+.jls-node--lg { padding: 22px 22px 20px; }
+.jls-node--lg .jls-node__label { font-size: 18px; }
+.jls-node--lg .jls-avatar { width: 36px; height: 36px; font-size: 12.5px; }
 
 /* Variante compacte pour la rangee des focal points JLV / JLE / ... */
 .jls-node--compact { padding: 14px 12px; align-items: center; text-align: center; }

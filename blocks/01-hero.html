@@ -26,29 +26,28 @@
           et synthese multi-programmes.
         </p>
 
-        <div class="jls-hero__actions">
-          <a class="jls-btn jls-btn--primary" href="#">
-            JLS Internal Portal
-            <span class="jls-btn__arrow" aria-hidden="true">&rarr;</span>
-          </a>
-          <a class="jls-btn jls-btn--ghost" href="#jls-organisation">
-            Voir l&rsquo;organisation
-          </a>
-        </div>
       </div>
 
-      <!-- Carte "responsable" : remplace le nom flottant en haut a droite
-           du PowerPoint source. -->
-      <aside class="jls-hero__aside">
-        <p class="jls-hero__aside-label">Head of PMO</p>
-        <div class="jls-node__meta">
-          <span class="jls-avatar jls-avatar--accent jls-avatar--lg" aria-hidden="true">NN</span>
-          <div>
-            <p style="margin:0;font-weight:650;color:#fff;">{{Prenom Nom}}</p>
-            <p style="margin:0;font-size:12px;color:rgba(233,237,244,.6);">JLS PMO</p>
+      <!-- Colonne de droite : CTA en grand format + carte "responsable".
+           `jls-btn--xl` occupe toute la largeur de la colonne, la aside
+           garde la meme largeur en-dessous. -->
+      <div class="jls-hero__rail">
+        <a class="jls-btn jls-btn--primary jls-btn--xl" href="#">
+          JLS Internal Portal
+          <span class="jls-btn__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <aside class="jls-hero__aside">
+          <p class="jls-hero__aside-label">Head of PMO</p>
+          <div class="jls-node__meta">
+            <span class="jls-avatar jls-avatar--accent jls-avatar--lg" aria-hidden="true">NN</span>
+            <div>
+              <p style="margin:0;font-weight:650;color:#fff;">{{Prenom Nom}}</p>
+              <p style="margin:0;font-size:12px;color:rgba(233,237,244,.6);">JLS PMO</p>
+            </div>
           </div>
-        </div>
-      </aside>
+        </aside>
+      </div>
 
     </div>
   </header>
