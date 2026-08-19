@@ -32,9 +32,10 @@ stylesheet/
   space-stylesheet.css                 ← à coller dans Look and Feel > Stylesheet
 blocks/
   01-hero.html                         ← HTML Module 1
-  02-organisation.html                 ← HTML Module 2
-  03-synthese-et-onglets.html          ← HTML Module 3
-  04-enhancement.js.html               ← HTML Module 4 (optionnel, en dernier)
+  02-organisation.html                 ← HTML Module 2 (Chief of PMO + Program PMO)
+  03-programmes-et-synthese.html       ← HTML Module 3 (JL Board + Multi-Programme)
+  04-onglets.html                      ← HTML Module 4 (Group PMO / Transversal)
+  05-enhancement.js.html               ← HTML Module 5 (optionnel, en dernier)
   00-portail-complet-standalone.html   ← GÉNÉRÉ · variante tout-en-un
 preview/
   index.html                           ← GÉNÉRÉ · aperçu navigateur
@@ -67,11 +68,14 @@ Il contient deux parties :
 
 Dans la Content Layout Macro, supprimer les modules *Navigation Highlight* et
 *Navigation Cards*, puis `+ Add Module` → **HTML Module** pour chacun des blocs
-`01`, `02`, `03` — dans cet ordre, chacun dans son propre module.
+`01` à `04`, chacun dans son propre module. Les quatre sont indépendants et se
+positionnent librement dans la macro (par exemple `01` et `02` côte à côte en
+haut, `03` et `04` côte à côte en dessous) — voir *Personnalisation* ci-dessous
+pour la logique de ce découpage.
 
 ### 3. Le script (optionnel)
 
-`04-enhancement.js.html` va dans un dernier HTML Module, **en bas de page**.
+`05-enhancement.js.html` va dans un dernier HTML Module, **en bas de page**.
 Il n'est jamais indispensable : sans lui les onglets fonctionnent (CSS pur), les
 cartes flottent, la page est complète. Il n'ajoute que l'apparition au
 défilement, la navigation clavier des onglets et les attributs ARIA.
@@ -86,6 +90,15 @@ embarque son propre CSS.
 ---
 
 ## Personnalisation
+
+### Pourquoi 4 blocs plutôt que 3
+
+Chaque bloc est un module HTML indépendant que tu places où tu veux dans la
+Content Layout Macro — typiquement deux quadrants en haut (`01` hero, `02`
+organisation) et deux en dessous (`03` JL Board + synthèse, `04` onglets).
+Le bloc `04` ne dépend plus d'un autre bloc pour sa largeur : les onglets
+occupent tout l'espace de leur propre module, quel que soit le quadrant qui
+les accueille.
 
 ### Contenu
 

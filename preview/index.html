@@ -117,11 +117,6 @@
   color: var(--jls-ink);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  /* Chaque bloc peut atterrir dans un quadrant etroit de la Content Layout
-     Macro : il doit reagir a SA propre largeur, pas a celle du navigateur.
-     Necessite un navigateur recent (Chrome/Edge/Firefox 2023+). */
-  container-type: inline-size;
-  container-name: jls;
 }
 
 .jls p { margin: 0 0 .85em; }
@@ -235,18 +230,16 @@
   color: rgba(233,237,244,.80);
 }
 
-/* Colonne de droite du hero : empile le CTA et la carte "responsable"
-   sur la meme largeur. */
-.jls-hero__rail {
+.jls-hero__actions {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
-  flex: 0 1 300px;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
 }
 
-/* Carte "responsable" ancree a droite du hero */
+/* Carte "responsable" ancree a droite du hero, a cote du bouton */
 .jls-hero__aside {
+  flex: 0 1 280px;
   padding: 16px 18px;
   border-radius: var(--jls-r-lg);
   background: rgba(255,255,255,.08);
@@ -292,8 +285,6 @@
 
 /* Variante grand format — CTA seul dans la colonne de droite du hero */
 .jls-btn--xl {
-  width: 100%;
-  justify-content: center;
   padding: 18px 26px;
   font-size: 16.5px;
 }
@@ -409,18 +400,6 @@
   justify-content: center;
 }
 .jls-grid--5 { --jls-col: 148px; --jls-node-max: 220px; }
-
-/* Deux colonnes principales : synthese a gauche, onglets a droite */
-.jls-split {
-  display: grid;
-  gap: clamp(16px, 2vw, 26px);
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  align-items: start;   /* chaque colonne garde sa hauteur propre */
-}
-
-@container jls (max-width: 680px) {
-  .jls-split { grid-template-columns: 1fr; }
-}
 
 
 /* --------------------------------------------------------------------------
@@ -866,28 +845,26 @@
           et synthese multi-programmes.
         </p>
 
+        <div class="jls-hero__actions">
+          <a class="jls-btn jls-btn--primary jls-btn--xl" href="#">
+            JLS Internal Portal
+            <span class="jls-btn__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
       </div>
 
-      <!-- Colonne de droite : CTA en grand format + carte "responsable".
-           `jls-btn--xl` occupe toute la largeur de la colonne, la aside
-           garde la meme largeur en-dessous. -->
-      <div class="jls-hero__rail">
-        <a class="jls-btn jls-btn--primary jls-btn--xl" href="#">
-          JLS Internal Portal
-          <span class="jls-btn__arrow" aria-hidden="true">&rarr;</span>
-        </a>
-
-        <aside class="jls-hero__aside">
-          <p class="jls-hero__aside-label">Head of PMO</p>
-          <div class="jls-node__meta">
-            <span class="jls-avatar jls-avatar--accent jls-avatar--lg" aria-hidden="true">NN</span>
-            <div>
-              <p style="margin:0;font-weight:650;color:#fff;">{{Prenom Nom}}</p>
-              <p style="margin:0;font-size:12px;color:rgba(233,237,244,.6);">JLS PMO</p>
-            </div>
+      <!-- Carte "responsable" : remplace le nom flottant en haut a droite
+           du PowerPoint source. -->
+      <aside class="jls-hero__aside">
+        <p class="jls-hero__aside-label">Head of PMO</p>
+        <div class="jls-node__meta">
+          <span class="jls-avatar jls-avatar--accent jls-avatar--lg" aria-hidden="true">NN</span>
+          <div>
+            <p style="margin:0;font-weight:650;color:#fff;">{{Prenom Nom}}</p>
+            <p style="margin:0;font-size:12px;color:rgba(233,237,244,.6);">JLS PMO</p>
           </div>
-        </aside>
-      </div>
+        </div>
+      </aside>
 
     </div>
   </header>
@@ -933,9 +910,9 @@
       <span class="jls-section__rule" aria-hidden="true"></span>
     </div>
 
-    <div class="jls-grid jls-grid--2">
+    <div class="jls-grid">
 
-      <a class="jls-node jls-reveal" href="#" style="--jls-delay:0ms">
+      <a class="jls-node jls-node--lg jls-reveal" href="#" style="--jls-delay:0ms">
         <p class="jls-node__label">Promethee</p>
         <div class="jls-node__meta">
           <span class="jls-avatar" aria-hidden="true">NN</span>
@@ -943,7 +920,7 @@
         </div>
       </a>
 
-      <a class="jls-node jls-reveal" href="#" style="--jls-delay:60ms">
+      <a class="jls-node jls-node--lg jls-reveal" href="#" style="--jls-delay:60ms">
         <p class="jls-node__label">Themis</p>
         <div class="jls-node__meta">
           <span class="jls-avatar" aria-hidden="true">NN</span>
@@ -951,7 +928,7 @@
         </div>
       </a>
 
-      <a class="jls-node jls-reveal" href="#" style="--jls-delay:120ms">
+      <a class="jls-node jls-node--lg jls-reveal" href="#" style="--jls-delay:120ms">
         <p class="jls-node__label">Astris</p>
         <div class="jls-node__meta">
           <span class="jls-avatar" aria-hidden="true">NN</span>
@@ -962,10 +939,15 @@
     </div>
   </section>
 
+</div>
+
+
+<div class="jls">
+
   <!-- ---------- JL Board member focal point ------------------------------
        Variante compacte : 5 entites courtes, centrees, sur une seule ligne
        en desktop et 2-3 par ligne en mobile.                              -->
-  <section class="jls-section">
+  <section class="jls-section" style="margin-top:0">
     <div class="jls-section__head">
       <h2 class="jls-section__title">JL Board member focal point</h2>
       <span class="jls-section__count">5</span>
@@ -1007,132 +989,127 @@
     </div>
   </section>
 
+  <!-- ---------- Multi-Programme Synthesis -------------------------------- -->
+  <section class="jls-section">
+    <div class="jls-section__head">
+      <h2 class="jls-section__title">Multi-Programme Synthesis</h2>
+      <span class="jls-section__rule" aria-hidden="true"></span>
+    </div>
+
+    <div class="jls-grid" style="--jls-col:180px">
+
+      <a class="jls-node jls-reveal" href="#">
+        <p class="jls-node__label">Promethee &middot; Maia &middot; Themis</p>
+        <div class="jls-node__meta">
+          <span class="jls-avatar" aria-hidden="true">NN</span>
+          <p class="jls-node__owner">{{Prenom Nom}}</p>
+        </div>
+      </a>
+
+      <a class="jls-node jls-reveal" href="#" style="--jls-delay:60ms">
+        <p class="jls-node__label">Ariane 6</p>
+        <div class="jls-node__meta">
+          <span class="jls-avatar" aria-hidden="true">NN</span>
+          <p class="jls-node__owner">{{Prenom Nom}}</p>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Acces direct mis en avant : reprend le bloc "JLS Internal Portal"
+         isole du PowerPoint. -->
+    <a class="jls-node jls-node--feature jls-reveal" href="#"
+       style="margin-top:14px;--jls-delay:120ms">
+      <p class="jls-node__label">JLS Internal Portal</p>
+      <div class="jls-node__meta">
+        <p class="jls-node__owner">Acces aux outils et referentiels de l&rsquo;equipe</p>
+        <span class="jls-btn__arrow" aria-hidden="true"
+              style="margin-left:auto;color:#EF8354;font-size:18px">&rarr;</span>
+      </div>
+    </a>
+  </section>
+
 </div>
 
 
 <div class="jls">
-  <!-- marge haute : ce bloc vit dans son propre HTML Module, il ne
-       herite pas de l'espacement de .jls-section du bloc precedent. -->
-  <div class="jls-split" style="margin-top:clamp(26px,3.6vw,46px)">
 
-    <!-- ================= Colonne gauche : synthese ==================== -->
-    <section class="jls-section" style="margin-top:0">
-      <div class="jls-section__head">
-        <h2 class="jls-section__title">Multi-Programme Synthesis</h2>
-        <span class="jls-section__rule" aria-hidden="true"></span>
-      </div>
+  <div class="jls-tabs" style="--jls-tab-n:2" data-jls-tabs>
 
-      <div class="jls-grid" style="--jls-col:180px">
+    <input class="jls-tabs__radio" type="radio" name="jls-pmo-tabs"
+           id="jls-tab-gp1" checked>
+    <input class="jls-tabs__radio" type="radio" name="jls-pmo-tabs"
+           id="jls-tab-gp2">
 
-        <a class="jls-node jls-reveal" href="#">
-          <p class="jls-node__label">Promethee &middot; Maia &middot; Themis</p>
-          <div class="jls-node__meta">
-            <span class="jls-avatar" aria-hidden="true">NN</span>
-            <p class="jls-node__owner">{{Prenom Nom}}</p>
-          </div>
-        </a>
-
-        <a class="jls-node jls-reveal" href="#" style="--jls-delay:60ms">
-          <p class="jls-node__label">Ariane 6</p>
-          <div class="jls-node__meta">
-            <span class="jls-avatar" aria-hidden="true">NN</span>
-            <p class="jls-node__owner">{{Prenom Nom}}</p>
-          </div>
-        </a>
-
-      </div>
-
-      <!-- Acces direct mis en avant : reprend le bloc "JLS Internal Portal"
-           isole du PowerPoint. -->
-      <a class="jls-node jls-node--feature jls-reveal" href="#"
-         style="margin-top:14px;--jls-delay:120ms">
-        <p class="jls-node__label">JLS Internal Portal</p>
-        <div class="jls-node__meta">
-          <p class="jls-node__owner">Acces aux outils et referentiels de l&rsquo;equipe</p>
-          <span class="jls-btn__arrow" aria-hidden="true"
-                style="margin-left:auto;color:#EF8354;font-size:18px">&rarr;</span>
-        </div>
-      </a>
-    </section>
-
-    <!-- ================= Colonne droite : onglets ====================== -->
-    <div class="jls-tabs" style="--jls-tab-n:2" data-jls-tabs>
-
-      <input class="jls-tabs__radio" type="radio" name="jls-pmo-tabs"
-             id="jls-tab-gp1" checked>
-      <input class="jls-tabs__radio" type="radio" name="jls-pmo-tabs"
-             id="jls-tab-gp2">
-
-      <div class="jls-tabs__list" role="tablist">
-        <span class="jls-tabs__slider" aria-hidden="true"></span>
-        <label class="jls-tabs__tab" for="jls-tab-gp1">Group PMO</label>
-        <label class="jls-tabs__tab" for="jls-tab-gp2">Transversal</label>
-      </div>
-
-      <div class="jls-tabs__panels">
-
-        <!-- ---------- Panneau 1 : Group PMO ------------------------------
-             Deux axes (SYSTEM, Launcher), chacun decline sur les memes
-             trois sujets. Le filet vertical .jls-stack--nested materialise
-             le rattachement, la ou le PowerPoint utilisait des cercles. -->
-        <section class="jls-tabs__panel" role="tabpanel"
-                 aria-labelledby="jls-tab-gp1">
-
-          <div class="jls-stack">
-            <div class="jls-row jls-row--lead">
-              <span class="jls-avatar" aria-hidden="true">SY</span>
-              <span class="jls-row__label">SYSTEM</span>
-            </div>
-
-            <div class="jls-stack jls-stack--nested">
-              <a class="jls-row" href="#">
-                <span class="jls-row__label">LIOD, Kourou Focal Point &amp; Ground Industrialists</span>
-              </a>
-              <a class="jls-row" href="#">
-                <span class="jls-row__label">Decoupling point</span>
-              </a>
-              <a class="jls-row" href="#">
-                <span class="jls-row__label">SPRO / ESR</span>
-              </a>
-            </div>
-          </div>
-
-          <div class="jls-stack" style="margin-top:16px">
-            <div class="jls-row jls-row--lead">
-              <span class="jls-avatar" aria-hidden="true">LA</span>
-              <span class="jls-row__label">Launcher</span>
-            </div>
-
-            <div class="jls-stack jls-stack--nested">
-              <a class="jls-row" href="#">
-                <span class="jls-row__label">LIOD, Kourou Focal Point &amp; Ground Industrialists</span>
-              </a>
-              <a class="jls-row" href="#">
-                <span class="jls-row__label">Decoupling point</span>
-              </a>
-              <a class="jls-row" href="#">
-                <span class="jls-row__label">SPRO / ESR</span>
-              </a>
-            </div>
-          </div>
-
-        </section>
-
-        <!-- ---------- Panneau 2 : Transversal ----------------------------
-             Contenu non lisible sur la source : structure a completer. -->
-        <section class="jls-tabs__panel" role="tabpanel"
-                 aria-labelledby="jls-tab-gp2">
-          <div class="jls-stack">
-            <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 1}}</span></a>
-            <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 2}}</span></a>
-            <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 3}}</span></a>
-          </div>
-        </section>
-
-      </div>
+    <div class="jls-tabs__list" role="tablist">
+      <span class="jls-tabs__slider" aria-hidden="true"></span>
+      <label class="jls-tabs__tab" for="jls-tab-gp1">Group PMO</label>
+      <label class="jls-tabs__tab" for="jls-tab-gp2">Transversal</label>
     </div>
 
+    <div class="jls-tabs__panels">
+
+      <!-- ---------- Panneau 1 : Group PMO ------------------------------
+           Deux axes (SYSTEM, Launcher), chacun decline sur les memes
+           trois sujets. Le filet vertical .jls-stack--nested materialise
+           le rattachement, la ou le PowerPoint utilisait des cercles. -->
+      <section class="jls-tabs__panel" role="tabpanel"
+               aria-labelledby="jls-tab-gp1">
+
+        <div class="jls-stack">
+          <div class="jls-row jls-row--lead">
+            <span class="jls-avatar" aria-hidden="true">SY</span>
+            <span class="jls-row__label">SYSTEM</span>
+          </div>
+
+          <div class="jls-stack jls-stack--nested">
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">LIOD, Kourou Focal Point &amp; Ground Industrialists</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">Decoupling point</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">SPRO / ESR</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="jls-stack" style="margin-top:16px">
+          <div class="jls-row jls-row--lead">
+            <span class="jls-avatar" aria-hidden="true">LA</span>
+            <span class="jls-row__label">Launcher</span>
+          </div>
+
+          <div class="jls-stack jls-stack--nested">
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">LIOD, Kourou Focal Point &amp; Ground Industrialists</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">Decoupling point</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">SPRO / ESR</span>
+            </a>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------- Panneau 2 : Transversal ----------------------------
+           Contenu non lisible sur la source : structure a completer. -->
+      <section class="jls-tabs__panel" role="tabpanel"
+               aria-labelledby="jls-tab-gp2">
+        <div class="jls-stack">
+          <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 1}}</span></a>
+          <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 2}}</span></a>
+          <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 3}}</span></a>
+        </div>
+      </section>
+
+    </div>
   </div>
+
 </div>
 
 </div>

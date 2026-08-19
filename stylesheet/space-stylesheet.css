@@ -349,11 +349,6 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
   color: var(--jls-ink);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  /* Chaque bloc peut atterrir dans un quadrant etroit de la Content Layout
-     Macro : il doit reagir a SA propre largeur, pas a celle du navigateur.
-     Necessite un navigateur recent (Chrome/Edge/Firefox 2023+). */
-  container-type: inline-size;
-  container-name: jls;
 }
 
 .jls p { margin: 0 0 .85em; }
@@ -467,18 +462,16 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
   color: rgba(233,237,244,.80);
 }
 
-/* Colonne de droite du hero : empile le CTA et la carte "responsable"
-   sur la meme largeur. */
-.jls-hero__rail {
+.jls-hero__actions {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
-  flex: 0 1 300px;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
 }
 
-/* Carte "responsable" ancree a droite du hero */
+/* Carte "responsable" ancree a droite du hero, a cote du bouton */
 .jls-hero__aside {
+  flex: 0 1 280px;
   padding: 16px 18px;
   border-radius: var(--jls-r-lg);
   background: rgba(255,255,255,.08);
@@ -524,8 +517,6 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
 
 /* Variante grand format — CTA seul dans la colonne de droite du hero */
 .jls-btn--xl {
-  width: 100%;
-  justify-content: center;
   padding: 18px 26px;
   font-size: 16.5px;
 }
@@ -641,18 +632,6 @@ body#com-atlassian-confluence .wiki-content .cl-module-html {
   justify-content: center;
 }
 .jls-grid--5 { --jls-col: 148px; --jls-node-max: 220px; }
-
-/* Deux colonnes principales : synthese a gauche, onglets a droite */
-.jls-split {
-  display: grid;
-  gap: clamp(16px, 2vw, 26px);
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  align-items: start;   /* chaque colonne garde sa hauteur propre */
-}
-
-@container jls (max-width: 680px) {
-  .jls-split { grid-template-columns: 1fr; }
-}
 
 
 /* --------------------------------------------------------------------------

@@ -1,0 +1,98 @@
+<!-- ==========================================================================
+     BLOC 03 — JL BOARD FOCAL POINTS + MULTI-PROGRAMME SYNTHESIS
+     --------------------------------------------------------------------------
+     A positionner sous le bloc hero (01). Regroupe deux sections
+     precedemment reparties ailleurs :
+       - "JL Board member focal point"   (etait dans 02-organisation.html)
+       - "Multi-Programme Synthesis"      (etait dans 03-synthese-et-onglets,
+                                            desormais 04-onglets.html)
+     ========================================================================== -->
+
+<div class="jls">
+
+  <!-- ---------- JL Board member focal point ------------------------------
+       Variante compacte : 5 entites courtes, centrees, sur une seule ligne
+       en desktop et 2-3 par ligne en mobile.                              -->
+  <section class="jls-section" style="margin-top:0">
+    <div class="jls-section__head">
+      <h2 class="jls-section__title">JL Board member focal point</h2>
+      <span class="jls-section__count">5</span>
+      <span class="jls-section__rule" aria-hidden="true"></span>
+    </div>
+
+    <div class="jls-grid jls-grid--5">
+
+      <a class="jls-node jls-node--compact jls-reveal" href="#" style="--jls-delay:0ms">
+        <span class="jls-avatar" aria-hidden="true">NN</span>
+        <p class="jls-node__label">JLV</p>
+        <p class="jls-node__owner">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="jls-node jls-node--compact jls-reveal" href="#" style="--jls-delay:50ms">
+        <span class="jls-avatar" aria-hidden="true">NN</span>
+        <p class="jls-node__label">JLE</p>
+        <p class="jls-node__owner">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="jls-node jls-node--compact jls-reveal" href="#" style="--jls-delay:100ms">
+        <span class="jls-avatar" aria-hidden="true">NN</span>
+        <p class="jls-node__label">JLL</p>
+        <p class="jls-node__owner">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="jls-node jls-node--compact jls-reveal" href="#" style="--jls-delay:150ms">
+        <span class="jls-avatar" aria-hidden="true">NN</span>
+        <p class="jls-node__label">JLI</p>
+        <p class="jls-node__owner">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="jls-node jls-node--compact jls-reveal" href="#" style="--jls-delay:200ms">
+        <span class="jls-avatar" aria-hidden="true">NN</span>
+        <p class="jls-node__label">JLO</p>
+        <p class="jls-node__owner">{{Prenom Nom}}</p>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ---------- Multi-Programme Synthesis -------------------------------- -->
+  <section class="jls-section">
+    <div class="jls-section__head">
+      <h2 class="jls-section__title">Multi-Programme Synthesis</h2>
+      <span class="jls-section__rule" aria-hidden="true"></span>
+    </div>
+
+    <div class="jls-grid" style="--jls-col:180px">
+
+      <a class="jls-node jls-reveal" href="#">
+        <p class="jls-node__label">Promethee &middot; Maia &middot; Themis</p>
+        <div class="jls-node__meta">
+          <span class="jls-avatar" aria-hidden="true">NN</span>
+          <p class="jls-node__owner">{{Prenom Nom}}</p>
+        </div>
+      </a>
+
+      <a class="jls-node jls-reveal" href="#" style="--jls-delay:60ms">
+        <p class="jls-node__label">Ariane 6</p>
+        <div class="jls-node__meta">
+          <span class="jls-avatar" aria-hidden="true">NN</span>
+          <p class="jls-node__owner">{{Prenom Nom}}</p>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Acces direct mis en avant : reprend le bloc "JLS Internal Portal"
+         isole du PowerPoint. -->
+    <a class="jls-node jls-node--feature jls-reveal" href="#"
+       style="margin-top:14px;--jls-delay:120ms">
+      <p class="jls-node__label">JLS Internal Portal</p>
+      <div class="jls-node__meta">
+        <p class="jls-node__owner">Acces aux outils et referentiels de l&rsquo;equipe</p>
+        <span class="jls-btn__arrow" aria-hidden="true"
+              style="margin-left:auto;color:#EF8354;font-size:18px">&rarr;</span>
+      </div>
+    </a>
+  </section>
+
+</div>

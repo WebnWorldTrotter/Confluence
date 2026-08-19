@@ -67,12 +67,12 @@ HEADER
   printf '%s\n' "$LIB"
   echo "</style>"
   echo
-  for f in 01-hero 02-organisation 03-synthese-et-onglets; do
+  for f in 01-hero 02-organisation 03-programmes-et-synthese 04-onglets; do
     echo "<!-- ---------- $f ---------- -->"
     strip_header "$ROOT/blocks/$f.html"
     echo
   done
-  strip_header "$ROOT/blocks/04-enhancement.js.html"
+  strip_header "$ROOT/blocks/05-enhancement.js.html"
 } > "$ROOT/blocks/00-portail-complet-standalone.html"
 
 # --- 2. Apercu navigateur -----------------------------------------------------
@@ -117,12 +117,12 @@ HEADER
 <body>
 <div class="page">
 MID
-  for f in 01-hero 02-organisation 03-synthese-et-onglets; do
+  for f in 01-hero 02-organisation 03-programmes-et-synthese 04-onglets; do
     strip_header "$ROOT/blocks/$f.html"
     echo
   done
   echo "</div>"
-  strip_header "$ROOT/blocks/04-enhancement.js.html"
+  strip_header "$ROOT/blocks/05-enhancement.js.html"
   echo "</body>"
   echo "</html>"
 } > "$ROOT/preview/index.html"
