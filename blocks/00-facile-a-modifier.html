@@ -52,7 +52,7 @@
         des balises <a>. Il suffit de remplacer ce qu'il y a entre les
         guillemets de href="..." par l'adresse de la page.
 
-          AVANT :  <a class="carte carte-grande" href="#REMPLACE_PAR_LE_LIEN">
+          AVANT :  <a class="carte carte-grande" href="REMPLACE_PAR_LE_LIEN">
           APRES :  <a class="carte carte-grande" href="/confluence/display/JLS/A6+Dev">
 
         Comment recuperer l'adresse d'une page Confluence :
@@ -231,9 +231,22 @@
      hauteur de la plus grande. Pas besoin de les regler une par une.
      -------------------------------------------------------------------------- */
 
-  /* Carte agrandie — ajoute la classe "carte-grande" a cote de "carte" :
-       <a class="carte carte-grande" href="#">
-     Change les 2 valeurs ci-dessous pour ajuster la taille. */
+  /* --------------------------------------------------------------------------
+     LES 3 TAILLES DE CARTE
+     Ajoute UNE de ces classes a cote de "carte" :
+
+       <a class="carte">                  taille normale (par defaut)
+       <a class="carte carte-moyenne">    un peu plus haute
+       <a class="carte carte-grande">     nettement plus haute
+
+     Pour ajuster, change les valeurs min-height et padding ci-dessous.
+     -------------------------------------------------------------------------- */
+  .carte-moyenne {
+    min-height: 110px;
+    padding: 22px;
+  }
+  .carte-moyenne .carte-titre { font-size: 16px; }
+
   .carte-grande {
     min-height: 150px;
     padding: 26px;
@@ -243,14 +256,36 @@
   /* --------------------------------------------------------------------------
      METTRE UNE IMAGE EN FOND D'UNE CARTE
 
-     >>> LES ADRESSES D'IMAGES SE METTENT PLUS BAS, dans le bloc
-         "MES IMAGES DE FOND". C'est le seul endroit a modifier. <<<
+     L'image se met DIRECTEMENT DANS LE HTML de la carte, avec une balise
+     <img> ordinaire, comme ceci :
 
-     POURQUOI PAS DANS LE HTML ?
-     Ecrire style="background-image: url(...)" directement sur la carte ne
-     marche souvent PAS dans Confluence : le module HTML nettoie le code
-     colle et supprime frequemment l'attribut style. En declarant l'image
-     ici dans la feuille de style, elle passe sans probleme.
+       <a class="carte carte-grande carte-image" href="/confluence/...">
+         <img class="carte-fond" src="ADRESSE_DE_L_IMAGE" alt="">
+         <p class="carte-titre">A6 Dev</p>
+         <p class="carte-personne">Prenom Nom</p>
+       </a>
+
+     L'ordre compte : la ligne <img> doit etre la PREMIERE a l'interieur
+     de la carte, avant le titre.
+
+     POURQUOI UNE BALISE <img> ET PAS UN FOND CSS ?
+     Une image de fond declaree en CSS (background-image) est souvent
+     bloquee ou nettoyee par Confluence, et quand ca echoue on ne voit
+     RIEN : impossible de savoir si le probleme vient de l'adresse ou du
+     blocage. Avec une balise <img>, si l'adresse est mauvaise le
+     navigateur affiche une icone d'image cassee : tu sais tout de suite
+     d'ou vient le probleme.
+
+     SI L'IMAGE N'APPARAIT TOUJOURS PAS
+       1. Ouvre l'adresse seule dans un nouvel onglet du navigateur.
+          - L'image s'affiche      -> l'adresse est bonne
+          - Page d'erreur / login  -> l'image est attachee a une page dont
+                                      tes lecteurs n'ont pas les droits,
+                                      ou l'adresse est incomplete
+       2. Verifie que l'adresse commence par "/confluence/..." ou par
+          "https://...". Une adresse comme "mon-image.jpg" toute seule ne
+          marchera pas.
+       3. Evite les adresses commencant par "data:" : Confluence les bloque.
 
      Un voile sombre est pose automatiquement par-dessus l'image pour que le
      texte blanc reste lisible quelle que soit l'image (meme tres claire).
@@ -259,65 +294,42 @@
        0.55 = plus clair, image bien visible, texte plus fragile
      -------------------------------------------------------------------------- */
   .carte-image {
-    position: relative;      /* necessaire pour positionner le voile */
+    position: relative;      /* necessaire pour empiler image / voile / texte */
     overflow: hidden;        /* l'image ne depasse pas des coins arrondis */
     border-color: transparent;
     color: #FFFFFF;
-    background-size: cover;      /* l'image remplit la carte sans se deformer */
-    background-position: center; /* elle est cadree au centre */
+    background: var(--couleur-fond-sombre);  /* fond de secours si pas d'image */
   }
 
-  /* Le voile sombre pose par-dessus l'image */
+  /* L'image elle-meme : elle remplit la carte, en dessous de tout le reste */
+  .carte-fond {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;   /* remplit la carte sans deformer l'image */
+    object-position: center;
+    z-index: 0;
+  }
+
+  /* Le voile sombre, pose PAR-DESSUS l'image */
   .carte-image::before {
     content: "";
     position: absolute;
-    inset: 0;                /* couvre toute la carte */
+    inset: 0;
     background: rgba(45, 49, 66, 0.72);
+    z-index: 1;
   }
 
-  /* Le texte doit passer AU-DESSUS du voile, sinon il serait cache dessous */
-  .carte-image > * {
+  /* Le texte passe au-dessus du voile */
+  .carte-image .carte-titre,
+  .carte-image .carte-personne {
     position: relative;
+    z-index: 2;
   }
 
   .carte-image .carte-personne { color: rgba(255,255,255,.8); }
 
-  /* ==========================================================================
-     MES IMAGES DE FOND   <<<<<  C'EST ICI QUE TU COLLES TES ADRESSES  >>>>>
-     --------------------------------------------------------------------------
-     COMMENT OBTENIR L'ADRESSE D'UNE IMAGE DANS CONFLUENCE
-       1. Ouvre la page, menu "..." en haut a droite > "Attachments"
-       2. Televerse ton image (bouton "Attach file")
-       3. Clic droit sur l'image dans la liste > "Copier l'adresse du lien"
-       4. Colle l'adresse entre les guillemets ci-dessous
-
-     L'adresse ressemble a :
-       /confluence/download/attachments/123456789/mon-image.jpg
-
-     3 PIEGES A CONNAITRE
-       - Attache l'image a une page que TOUT LE MONDE peut voir, sinon
-         l'image sera invisible pour tes collegues (ils verront un cadre
-         sombre vide). Le plus simple : l'attacher a cette page-ci.
-       - N'utilise pas une adresse qui commence par "data:" : Confluence
-         bloque souvent ce format pour raisons de securite.
-       - Ne mets pas d'espace dans le nom du fichier (mon-image.jpg, pas
-         "mon image.jpg").
-
-     TANT QU'UNE ADRESSE N'EST PAS RENSEIGNEE, la carte s'affiche en gris
-     fonce : c'est le voile sombre sans image en dessous. Ce n'est pas une
-     erreur, la carte reste lisible et cliquable. Elle prendra son image
-     des que tu auras colle une vraie adresse.
-
-     Si tu preferes qu'une carte reste blanche, enleve simplement les classes
-     "carte-image image-xxx" de son HTML.
-     ========================================================================== */
-
-  .image-a6-dev      { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
-  .image-a6-exploit  { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
-  .image-promethee   { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
-  .image-themis      { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
-  .image-astris      { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
-  .image-portail     { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
 
   /* ==========================================================================
      RENDRE UNE CARTE VISIBLEMENT CLIQUABLE
@@ -325,10 +337,12 @@
      petite fleche pour que ca se voie, et un contour au clavier.
      ========================================================================== */
 
-  /* La fleche apparait en bas a droite des cartes agrandies */
+  /* La fleche apparait en bas a droite des cartes moyennes et grandes */
+  .carte-moyenne,
   .carte-grande {
     position: relative;
   }
+  .carte-moyenne::after,
   .carte-grande::after {
     content: "\2192";              /* le caractere fleche  -> */
     position: absolute;
@@ -337,7 +351,9 @@
     font-size: 20px;
     color: var(--couleur-accent);
     transition: transform .2s ease;
+    z-index: 2;        /* au-dessus du voile des cartes avec image */
   }
+  .carte-moyenne:hover::after,
   .carte-grande:hover::after { transform: translateX(4px); }
 
   /* Sur une carte avec image, le voile est en ::before et la fleche en
@@ -521,7 +537,7 @@
         multi-programmes.
       </p>
       <!-- Bouton principal. Colle l'adresse du portail dans href="..." -->
-      <a class="bouton" href="#REMPLACE_PAR_LE_LIEN">JLS Internal Portal &rarr;</a>
+      <a class="bouton" href="REMPLACE_PAR_LE_LIEN">JLS Internal Portal &rarr;</a>
     </div>
 
     <div class="entete-contact">
@@ -536,18 +552,21 @@
     <h2 class="titre-section">Chief of PMO</h2>
     <div class="grille grille-2">
 
-      <!-- Le lien de la carte se met dans href="..." (voir le bloc
-           "OU METTRE LES LIENS" juste au-dessus de cette section).
-           L'image de fond se met dans la feuille de style, sur la ligne
-           .image-a6-dev  /  .image-a6-exploit -->
-      <a class="carte carte-grande carte-image image-a6-dev"
-         href="#REMPLACE_PAR_LE_LIEN">
+      <!-- 2 choses a remplir sur chaque carte :
+             href="..."  -> l'adresse de la page Confluence a ouvrir
+             src="..."   -> l'adresse de l'image de fond
+           Si tu ne veux PAS d'image sur une carte, supprime sa ligne <img>
+           et enleve "carte-image" de son class. -->
+      <a class="carte carte-grande carte-image"
+         href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
         <p class="carte-titre">A6 Dev</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande carte-image image-a6-exploit"
-         href="#REMPLACE_PAR_LE_LIEN">
+      <a class="carte carte-grande carte-image"
+         href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
         <p class="carte-titre">A6 Exploit</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
@@ -560,23 +579,25 @@
     <h2 class="titre-section">Program PMO</h2>
     <div class="grille">
 
-      <!-- Le lien de chaque carte se met dans href="..." et l'image de fond
-           dans la feuille de style, sur les lignes .image-promethee,
-           .image-themis, .image-astris. -->
-      <a class="carte carte-grande carte-image image-promethee"
-         href="#REMPLACE_PAR_LE_LIEN">
+      <!-- Meme principe ici : href="..." pour le lien, src="..." pour
+           l'image de fond de chaque carte. -->
+      <a class="carte carte-grande carte-image"
+         href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
         <p class="carte-titre">Promethee</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande carte-image image-themis"
-         href="#REMPLACE_PAR_LE_LIEN">
+      <a class="carte carte-grande carte-image"
+         href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
         <p class="carte-titre">Themis</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande carte-image image-astris"
-         href="#REMPLACE_PAR_LE_LIEN">
+      <a class="carte carte-grande carte-image"
+         href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
         <p class="carte-titre">Astris</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
@@ -602,27 +623,27 @@
     <!-- Contenu de l'onglet "Group PMO" -->
     <div id="contenu-groupe-pmo" class="onglet-contenu actif">
 
-      <a href="#" class="ligne ligne-titre">SYSTEM</a>
+      <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">SYSTEM</a>
       <div class="sous-lignes">
-        <a href="#" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-        <a href="#" class="ligne">Decoupling point</a>
-        <a href="#" class="ligne">SPRO / ESR</a>
+        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
+        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
       </div>
 
-      <a href="#" class="ligne ligne-titre">Launcher</a>
+      <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">Launcher</a>
       <div class="sous-lignes">
-        <a href="#" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-        <a href="#" class="ligne">Decoupling point</a>
-        <a href="#" class="ligne">SPRO / ESR</a>
+        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
+        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
       </div>
 
     </div>
 
     <!-- Contenu de l'onglet "Transversal" -->
     <div id="contenu-transversal" class="onglet-contenu">
-      <a href="#" class="ligne">{{Sujet transversal 1}}</a>
-      <a href="#" class="ligne">{{Sujet transversal 2}}</a>
-      <a href="#" class="ligne">{{Sujet transversal 3}}</a>
+      <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 1}}</a>
+      <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 2}}</a>
+      <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 3}}</a>
     </div>
 
   </section>
@@ -632,27 +653,27 @@
     <h2 class="titre-section">JL Board member focal point</h2>
     <div class="grille grille-compacte">
 
-      <a class="carte" href="#">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLV</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLE</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLL</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLI</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLO</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
@@ -665,19 +686,20 @@
     <h2 class="titre-section">Multi-Programme Synthesis</h2>
     <div class="grille">
 
-      <a class="carte" href="#">
+      <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">Ariane 6</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <!-- Pour mettre une image de fond ici, ajoute "carte-image image-portail"
-           dans class="..." et renseigne .image-portail dans la feuille de style. -->
-      <a class="carte carte-sombre" href="#REMPLACE_PAR_LE_LIEN">
+      <!-- Pour mettre une image de fond ici : ajoute "carte-image" dans
+           class="..." et une ligne <img class="carte-fond" src="..." alt="">
+           juste apres cette balise <a>. -->
+      <a class="carte carte-sombre" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLS Internal Portal &rarr;</p>
         <p class="carte-personne">Acces aux outils et referentiels de l'equipe</p>
       </a>
