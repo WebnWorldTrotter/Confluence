@@ -100,12 +100,45 @@
     display: flex;
     flex-wrap: wrap;       /* passe a la ligne si ca ne tient plus */
     gap: 16px;
+
+    /* Centre les cartes horizontalement.
+       ATTENTION — piege classique : cette ligne ne fait quelque chose QUE
+       s'il reste de la place vide sur la ligne. Si les cartes s'etirent
+       deja pour remplir toute la largeur, il n'y a rien a centrer et
+       cette ligne n'a aucun effet visible. Voir "COMMENT CENTRER" plus bas. */
+    justify-content: center;
   }
 
-  /* Cartes normales : largeur minimum 210px, grandissent pour remplir la ligne */
+  /* --------------------------------------------------------------------------
+     COMPRENDRE "flex: 1 1 210px"  (les 3 valeurs, dans l'ordre)
+
+       1er chiffre  = grandir ?   1 = oui, la carte s'etire pour remplir la
+                                      place libre    /   0 = non, elle garde
+                                      sa largeur naturelle
+       2e chiffre   = retrecir ?  1 = oui (a laisser a 1 dans presque tous les cas)
+       3e valeur    = largeur souhaitee au depart (210px ici)
+
+     COMMENT CENTRER LES CARTES POUR DE VRAI
+     Il faut que les cartes arretent de s'etirer, sinon il ne reste pas de
+     place a repartir. Deux facons :
+
+       - Mettre le 1er chiffre a 0 :   flex: 0 1 210px;
+         -> les cartes font 210px pile, le reste de la place se repartit
+            a gauche et a droite : elles sont centrees.
+
+       - Ou garder le 1 et ajouter un max-width :  flex: 1 1 240px; max-width: 380px;
+         -> les cartes s'etirent mais s'arretent a 380px, et l'espace
+            restant est centre. (C'est ce que fait .grille-2 ci-dessous.)
+     -------------------------------------------------------------------------- */
+
+  /* Cartes normales : largeur minimum 210px, grandissent pour remplir la ligne.
+     Comme elles s'etirent sans limite, elles occupent toute la largeur :
+     le "justify-content: center" ci-dessus n'a donc pas d'effet visible ici.
+     Pour les centrer, remplace la ligne ci-dessous par :  flex: 0 1 300px; */
   .grille .carte { flex: 1 1 210px; }
 
-  /* Grille a 2 cartes (Chief of PMO) : plus larges, ne s'etirent pas a l'infini */
+  /* Grille a 2 cartes (Chief of PMO) : plus larges, ne s'etirent pas a l'infini.
+     Le max-width laisse de la place libre, donc elles sont bien centrees. */
   .grille-2 .carte { flex: 1 1 240px; max-width: 380px; }
 
   /* Grille compacte (JL Board, 5 cartes) : plus petites */
