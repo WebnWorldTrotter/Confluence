@@ -46,6 +46,31 @@
         Tout ce qui ressemble a {{Prenom Nom}} est un texte a remplacer
         par une vraie valeur (nom, lien...). Les {{ }} eux-memes doivent
         disparaitre une fois remplaces.
+
+     6. OU METTRE LES LIENS VERS D'AUTRES PAGES CONFLUENCE
+        Toutes les cartes et tous les boutons sont DEJA des liens : ce sont
+        des balises <a>. Il suffit de remplacer ce qu'il y a entre les
+        guillemets de href="..." par l'adresse de la page.
+
+          AVANT :  <a class="carte carte-grande" href="#REMPLACE_PAR_LE_LIEN">
+          APRES :  <a class="carte carte-grande" href="/confluence/display/JLS/A6+Dev">
+
+        Comment recuperer l'adresse d'une page Confluence :
+          - Ouvre la page en question
+          - Copie ce qu'il y a dans la barre d'adresse du navigateur
+          - Colle-le entre les guillemets de href=""
+
+        Tu peux coller l'adresse complete :
+          href="https://atlas.fr.space.corp/confluence/display/JLS/Ma+Page"
+        ou seulement la partie apres le nom du serveur (plus court, et ca
+        continue de marcher si le serveur change un jour) :
+          href="/confluence/display/JLS/Ma+Page"
+
+        Pour ouvrir la page dans un NOUVEL onglet, ajoute target="_blank" :
+          <a class="carte" href="/confluence/display/JLS/Ma+Page" target="_blank">
+
+        Une carte laissee avec href="#" ne va nulle part : c'est normal tant
+        que tu n'as pas mis la vraie adresse.
      ============================================================================ -->
 
 <style>
@@ -218,13 +243,14 @@
   /* --------------------------------------------------------------------------
      METTRE UNE IMAGE EN FOND D'UNE CARTE
 
-     Dans le HTML, ajoute la classe "carte-image" ET l'adresse de l'image :
+     >>> LES ADRESSES D'IMAGES SE METTENT PLUS BAS, dans le bloc
+         "MES IMAGES DE FOND". C'est le seul endroit a modifier. <<<
 
-       <a class="carte carte-grande carte-image" href="#"
-          style="background-image: url('ADRESSE_DE_TON_IMAGE')">
-
-     Ou trouver l'adresse dans Confluence : joins l'image en piece jointe a
-     la page, puis clic droit sur l'image > "Copier l'adresse de l'image".
+     POURQUOI PAS DANS LE HTML ?
+     Ecrire style="background-image: url(...)" directement sur la carte ne
+     marche souvent PAS dans Confluence : le module HTML nettoie le code
+     colle et supprime frequemment l'attribut style. En declarant l'image
+     ici dans la feuille de style, elle passe sans probleme.
 
      Un voile sombre est pose automatiquement par-dessus l'image pour que le
      texte blanc reste lisible quelle que soit l'image (meme tres claire).
@@ -255,6 +281,75 @@
   }
 
   .carte-image .carte-personne { color: rgba(255,255,255,.8); }
+
+  /* ==========================================================================
+     MES IMAGES DE FOND   <<<<<  C'EST ICI QUE TU COLLES TES ADRESSES  >>>>>
+     --------------------------------------------------------------------------
+     COMMENT OBTENIR L'ADRESSE D'UNE IMAGE DANS CONFLUENCE
+       1. Ouvre la page, menu "..." en haut a droite > "Attachments"
+       2. Televerse ton image (bouton "Attach file")
+       3. Clic droit sur l'image dans la liste > "Copier l'adresse du lien"
+       4. Colle l'adresse entre les guillemets ci-dessous
+
+     L'adresse ressemble a :
+       /confluence/download/attachments/123456789/mon-image.jpg
+
+     3 PIEGES A CONNAITRE
+       - Attache l'image a une page que TOUT LE MONDE peut voir, sinon
+         l'image sera invisible pour tes collegues (ils verront un cadre
+         sombre vide). Le plus simple : l'attacher a cette page-ci.
+       - N'utilise pas une adresse qui commence par "data:" : Confluence
+         bloque souvent ce format pour raisons de securite.
+       - Ne mets pas d'espace dans le nom du fichier (mon-image.jpg, pas
+         "mon image.jpg").
+
+     TANT QU'UNE ADRESSE N'EST PAS RENSEIGNEE, la carte s'affiche en gris
+     fonce : c'est le voile sombre sans image en dessous. Ce n'est pas une
+     erreur, la carte reste lisible et cliquable. Elle prendra son image
+     des que tu auras colle une vraie adresse.
+
+     Si tu preferes qu'une carte reste blanche, enleve simplement les classes
+     "carte-image image-xxx" de son HTML.
+     ========================================================================== */
+
+  .image-a6-dev      { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
+  .image-a6-exploit  { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
+  .image-promethee   { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
+  .image-themis      { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
+  .image-astris      { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
+  .image-portail     { background-image: url('REMPLACE_PAR_TON_ADRESSE_IMAGE'); }
+
+  /* ==========================================================================
+     RENDRE UNE CARTE VISIBLEMENT CLIQUABLE
+     Toutes les cartes sont deja des liens (balise <a>). On ajoute juste une
+     petite fleche pour que ca se voie, et un contour au clavier.
+     ========================================================================== */
+
+  /* La fleche apparait en bas a droite des cartes agrandies */
+  .carte-grande {
+    position: relative;
+  }
+  .carte-grande::after {
+    content: "\2192";              /* le caractere fleche  -> */
+    position: absolute;
+    right: 20px;
+    bottom: 16px;
+    font-size: 20px;
+    color: var(--couleur-accent);
+    transition: transform .2s ease;
+  }
+  .carte-grande:hover::after { transform: translateX(4px); }
+
+  /* Sur une carte avec image, le voile est en ::before et la fleche en
+     ::after : la fleche est donc deja au-dessus du voile, rien a faire. */
+
+  /* Contour visible pour ceux qui naviguent au clavier (touche Tab) */
+  .carte:focus-visible,
+  .bouton:focus-visible,
+  .ligne:focus-visible {
+    outline: 3px solid var(--couleur-accent);
+    outline-offset: 3px;
+  }
 
   /* ==========================================================================
      BOUTON
@@ -425,7 +520,8 @@
         de transport spatial : gouvernance, jalons, points focaux et synthese
         multi-programmes.
       </p>
-      <a class="bouton" href="#">JLS Internal Portal &rarr;</a>
+      <!-- Bouton principal. Colle l'adresse du portail dans href="..." -->
+      <a class="bouton" href="#REMPLACE_PAR_LE_LIEN">JLS Internal Portal &rarr;</a>
     </div>
 
     <div class="entete-contact">
@@ -440,12 +536,18 @@
     <h2 class="titre-section">Chief of PMO</h2>
     <div class="grille grille-2">
 
-      <a class="carte carte-grande" href="#">
+      <!-- Le lien de la carte se met dans href="..." (voir le bloc
+           "OU METTRE LES LIENS" juste au-dessus de cette section).
+           L'image de fond se met dans la feuille de style, sur la ligne
+           .image-a6-dev  /  .image-a6-exploit -->
+      <a class="carte carte-grande carte-image image-a6-dev"
+         href="#REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">A6 Dev</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande" href="#">
+      <a class="carte carte-grande carte-image image-a6-exploit"
+         href="#REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">A6 Exploit</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
@@ -458,22 +560,23 @@
     <h2 class="titre-section">Program PMO</h2>
     <div class="grille">
 
-      <!-- EXEMPLE DE CARTE AVEC IMAGE EN FOND.
-           Remplace l'adresse dans style="background-image: url('...')" par
-           celle de ta propre image. Les 2 autres cartes ci-dessous sont
-           restees normales, pour que tu voies la difference. -->
-      <a class="carte carte-grande carte-image" href="#"
-         style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27300%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%234FA3C7%27/%3E%3Cstop offset=%27.55%27 stop-color=%27%23E8B04B%27/%3E%3Cstop offset=%271%27 stop-color=%27%23C7563A%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%27400%27 height=%27300%27 fill=%27url(%23g)%27/%3E%3C/svg%3E')">
+      <!-- Le lien de chaque carte se met dans href="..." et l'image de fond
+           dans la feuille de style, sur les lignes .image-promethee,
+           .image-themis, .image-astris. -->
+      <a class="carte carte-grande carte-image image-promethee"
+         href="#REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">Promethee</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande" href="#">
+      <a class="carte carte-grande carte-image image-themis"
+         href="#REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">Themis</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande" href="#">
+      <a class="carte carte-grande carte-image image-astris"
+         href="#REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">Astris</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
@@ -572,7 +675,9 @@
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-sombre" href="#">
+      <!-- Pour mettre une image de fond ici, ajoute "carte-image image-portail"
+           dans class="..." et renseigne .image-portail dans la feuille de style. -->
+      <a class="carte carte-sombre" href="#REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLS Internal Portal &rarr;</p>
         <p class="carte-personne">Acces aux outils et referentiels de l'equipe</p>
       </a>
