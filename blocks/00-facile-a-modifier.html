@@ -1,0 +1,497 @@
+<!-- ============================================================================
+     JLS PMO — VERSION FACILE A MODIFIER
+     ----------------------------------------------------------------------
+     Ce fichier n'est PAS genere par build.sh : c'est une version ecrite a
+     la main, volontairement plus simple que le portail complet, pour que
+     tu puisses la reprendre et la modifier sans connaitre le CSS.
+     ----------------------------------------------------------------------
+     GUIDE RAPIDE — A LIRE AVANT DE MODIFIER
+
+     1. LA PAGE EST DECOUPEE EN "BLOCS"
+        Chaque partie visible de la page (le bandeau bleu, "Chief of PMO",
+        "Program PMO", le tableau a onglets, etc.) est un bloc qui commence
+        par :   <section class="bloc">
+        et se termine par :   </section>
+        Ces deux lignes sont toujours en commentaire juste au-dessus,
+        avec le nom du bloc ecrit en majuscules (BLOC : PROGRAM PMO, etc).
+
+     2. POUR DEPLACER UN BLOC ENTIER (par exemple mettre les onglets
+        en dessous de "Program PMO")
+        - Repere la ligne "BLOC : ..." (en commentaire) qui commence le bloc
+        - Repere la balise </section> qui le termine (juste avant le
+          prochain "BLOC : ...")
+        - Selectionne TOUT depuis <section jusqu'a </section> inclus
+        - Coupe, colle a l'endroit voulu, entre deux autres blocs
+        - NE COUPE JAMAIS un morceau au milieu d'un bloc : le tableau a
+          onglets par exemple a besoin de ses boutons ET de son contenu
+          ensemble, sinon plus rien ne s'affiche.
+
+     3. POUR AJOUTER / SUPPRIMER UNE CARTE (ex: ajouter un programme)
+        Une carte ressemble a ca :
+          <a class="carte" href="#">
+            <p class="carte-titre">Nom du programme</p>
+            <p class="carte-personne">Prenom Nom</p>
+          </a>
+        Pour en ajouter une, copie ce bloc entier (de <a a </a>) et colle-le
+        juste apres une carte existante, dans la meme <div class="grille">.
+        Pour en supprimer une, efface le bloc <a>...</a> correspondant.
+
+     4. POUR CHANGER LE TEXTE
+        Modifie juste le texte entre les balises, par exemple :
+          <p class="carte-titre">Promethee</p>   ->   <p class="carte-titre">Ariane 6</p>
+        Ne touche pas aux mots apres class="..." (ce sont des noms de
+        style, pas du texte a afficher).
+
+     5. LES ACCOLADES {{ }}
+        Tout ce qui ressemble a {{Prenom Nom}} est un texte a remplacer
+        par une vraie valeur (nom, lien...). Les {{ }} eux-memes doivent
+        disparaitre une fois remplaces.
+     ============================================================================ -->
+
+<style>
+
+  /* ==========================================================================
+     COULEURS ET REGLAGES GENERAUX
+     Change une couleur ici et elle change PARTOUT dans la page.
+     ========================================================================== */
+  .jls {
+    --couleur-fond-sombre:   #2D3142;  /* bandeau bleu fonce, cartes sombres */
+    --couleur-texte-gris:    #4F5D75;  /* texte secondaire (sous-titres) */
+    --couleur-bordure:       #BFC0C0;  /* filets et bordures fines */
+    --couleur-fond-carte:    #FFFFFF;  /* fond blanc des cartes */
+    --couleur-accent:        #EF8354;  /* corail : boutons, accents */
+    --couleur-accent-texte:  #B8501C;  /* corail fonce : utilise pour du texte
+                                           (le corail clair est illisible en texte) */
+    --couleur-fond-page:     #F4F5F7;  /* gris tres clair, fond de la page */
+
+    --rayon-carte: 14px;   /* coins arrondis des cartes */
+    --rayon-gros:  24px;   /* coins arrondis du bandeau bleu et des gros blocs */
+
+    --ombre-carte:        0 4px 12px rgba(45,49,66,.10);
+    --ombre-carte-survol: 0 14px 28px rgba(45,49,66,.16);
+
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--couleur-fond-sombre);
+    line-height: 1.5;
+  }
+
+  .jls, .jls * { box-sizing: border-box; }
+
+  /* ==========================================================================
+     TITRES DE SECTION  (ex: "Chief of PMO", "Program PMO")
+     ========================================================================== */
+  .titre-section {
+    margin: 0 0 16px;
+    font-size: 19px;
+    font-weight: 700;
+    padding-left: 12px;
+    border-left: 3px solid var(--couleur-accent);
+  }
+
+  .bloc { margin-top: 40px; }
+  .bloc:first-child { margin-top: 0; }
+
+  /* ==========================================================================
+     GRILLE DE CARTES
+     Les cartes se rangent toutes seules en fonction de la largeur de
+     l'ecran : pas besoin de calculer combien en tenir par ligne.
+     ========================================================================== */
+  .grille {
+    display: flex;
+    flex-wrap: wrap;       /* passe a la ligne si ca ne tient plus */
+    gap: 16px;
+  }
+
+  /* Cartes normales : largeur minimum 210px, grandissent pour remplir la ligne */
+  .grille .carte { flex: 1 1 210px; }
+
+  /* Grille a 2 cartes (Chief of PMO) : plus larges, ne s'etirent pas a l'infini */
+  .grille-2 .carte { flex: 1 1 240px; max-width: 380px; }
+
+  /* Grille compacte (JL Board, 5 cartes) : plus petites */
+  .grille-compacte .carte { flex: 1 1 140px; max-width: 200px; text-align: center; }
+
+  /* ==========================================================================
+     CARTE — le bloc reutilisable pour "A6 Dev", "Promethee", "JLV"...
+     ========================================================================== */
+  .carte {
+    display: block;
+    padding: 18px;
+    background: var(--couleur-fond-carte);
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    box-shadow: var(--ombre-carte);
+    text-decoration: none;
+    color: inherit;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+
+  /* Effet de "flottaison" au survol : la carte monte legerement */
+  .carte:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--ombre-carte-survol);
+    border-color: var(--couleur-accent);
+  }
+
+  .carte-titre {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .carte-personne {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--couleur-texte-gris);
+  }
+
+  /* Carte sombre mise en avant (ex: "JLS Internal Portal") */
+  .carte-sombre {
+    background: var(--couleur-fond-sombre);
+    border-color: transparent;
+    color: #FFFFFF;
+  }
+  .carte-sombre .carte-personne { color: rgba(255,255,255,.65); }
+
+  /* ==========================================================================
+     BOUTON
+     ========================================================================== */
+  .bouton {
+    display: inline-block;
+    padding: 13px 24px;
+    background: var(--couleur-accent);
+    color: var(--couleur-fond-sombre);
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 999px;
+    box-shadow: var(--ombre-carte);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .bouton:hover { transform: translateY(-2px); box-shadow: var(--ombre-carte-survol); }
+
+  /* ==========================================================================
+     BANDEAU D'ACCUEIL (HERO)
+     ========================================================================== */
+  .entete {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-end;
+    padding: 36px;
+    border-radius: var(--rayon-gros);
+    background: linear-gradient(145deg, #363B50, var(--couleur-fond-sombre));
+    color: #FFFFFF;
+  }
+
+  .entete-texte { flex: 1 1 380px; }
+
+  .entete-etiquette {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .entete-titre {
+    margin: 0 0 12px;
+    font-size: 32px;
+    font-weight: 800;
+  }
+  .entete-titre em { font-style: normal; color: var(--couleur-accent); }
+
+  .entete-description {
+    margin: 0 0 20px;
+    max-width: 60ch;
+    color: rgba(255,255,255,.8);
+  }
+
+  /* Carte "responsable" a droite du bandeau */
+  .entete-contact {
+    flex: 0 1 260px;
+    padding: 16px;
+    border-radius: var(--rayon-carte);
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.18);
+  }
+  .entete-contact-label {
+    margin: 0 0 10px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,.55);
+  }
+
+  .rond-initiales {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--couleur-accent);
+    color: var(--couleur-fond-sombre);
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  /* ==========================================================================
+     ONGLETS  (Group PMO / Transversal)
+     Pilotes par un petit script JavaScript tout en bas de la page :
+     chaque bouton dit "affiche le contenu qui a cet identifiant".
+     C'est volontairement simple : tu peux deplacer ce bloc n'importe ou
+     dans la page, il continuera a marcher, tant que tu le deplaces EN
+     ENTIER (voir le guide en haut du fichier).
+     ========================================================================== */
+  .onglets {
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    overflow: hidden;
+    box-shadow: var(--ombre-carte);
+  }
+
+  .onglets-boutons {
+    display: flex;
+    background: var(--couleur-fond-page);
+    border-bottom: 1px solid var(--couleur-bordure);
+  }
+
+  .onglet-bouton {
+    flex: 1;
+    padding: 12px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 700;
+    color: var(--couleur-texte-gris);
+    cursor: pointer;
+  }
+
+  /* Le bouton actif (celui du contenu affiche) est mis en evidence */
+  .onglet-bouton.actif {
+    background: var(--couleur-fond-carte);
+    color: var(--couleur-fond-sombre);
+    box-shadow: inset 0 -2px 0 var(--couleur-accent);
+  }
+
+  .onglet-contenu { display: none; padding: 20px; }
+  .onglet-contenu.actif { display: block; }
+
+  /* Une ligne a l'interieur d'un onglet (ex: "SYSTEM", "Decoupling point") */
+  .ligne {
+    display: block;
+    padding: 11px 14px;
+    margin-bottom: 8px;
+    background: var(--couleur-fond-carte);
+    border: 1px solid var(--couleur-bordure);
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .ligne:hover { border-color: var(--couleur-accent); }
+
+  /* Ligne "titre" (SYSTEM / Launcher), mise en avant en sombre */
+  .ligne-titre {
+    background: var(--couleur-fond-sombre);
+    color: #FFFFFF;
+    border-color: transparent;
+  }
+
+  /* Retrait visuel des sous-lignes sous un titre */
+  .sous-lignes { margin-left: 20px; margin-bottom: 16px; }
+
+</style>
+
+<div class="jls">
+
+  <!-- BLOC : BANDEAU D'ACCUEIL (HERO) -->
+  <section class="bloc entete">
+    <div class="entete-texte">
+      <span class="entete-etiquette">Space Transportation</span>
+      <h1 class="entete-titre">JLS &ndash; <em>Program Management Office</em></h1>
+      <p class="entete-description">
+        Espace de pilotage de l'equipe de support au management des programmes
+        de transport spatial : gouvernance, jalons, points focaux et synthese
+        multi-programmes.
+      </p>
+      <a class="bouton" href="#">JLS Internal Portal &rarr;</a>
+    </div>
+
+    <div class="entete-contact">
+      <p class="entete-contact-label">Head of PMO</p>
+      <span class="rond-initiales">NN</span>
+      <strong>{{Prenom Nom}}</strong>
+    </div>
+  </section>
+
+  <!-- BLOC : CHIEF OF PMO (2 cartes) -->
+  <section class="bloc">
+    <h2 class="titre-section">Chief of PMO</h2>
+    <div class="grille grille-2">
+
+      <a class="carte" href="#">
+        <p class="carte-titre">A6 Dev</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">A6 Exploit</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- BLOC : PROGRAM PMO (3 cartes) -->
+  <section class="bloc">
+    <h2 class="titre-section">Program PMO</h2>
+    <div class="grille">
+
+      <a class="carte" href="#">
+        <p class="carte-titre">Promethee</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">Themis</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">Astris</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- BLOC : ONGLETS GROUP PMO / TRANSVERSAL
+       Ce bloc a ete place ICI, juste sous "Program PMO", comme demande.
+       Pour le redeplacer : coupe TOUT depuis "<section class="bloc onglets">"
+       jusqu'au "</section>" qui lui correspond, colle-le ailleurs. -->
+  <section class="bloc onglets">
+
+    <div class="onglets-boutons">
+      <button class="onglet-bouton actif" onclick="afficherOnglet(event, 'contenu-groupe-pmo')">
+        Group PMO
+      </button>
+      <button class="onglet-bouton" onclick="afficherOnglet(event, 'contenu-transversal')">
+        Transversal
+      </button>
+    </div>
+
+    <!-- Contenu de l'onglet "Group PMO" -->
+    <div id="contenu-groupe-pmo" class="onglet-contenu actif">
+
+      <a href="#" class="ligne ligne-titre">SYSTEM</a>
+      <div class="sous-lignes">
+        <a href="#" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+        <a href="#" class="ligne">Decoupling point</a>
+        <a href="#" class="ligne">SPRO / ESR</a>
+      </div>
+
+      <a href="#" class="ligne ligne-titre">Launcher</a>
+      <div class="sous-lignes">
+        <a href="#" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+        <a href="#" class="ligne">Decoupling point</a>
+        <a href="#" class="ligne">SPRO / ESR</a>
+      </div>
+
+    </div>
+
+    <!-- Contenu de l'onglet "Transversal" -->
+    <div id="contenu-transversal" class="onglet-contenu">
+      <a href="#" class="ligne">{{Sujet transversal 1}}</a>
+      <a href="#" class="ligne">{{Sujet transversal 2}}</a>
+      <a href="#" class="ligne">{{Sujet transversal 3}}</a>
+    </div>
+
+  </section>
+
+  <!-- BLOC : JL BOARD MEMBER FOCAL POINT (5 cartes) -->
+  <section class="bloc">
+    <h2 class="titre-section">JL Board member focal point</h2>
+    <div class="grille grille-compacte">
+
+      <a class="carte" href="#">
+        <p class="carte-titre">JLV</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">JLE</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">JLL</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">JLI</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">JLO</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- BLOC : MULTI-PROGRAMME SYNTHESIS -->
+  <section class="bloc">
+    <h2 class="titre-section">Multi-Programme Synthesis</h2>
+    <div class="grille">
+
+      <a class="carte" href="#">
+        <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte" href="#">
+        <p class="carte-titre">Ariane 6</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte carte-sombre" href="#">
+        <p class="carte-titre">JLS Internal Portal &rarr;</p>
+        <p class="carte-personne">Acces aux outils et referentiels de l'equipe</p>
+      </a>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Affiche le contenu d'onglet dont l'id est passe en parametre, et cache
+  // les autres contenus d'onglets DU MEME GROUPE (celui qui contient le
+  // bouton sur lequel on a clique). "evenement" est fourni automatiquement
+  // par le onclick="..." sur chaque bouton.
+  function afficherOnglet(evenement, idDuContenu) {
+    var groupeOnglets = evenement.target.closest('.onglets');
+
+    // On cache tous les contenus et on retire "actif" de tous les boutons...
+    groupeOnglets.querySelectorAll('.onglet-contenu').forEach(function (el) {
+      el.classList.remove('actif');
+    });
+    groupeOnglets.querySelectorAll('.onglet-bouton').forEach(function (el) {
+      el.classList.remove('actif');
+    });
+
+    // ...puis on affiche seulement celui demande.
+    document.getElementById(idDuContenu).classList.add('actif');
+    evenement.target.classList.add('actif');
+  }
+</script>
