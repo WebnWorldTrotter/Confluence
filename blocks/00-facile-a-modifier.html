@@ -186,6 +186,76 @@
   }
   .carte-sombre .carte-personne { color: rgba(255,255,255,.65); }
 
+  /* --------------------------------------------------------------------------
+     REGLER LA HAUTEUR D'UNE CARTE — 2 leviers, a ne pas confondre
+
+       padding      = l'espace VIDE a l'interieur, entre le bord et le texte.
+                      Augmente la hauteur ET la largeur, et aere le contenu.
+                      Ex: padding: 30px;
+
+       min-height   = la hauteur MINIMUM de la carte.
+                      La carte ne sera jamais plus petite, mais elle peut
+                      grandir si le texte est long. C'est le bon reglage pour
+                      "je veux des cartes plus hautes".
+                      Ex: min-height: 160px;
+
+     A EVITER : height: 160px  (hauteur FIXE). Si un jour le texte est plus
+     long que prevu, il deborde de la carte. Prefere toujours min-height.
+
+     Remarque : les cartes d'une meme ligne prennent automatiquement la
+     hauteur de la plus grande. Pas besoin de les regler une par une.
+     -------------------------------------------------------------------------- */
+
+  /* Carte agrandie — ajoute la classe "carte-grande" a cote de "carte" :
+       <a class="carte carte-grande" href="#">
+     Change les 2 valeurs ci-dessous pour ajuster la taille. */
+  .carte-grande {
+    min-height: 150px;
+    padding: 26px;
+  }
+  .carte-grande .carte-titre { font-size: 18px; }
+
+  /* --------------------------------------------------------------------------
+     METTRE UNE IMAGE EN FOND D'UNE CARTE
+
+     Dans le HTML, ajoute la classe "carte-image" ET l'adresse de l'image :
+
+       <a class="carte carte-grande carte-image" href="#"
+          style="background-image: url('ADRESSE_DE_TON_IMAGE')">
+
+     Ou trouver l'adresse dans Confluence : joins l'image en piece jointe a
+     la page, puis clic droit sur l'image > "Copier l'adresse de l'image".
+
+     Un voile sombre est pose automatiquement par-dessus l'image pour que le
+     texte blanc reste lisible quelle que soit l'image (meme tres claire).
+     Pour un voile plus ou moins fort, change le 0.72 plus bas :
+       0.85 = plus sombre, texte tres lisible, image peu visible
+       0.55 = plus clair, image bien visible, texte plus fragile
+     -------------------------------------------------------------------------- */
+  .carte-image {
+    position: relative;      /* necessaire pour positionner le voile */
+    overflow: hidden;        /* l'image ne depasse pas des coins arrondis */
+    border-color: transparent;
+    color: #FFFFFF;
+    background-size: cover;      /* l'image remplit la carte sans se deformer */
+    background-position: center; /* elle est cadree au centre */
+  }
+
+  /* Le voile sombre pose par-dessus l'image */
+  .carte-image::before {
+    content: "";
+    position: absolute;
+    inset: 0;                /* couvre toute la carte */
+    background: rgba(45, 49, 66, 0.72);
+  }
+
+  /* Le texte doit passer AU-DESSUS du voile, sinon il serait cache dessous */
+  .carte-image > * {
+    position: relative;
+  }
+
+  .carte-image .carte-personne { color: rgba(255,255,255,.8); }
+
   /* ==========================================================================
      BOUTON
      ========================================================================== */
@@ -370,12 +440,12 @@
     <h2 class="titre-section">Chief of PMO</h2>
     <div class="grille grille-2">
 
-      <a class="carte" href="#">
+      <a class="carte carte-grande" href="#">
         <p class="carte-titre">A6 Dev</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte carte-grande" href="#">
         <p class="carte-titre">A6 Exploit</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
@@ -388,17 +458,22 @@
     <h2 class="titre-section">Program PMO</h2>
     <div class="grille">
 
-      <a class="carte" href="#">
+      <!-- EXEMPLE DE CARTE AVEC IMAGE EN FOND.
+           Remplace l'adresse dans style="background-image: url('...')" par
+           celle de ta propre image. Les 2 autres cartes ci-dessous sont
+           restees normales, pour que tu voies la difference. -->
+      <a class="carte carte-grande carte-image" href="#"
+         style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27300%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%234FA3C7%27/%3E%3Cstop offset=%27.55%27 stop-color=%27%23E8B04B%27/%3E%3Cstop offset=%271%27 stop-color=%27%23C7563A%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%27400%27 height=%27300%27 fill=%27url(%23g)%27/%3E%3C/svg%3E')">
         <p class="carte-titre">Promethee</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte carte-grande" href="#">
         <p class="carte-titre">Themis</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="#">
+      <a class="carte carte-grande" href="#">
         <p class="carte-titre">Astris</p>
         <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
