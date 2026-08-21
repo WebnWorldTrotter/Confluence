@@ -179,6 +179,69 @@ Pour régénérer l'aperçu et la version autonome après une modification :
 
 ---
 
+## Mettre à jour les responsables depuis un tableau
+
+Les noms affichés sur la page peuvent être pilotés par un fichier tableur,
+pour ne plus avoir à éditer le HTML à chaque changement de titulaire.
+
+```
+donnees/responsables.csv              ← le tableau, à ouvrir dans Excel
+outils/remplir-depuis-tableau.py      ← solution de repli (voir plus bas)
+```
+
+### Principe
+
+Chaque nom affiché porte une étiquette invisible dans le HTML :
+
+```html
+<p class="carte-personne" data-cle="a6-dev">Prenom Nom</p>
+<a class="carte …" data-lien="a6-dev" href="…">
+```
+
+Le tableau fait la correspondance :
+
+```csv
+cle;nom;lien
+a6-dev;Anais Capiez;/confluence/display/JLS/A6-Dev
+```
+
+À chaque affichage de la page, un script lit le fichier et remplace les noms
+et les liens. **Tu modifies le tableau dans Excel, la page se met à jour au
+rechargement suivant** — aucune intervention dans le code.
+
+### Mise en place (une seule fois)
+
+1. Remplir la colonne `nom` de `responsables.csv` dans Excel
+2. `Enregistrer sous` → format **CSV UTF-8**. Sans le « UTF-8 », les accents
+   s'affichent en caractères parasites.
+3. Attacher le fichier à la page Confluence
+4. Clic droit sur la pièce jointe → *Copier l'adresse du lien*
+5. Coller l'adresse dans `ADRESSE_DU_TABLEAU`, en bas du fichier HTML
+
+Le séparateur (`;` ou `,`) est détecté automatiquement : Excel français
+enregistre avec des points-virgules, Excel anglais avec des virgules.
+
+### Filet de sécurité
+
+Si le fichier est introuvable, mal formé, ou si Confluence en bloque la
+lecture, **la page garde les noms écrits dans le HTML** — elle ne se retrouve
+jamais vide. La console du navigateur (F12) indique alors précisément ce qui
+a échoué, et signale les clés du tableau absentes de la page (fautes de
+frappe).
+
+### Si Confluence bloque la lecture du fichier
+
+Solution de repli : le script génère une page avec les noms déjà inscrits
+dedans, à recoller dans le module HTML après chaque changement.
+
+```bash
+python3 outils/remplir-depuis-tableau.py
+```
+
+Il signale les clés du tableau absentes de la page et inversement.
+
+---
+
 ## Reste à faire
 
 - Contenu réel de l'onglet **Transversal** (illisible sur la source).
