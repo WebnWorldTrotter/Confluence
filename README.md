@@ -229,16 +229,38 @@ jamais vide. La console du navigateur (F12) indique alors précisément ce qui
 a échoué, et signale les clés du tableau absentes de la page (fautes de
 frappe).
 
+### Où va chaque fichier
+
+| Fichier | Où il vit | Qui s'en sert |
+|---|---|---|
+| le HTML de la page | collé dans le module HTML de Confluence | tout le monde |
+| `responsables.csv` | pièce jointe de la page Confluence | la personne qui met à jour |
+| `outil-mise-a-jour.html` | sur le poste, ou en pièce jointe | seulement si la lecture est bloquée |
+| `remplir-depuis-tableau.py` | ce dépôt | optionnel, profil technique |
+
+**Rien n'oblige à passer par ce dépôt au quotidien.** Il ne sert qu'à
+conserver les sources. Une fois la page collée dans Confluence et le CSV
+attaché, tout se fait depuis Confluence et Excel.
+
 ### Si Confluence bloque la lecture du fichier
 
-Solution de repli : le script génère une page avec les noms déjà inscrits
-dedans, à recoller dans le module HTML après chaque changement.
+Deux solutions de repli, au choix.
+
+**`outils/outil-mise-a-jour.html` — sans rien installer.** Enregistrer le
+fichier sur le poste, double-cliquer dessus : il s'ouvre dans le navigateur.
+On y choisit le CSV et le code de la page, on clique sur *Générer*, on copie
+le résultat dans le module Confluence. Tout se passe en local, aucun envoi
+réseau, fonctionne hors connexion.
+
+**`outils/remplir-depuis-tableau.py` — en ligne de commande.** Même
+résultat, pour qui a Python installé.
 
 ```bash
 python3 outils/remplir-depuis-tableau.py
 ```
 
-Il signale les clés du tableau absentes de la page et inversement.
+Les deux signalent les clés du tableau absentes de la page et inversement,
+et annoncent les mêmes compteurs.
 
 ---
 
