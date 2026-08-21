@@ -185,10 +185,10 @@ Pour régénérer l'aperçu et la version autonome après une modification :
 
 ---
 
-## Mettre à jour les responsables depuis un tableau
+## Piloter la page depuis un tableau
 
-Les noms affichés sur la page sont pilotés par un fichier tableur, pour ne plus
-avoir à éditer le HTML à chaque changement de titulaire.
+Les noms, les liens et les images de fond sont pilotés par un fichier tableur,
+pour ne plus avoir à éditer le HTML à chaque changement.
 
 ```
 donnees/responsables.csv              ← le tableau, à ouvrir dans Excel
@@ -197,31 +197,55 @@ outils/remplir-depuis-tableau.py      ← le script qui fabrique la page remplie
 
 ### Principe
 
-Le script reconnaît chaque carte par **le titre affiché dessus**. Il n'y a donc
-rien à ajouter dans le HTML — pas d'identifiant, pas d'étiquette invisible :
+Le script reconnaît chaque élément par **son intitulé affiché**. Il n'y a donc
+rien à ajouter dans le HTML — pas d'identifiant, pas d'étiquette invisible.
 
-```html
-<p class="carte-titre">A6 Dev</p>        <!-- repère -->
-<p class="carte-personne">…</p>          <!-- ligne remplacée -->
-```
+| Colonne | Rôle |
+|---|---|
+| `carte` | l'intitulé affiché sur la page — c'est le repère, ne pas le modifier |
+| `nom` | le titulaire |
+| `lien` | l'adresse de la page Confluence à ouvrir |
+| `image` | l'adresse de l'image de fond |
 
 ```csv
-carte;nom;lien
-A6 Dev;Prenom Nom;https://atlas.fr.space.corp/confluence/display/JLS/A6+Dev
+carte;nom;lien;image
+A6 Dev;Prenom Nom;https://…/A6+Dev;https://…/A6%20dev%20image.png?api=v2
+JLV;Prenom Nom;https://…/JLV;
+SYSTEM;;https://…/System;
 ```
 
-La colonne `lien` est facultative : laissée vide, la carte garde le `href`
-écrit dans le HTML. Le nom du bandeau d'accueil se pilote avec la ligne
-`Head of PMO`.
+**Une cellule vide veut dire « ne change rien »** : on ne remplit que ce qui
+bouge, le reste garde ce qui est écrit dans le HTML.
+
+Le tableau couvre tout ce qui est cliquable ou nominatif :
+
+| Élément | `nom` | `lien` | `image` |
+|---|:-:|:-:|:-:|
+| cartes (`<a class="carte">`) | ✓ | ✓ | ✓ |
+| lignes des onglets (`<a class="ligne">`) | | ✓ | |
+| bouton du bandeau (`<a class="bouton">`) | | ✓ | |
+| bandeau d'accueil (`Head of PMO`) | ✓ | | |
+
+Une valeur donnée à un élément qui ne l'accepte pas est signalée, pas ignorée
+en silence.
+
+### Les images
+
+Une carte qui n'a **pas encore** d'image de fond en reçoit une automatiquement
+dès que la colonne `image` est renseignée : la balise `<img class="carte-fond">`
+est insérée et la classe `carte-image` ajoutée, ce qui applique le voile de
+lisibilité. Rien à préparer à la main dans le HTML.
+
+L'adresse doit commencer par `https://` ou `/confluence/…`. Une adresse en
+`data:` est bloquée par Confluence.
 
 ### Utilisation
 
 ```bash
 # 1. fabriquer le tableau à partir de la page
-#    (les titres sont relevés dans le HTML : aucun n'est retapé à la main)
 python3 outils/remplir-depuis-tableau.py --cartes
 
-# 2. remplir les colonnes « nom » et « lien » dans Excel,
+# 2. remplir ce qui change dans Excel,
 #    puis « Enregistrer sous » → CSV UTF-8
 
 # 3. produire la page remplie
@@ -231,36 +255,48 @@ python3 outils/remplir-depuis-tableau.py
 Le second appel écrit `page-remplie.html` : on l'ouvre, on copie tout, on colle
 dans le module HTML de Confluence.
 
+`--cartes` relève les intitulés **dans la page** — aucun n'est retapé, ce qui
+supprime la faute de frappe à la source. Il reporte aussi les adresses et les
+images déjà en place, et conserve ce que tu avais déjà saisi. Le refaire après
+avoir ajouté, supprimé ou renommé un élément : les lignes devenues sans objet
+sont annoncées avant d'être retirées.
+
 Le séparateur (`;` ou `,`) est détecté automatiquement — Excel français
 enregistre avec des points-virgules, Excel anglais avec des virgules. Les fins
 de ligne du fichier d'origine sont conservées.
-
-Refaire l'étape 1 après avoir ajouté, supprimé ou renommé une carte : le
-tableau se resynchronise sur la page. **Les noms déjà saisis sont conservés** —
-seules les cartes nouvelles apparaissent vides, et les lignes devenues sans
-objet sont annoncées avant d'être retirées.
 
 ### Ce que le script signale
 
 | Situation | Sortie |
 |---|---|
-| Ligne du tableau qui ne correspond à aucune carte | `ATTENTION` + le titre fautif |
-| Carte de la page absente du tableau | liste informative (la carte garde son texte) |
-| Deux cartes portant le même titre | `ATTENTION` — seule la première est remplie |
+| Ligne du tableau qui ne correspond à aucun élément | `ATTENTION` + l'intitulé fautif |
+| Valeur donnée à un élément qui ne l'accepte pas | `ATTENTION` + la colonne en cause |
+| Élément de la page absent du tableau | liste informative (il garde son texte) |
+| Deux éléments portant le même intitulé | `ATTENTION` — seul le premier est rempli |
 
-C'est ce qui évite les fautes de frappe silencieuses : un titre mal orthographié
-dans Excel ne passe pas inaperçu.
+Le guide en commentaire, en tête du fichier HTML, n'est jamais touché : le
+script masque les commentaires avant toute recherche. Cela vaut pour les
+exemples de cartes qu'il contient, mais aussi pour ses balises `<a>` ouvertes
+et jamais refermées, qui sinon happeraient le début de la page.
 
-Les exemples de cartes écrits dans le **guide en commentaire**, en tête du
-fichier HTML, ne sont jamais touchés : le script repère les zones de
-commentaire et les exclut.
+### Vérification
+
+Un aller-retour *page → tableau → page* sans rien modifier dans Excel rend un
+fichier **identique au bit près** à l'original. C'est le contrôle le plus
+simple pour s'assurer que le tableau reflète bien la page :
+
+```bash
+python3 outils/remplir-depuis-tableau.py --cartes
+python3 outils/remplir-depuis-tableau.py
+diff blocks/00-facile-a-modifier.html page-remplie.html && echo identique
+```
 
 ### Où va chaque fichier
 
 | Fichier | Où il vit | Qui s'en sert |
 |---|---|---|
 | `blocks/00-facile-a-modifier.html` | la source, dans ce dépôt | qui modifie la structure |
-| `donnees/responsables.csv` | sur le poste, ouvert dans Excel | qui met à jour les titulaires |
+| `donnees/responsables.csv` | sur le poste, ouvert dans Excel | qui met à jour les données |
 | `outils/remplir-depuis-tableau.py` | ce dépôt, lancé depuis le poste | idem |
 | `page-remplie.html` | GÉNÉRÉ, à copier-coller dans Confluence | — |
 

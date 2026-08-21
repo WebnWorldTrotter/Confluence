@@ -3,19 +3,18 @@
 """
 remplir-depuis-tableau.py
 =============================================================================
-Prend le tableau des responsables et la page HTML, et produit une page avec
-les noms (et eventuellement les liens) deja remplis dedans.
+Prend le tableau des responsables et la page HTML, et produit une page ou les
+noms, les liens et les images de fond sont deja en place.
 
   tableau (Excel/CSV)  +  page HTML  ->  page-remplie.html
                                           a coller dans Confluence
 
 UTILISATION
-    1. Fabriquer le tableau a partir de la page (une seule fois, et a refaire
-       si on ajoute ou renomme des cartes) :
+    1. Fabriquer le tableau a partir de la page (a refaire si on ajoute,
+       renomme ou supprime un element) :
            python3 outils/remplir-depuis-tableau.py --cartes
 
-    2. Remplir les colonnes 'nom' et 'lien' dans Excel, enregistrer en
-       CSV UTF-8.
+    2. Remplir les colonnes dans Excel, enregistrer en CSV UTF-8.
 
     3. Produire la page remplie :
            python3 outils/remplir-depuis-tableau.py
@@ -23,27 +22,37 @@ UTILISATION
     Ou en precisant les fichiers :
     python3 outils/remplir-depuis-tableau.py mon-tableau.csv ma-page.html
 
-COMMENT LE SCRIPT RECONNAIT LES CARTES
-    Par leur TITRE, celui qui s'affiche sur la carte. Rien a ajouter dans le
-    HTML : le tableau utilise directement les intitules visibles.
+LES COLONNES DU TABLEAU
+    carte   l'intitule affiche sur la page. C'est lui qui sert de repere :
+            rien a ajouter dans le HTML, pas d'identifiant a inventer.
+    nom     le titulaire (cartes et bandeau d'accueil uniquement)
+    lien    l'adresse de la page Confluence a ouvrir
+    image   l'adresse de l'image de fond (cartes uniquement)
 
-        <p class="carte-titre">A6 Dev</p>          <- reconnu par "A6 Dev"
-        <p class="carte-personne">...</p>          <- c'est cette ligne qui
-                                                      est remplacee
+    Une cellule vide veut dire "ne touche pas a ce qui est deja dans le
+    HTML". On peut donc ne remplir que la colonne qui change.
 
-    Le nom du bandeau d'accueil se pilote avec la cle "Head of PMO"
-    (l'intitule affiche au-dessus du nom).
+CE QUE LE SCRIPT SAIT REMPLIR
+    les cartes    <a class="carte ...">   -> nom, lien, image
+    les lignes    <a class="ligne ...">   -> lien          (contenu des onglets)
+    les boutons   <a class="bouton">      -> lien
+    le bandeau    "Head of PMO"           -> nom
+
+    Une carte sans image de fond en recoit une automatiquement si la colonne
+    image est renseignee : la balise <img class="carte-fond"> est inseree et
+    la classe "carte-image" ajoutee. Rien a preparer a la main.
 
 CE QUE LE SCRIPT SIGNALE
-    - une carte du tableau introuvable dans la page  -> signale
-    - une carte de la page absente du tableau        -> signale
-    - deux cartes portant le meme titre              -> signale
+    - une ligne du tableau introuvable dans la page   -> ATTENTION
+    - un element de la page absent du tableau         -> liste informative
+    - deux elements portant le meme intitule          -> ATTENTION
+    - un nom ou une image donne a un element qui n'en accepte pas
     C'est ce qui evite les fautes de frappe silencieuses.
 
 CE QU'IL NE TOUCHE JAMAIS
     Les exemples ecrits dans les commentaires du HTML (le guide en haut du
     fichier). Ils ressemblent a de vraies cartes mais n'en sont pas : le
-    script les ignore explicitement.
+    script masque les commentaires avant toute recherche.
 =============================================================================
 """
 
@@ -60,13 +69,51 @@ SORTIE_PAR_DEFAUT = RACINE / "page-remplie.html"
 
 CLE_BANDEAU = "Head of PMO"
 
+COLONNES = ("carte", "nom", "lien", "image")
+
+# Ce que chaque famille d'element accepte comme colonnes.
+ACCEPTE = {
+    "carte":   {"nom", "lien", "image"},
+    "ligne":   {"lien"},
+    "bouton":  {"lien"},
+    "bandeau": {"nom"},
+}
+
+
+# ---------------------------------------------------------------------------
+# Comparaison des intitules
+# ---------------------------------------------------------------------------
+
+MOTIF_MASQUE = re.compile(r'<(\w+)[^>]*aria-hidden="true"[^>]*>.*?</\1>', re.S)
+MOTIF_BALISE = re.compile(r"<[^>]*>")
+
+
+def texte_visible(fragment):
+    """Le texte que l'oeil lit, debarrasse du balisage.
+
+    Les elements marques aria-hidden (la fleche des boutons, par exemple)
+    sont retires avec leur contenu : ils ne font pas partie de l'intitule.
+    Les entites sont decodees, ce qui fait correspondre le "&middot;" du
+    HTML au "·" tape dans Excel.
+    """
+    fragment = MOTIF_MASQUE.sub(" ", fragment)
+    fragment = MOTIF_BALISE.sub(" ", fragment)
+    fragment = html_module.unescape(fragment)
+    return re.sub(r"\s+", " ", fragment).strip()
+
+
+def normaliser(intitule):
+    """La cle de comparaison : intitule visible, espaces reduits, sans casse."""
+    intitule = html_module.unescape(intitule)
+    return re.sub(r"\s+", " ", intitule).strip().lower()
+
 
 # ---------------------------------------------------------------------------
 # Lecture du tableau
 # ---------------------------------------------------------------------------
 
 def lire_tableau(chemin):
-    """Renvoie {titre_de_carte: {"nom": ..., "lien": ...}} et l'ordre de lecture.
+    """Renvoie {cle: {"titre":, "nom":, "lien":, "image":}}.
 
     Le separateur est detecte automatiquement : Excel en francais enregistre
     avec des points-virgules, Excel en anglais avec des virgules.
@@ -82,69 +129,178 @@ def lire_tableau(chemin):
     lecteur = csv.DictReader(lignes_brutes, delimiter=separateur)
     colonnes = [(c or "").strip().lower() for c in (lecteur.fieldnames or [])]
 
-    if "carte" not in colonnes or "nom" not in colonnes:
+    if "carte" not in colonnes:
         raise SystemExit(
-            "Le tableau doit contenir au minimum les colonnes 'carte' et 'nom'.\n"
-            "Colonnes trouvees : " + (", ".join(colonnes) if colonnes else "aucune")
+            "Le tableau doit contenir au minimum une colonne 'carte'.\n"
+            "Colonnes attendues : " + ", ".join(COLONNES) + "\n"
+            "Colonnes trouvees  : " + (", ".join(colonnes) if colonnes else "aucune")
         )
 
     entrees = {}
-    ordre = []
     for brut in lecteur:
         ligne = {(k or "").strip().lower(): (v or "").strip()
-                 for k, v in brut.items()}
-        carte = ligne.get("carte", "")
-        if not carte:
+                 for k, v in brut.items() if k is not None}
+        intitule = ligne.get("carte", "")
+        if not intitule:
             continue
-        entrees[normaliser(carte)] = {
-            "titre": carte,
+        entrees[normaliser(intitule)] = {
+            "titre": intitule,
             "nom": ligne.get("nom", ""),
             "lien": ligne.get("lien", ""),
+            "image": ligne.get("image", ""),
         }
-        ordre.append(carte)
-    return entrees, ordre
-
-
-def normaliser(titre):
-    """Rend la comparaison des titres tolerante.
-
-    Le HTML ecrit "Promethee &middot; Maia" la ou l'utilisateur tape
-    "Promethee · Maia" dans Excel. On decode donc les entites HTML, on
-    ramene les espaces multiples a un seul, et on ignore la casse.
-    """
-    titre = html_module.unescape(titre)
-    titre = re.sub(r"\s+", " ", titre).strip()
-    return titre.lower()
+    return entrees
 
 
 # ---------------------------------------------------------------------------
-# Reperage des zones de commentaire
+# Masquage du guide
 # ---------------------------------------------------------------------------
 
-def zones_de_commentaire(html):
-    """Renvoie la liste des (debut, fin) des commentaires HTML.
+def masquer_commentaires(html):
+    """Renvoie une copie du HTML ou chaque commentaire est remplace par des
+    espaces, a longueur egale.
 
-    Indispensable : le guide en tete de fichier contient des exemples de
-    cartes qui ressemblent a du vrai balisage. Sans cette precaution, le
-    script remplacerait le nom dans la documentation elle-meme.
+    Indispensable, pour deux raisons. D'abord le guide en tete de fichier
+    contient des exemples de cartes qui ressemblent a du vrai balisage :
+    sans cette precaution, le script remplacerait le nom dans la
+    documentation elle-meme. Ensuite ces exemples comportent des balises
+    <a> ouvertes et jamais refermees ; une recherche naive les refermerait
+    sur le premier </a> venu, en avalant au passage tout le debut de la
+    page. Les positions sont conservees a l'identique : ce qui est trouve
+    dans la copie se retrouve au meme endroit dans l'original.
     """
-    return [(m.start(), m.end()) for m in re.finditer(r"<!--.*?-->", html, re.S)]
+    morceaux, fin = [], 0
+    for m in re.finditer(r"<!--.*?-->", html, re.S):
+        morceaux.append(html[fin:m.start()])
+        morceaux.append(re.sub(r"[^\n]", " ", m.group(0)))  # les sauts de
+        fin = m.end()                                        # ligne restent
+    morceaux.append(html[fin:])
+    return "".join(morceaux)
 
 
-def dans_un_commentaire(position, zones):
-    return any(debut <= position < fin for debut, fin in zones)
+# ---------------------------------------------------------------------------
+# Reperage des elements
+# ---------------------------------------------------------------------------
+
+MOTIF_ANCRE = re.compile(r'(<a\s[^>]*>)(.*?)(</a>)', re.S)
+MOTIF_TITRE = re.compile(r'<p class="carte-titre">(.*?)</p>', re.S)
+MOTIF_PERSONNE = re.compile(r'(<p class="carte-personne">)(.*?)(</p>)', re.S)
+MOTIF_BANDEAU = re.compile(r'(<p class="entete-contact-nom">)(.*?)(</p>)', re.S)
+MOTIF_CLASSE = re.compile(r'class="([^"]*)"')
+MOTIF_HREF = re.compile(r'href="[^"]*"')
+MOTIF_IMG = re.compile(r'<img\s[^>]*class="[^"]*\bcarte-fond\b[^"]*"[^>]*>')
+MOTIF_SRC = re.compile(r'src="[^"]*"')
+
+
+# Valeurs qui ne sont pas de vraies donnees mais des marqueurs "a remplir".
+# Relevees telles quelles dans le tableau, elles donneraient l'illusion d'une
+# adresse deja renseignee.
+REMPLIR_PLUS_TARD = {"REMPLACE_PAR_LE_LIEN", "ADRESSE_DE_LA_PAGE",
+                     "ADRESSE_DE_L_IMAGE", "#", ""}
+
+
+def vraie_valeur(valeur):
+    """Rend la valeur si c'en est une, la chaine vide si c'est un marqueur."""
+    valeur = html_module.unescape((valeur or "").strip())
+    if valeur in REMPLIR_PLUS_TARD:
+        return ""
+    if valeur.startswith("{{") and valeur.endswith("}}"):
+        return ""
+    return valeur
+
+
+def valeurs_actuelles(ouvrante, interieur, famille):
+    """Ce que la page contient deja pour cet element.
+
+    Permet au tableau de demarrer sur un etat fidele plutot que vide : les
+    adresses et les images deja en place s'y retrouvent, et un aller-retour
+    page -> tableau -> page ne change rien.
+    """
+    valeurs = {"nom": "", "lien": "", "image": ""}
+
+    if "lien" in ACCEPTE[famille]:
+        href = MOTIF_HREF.search(ouvrante)
+        if href:
+            valeurs["lien"] = vraie_valeur(href.group(0)[6:-1])
+
+    if "nom" in ACCEPTE[famille]:
+        motif = MOTIF_BANDEAU if famille == "bandeau" else MOTIF_PERSONNE
+        personne = motif.search(interieur)
+        if personne:
+            valeurs["nom"] = vraie_valeur(texte_visible(personne.group(2)))
+
+    if "image" in ACCEPTE[famille]:
+        img = MOTIF_IMG.search(interieur)
+        if img:
+            src = MOTIF_SRC.search(img.group(0))
+            if src:
+                valeurs["image"] = vraie_valeur(src.group(0)[5:-1])
+
+    return valeurs
+
+
+def classes_de(balise):
+    trouve = MOTIF_CLASSE.search(balise)
+    return set(trouve.group(1).split()) if trouve else set()
+
+
+def identifier(ouvrante, interieur):
+    """Renvoie (intitule, famille) pour une ancre, ou (None, None) si l'ancre
+    n'est pas un element pilotable."""
+    classes = classes_de(ouvrante)
+    if "carte" in classes:
+        titre = MOTIF_TITRE.search(interieur)
+        if not titre:
+            return None, None
+        return texte_visible(titre.group(1)), "carte"
+    if "ligne" in classes:
+        return texte_visible(interieur), "ligne"
+    if "bouton" in classes:
+        return texte_visible(interieur), "bouton"
+    return None, None
+
+
+def lister_elements(html):
+    """Les elements pilotables de la page, dans l'ordre ou ils y apparaissent.
+
+    Sert a produire un tableau dont les intitules sont forcement justes :
+    c'est la page qui les dicte, personne ne les retape.
+    """
+    visible = masquer_commentaires(html)
+    releve = []
+
+    for m in MOTIF_ANCRE.finditer(visible):
+        decoupe = MOTIF_ANCRE.match(html, m.start(), m.end())
+        if not decoupe:
+            continue
+        ouvrante, interieur = decoupe.group(1), decoupe.group(2)
+        intitule, famille = identifier(ouvrante, interieur)
+        if intitule:
+            releve.append((m.start(), intitule, famille,
+                           valeurs_actuelles(ouvrante, interieur, famille)))
+
+    for m in MOTIF_BANDEAU.finditer(visible):
+        decoupe = MOTIF_BANDEAU.match(html, m.start(), m.end())
+        actuelles = (valeurs_actuelles("", decoupe.group(0), "bandeau")
+                     if decoupe else {"nom": "", "lien": "", "image": ""})
+        releve.append((m.start(), CLE_BANDEAU, "bandeau", actuelles))
+        break
+
+    releve.sort(key=lambda e: e[0])
+
+    # Un meme intitule peut apparaitre deux fois : une seule ligne de tableau.
+    vus, ordonnes = set(), []
+    for _, intitule, famille, actuelles in releve:
+        if normaliser(intitule) in vus:
+            continue
+        vus.add(normaliser(intitule))
+        ordonnes.append((intitule, famille, actuelles))
+    return ordonnes
 
 
 # ---------------------------------------------------------------------------
 # Remplissage
 # ---------------------------------------------------------------------------
-
-MOTIF_CARTE = re.compile(
-    r'(<a\s[^>]*class="[^"]*\bcarte\b[^"]*"[^>]*>)(.*?)(</a>)', re.S)
-MOTIF_TITRE = re.compile(r'<p class="carte-titre">(.*?)</p>', re.S)
-MOTIF_PERSONNE = re.compile(r'(<p class="carte-personne">)(.*?)(</p>)', re.S)
-MOTIF_HREF = re.compile(r'href="[^"]*"')
-
 
 def echapper(texte):
     """Empeche qu'un nom contenant < > & ne casse la page."""
@@ -153,151 +309,238 @@ def echapper(texte):
                  .replace(">", "&gt;"))
 
 
+def attribut(valeur):
+    """Prepare une adresse pour tenir dans un href="..." ou un src="...".
+
+    Le passage par unescape avant escape rend l'operation sure quelle que
+    soit la forme collee depuis le navigateur : une adresse contenant deja
+    "&amp;" ne devient pas "&amp;amp;".
+    """
+    return html_module.escape(html_module.unescape(valeur), quote=True)
+
+
+def poser_lien(ouvrante, url):
+    """Remplace le href, ou l'ajoute si la balise n'en a pas."""
+    nouvelle, remplaces = MOTIF_HREF.subn('href="%s"' % attribut(url),
+                                          ouvrante, count=1)
+    if remplaces:
+        return nouvelle, 1
+    return re.sub(r"^<a\b", '<a href="%s"' % attribut(url), ouvrante, count=1), 1
+
+
+def ajouter_classe(ouvrante, classe):
+    def maj(m):
+        valeurs = m.group(1).split()
+        if classe not in valeurs:
+            valeurs.append(classe)
+        return 'class="%s"' % " ".join(valeurs)
+    return MOTIF_CLASSE.sub(maj, ouvrante, count=1)
+
+
+def poser_image(ouvrante, interieur, url):
+    """Met l'image de fond en place.
+
+    Si la carte a deja une <img class="carte-fond">, seule son adresse
+    change. Sinon la balise est creee en tete de carte, avec la meme
+    indentation que le reste, et la classe "carte-image" est ajoutee pour
+    que le voile de lisibilite s'applique.
+    """
+    src = attribut(url)
+    existante = MOTIF_IMG.search(interieur)
+
+    if existante:
+        balise, remplaces = MOTIF_SRC.subn('src="%s"' % src,
+                                           existante.group(0), count=1)
+        if not remplaces:   # <img> sans src : on en ajoute un
+            balise = re.sub(r"^<img\b", '<img src="%s"' % src,
+                            existante.group(0), count=1)
+        interieur = interieur[:existante.start()] + balise + interieur[existante.end():]
+    else:
+        blanc = re.match(r"\s*", interieur).group(0) or "\n"
+        interieur = ('%s<img class="carte-fond" src="%s" alt="">%s'
+                     % (blanc, src, interieur))
+
+    return ajouter_classe(ouvrante, "carte-image"), interieur
+
+
 def remplir(html, entrees):
-    zones = zones_de_commentaire(html)
+    """Renvoie le HTML rempli, plus de quoi rendre compte du travail fait.
 
-    # titre normalise -> {"n": occurrences dans la page, "titre": intitule affiche}
-    titres_vus = {}
+    Le reperage se fait sur la copie masquee (les commentaires n'y existent
+    plus), mais le texte remplace est toujours pris dans l'original : les
+    positions etant identiques dans les deux, chaque element trouve dans la
+    copie designe exactement le meme endroit dans le fichier reel.
+    """
+    visible = masquer_commentaires(html)
+
+    vus = {}            # cle -> {"n":, "titre":, "famille":}
     utilisees = set()
-    compteur = {"noms": 0, "liens": 0}
+    compteur = {"noms": 0, "liens": 0, "images": 0}
+    ignores = []        # (intitule, colonne, famille) fournis mais inutilisables
+    remplacements = []  # (debut, fin, nouveau_texte)
 
-    def traiter_carte(m):
-        # Les exemples du guide sont dans des commentaires : on les laisse.
-        if dans_un_commentaire(m.start(), zones):
-            return m.group(0)
+    def noter(cle, intitule, famille):
+        fiche = vus.setdefault(cle, {"n": 0, "titre": intitule, "famille": famille})
+        fiche["n"] += 1
 
-        ouvrante, interieur, fermante = m.group(1), m.group(2), m.group(3)
+    def signaler_colonnes_inutiles(entree, famille, intitule):
+        for colonne in ("nom", "lien", "image"):
+            if entree[colonne] and colonne not in ACCEPTE[famille]:
+                ignores.append((intitule, colonne, famille))
 
-        titre_trouve = MOTIF_TITRE.search(interieur)
-        if not titre_trouve:
-            return m.group(0)
+    # --- Cartes, lignes d'onglet et boutons --------------------------------
+    for m in MOTIF_ANCRE.finditer(visible):
+        decoupe = MOTIF_ANCRE.match(html, m.start(), m.end())
+        if not decoupe:
+            continue
+        ouvrante, interieur, fermante = decoupe.group(1), decoupe.group(2), decoupe.group(3)
 
-        affiche = re.sub(r"\s+", " ", html_module.unescape(titre_trouve.group(1))).strip()
-        cle = normaliser(titre_trouve.group(1))
-        vu = titres_vus.setdefault(cle, {"n": 0, "titre": affiche})
-        vu["n"] += 1
+        intitule, famille = identifier(ouvrante, interieur)
+        if not intitule:
+            continue
+
+        cle = normaliser(intitule)
+        noter(cle, intitule, famille)
 
         entree = entrees.get(cle)
         if not entree:
-            return m.group(0)
+            continue
+        if cle not in utilisees:
+            signaler_colonnes_inutiles(entree, famille, intitule)
         utilisees.add(cle)
 
-        if entree["nom"]:
-            def poser_nom(p):
-                compteur["noms"] += 1
-                return p.group(1) + echapper(entree["nom"]) + p.group(3)
-            interieur = MOTIF_PERSONNE.sub(poser_nom, interieur, count=1)
+        if entree["nom"] and "nom" in ACCEPTE[famille]:
+            interieur, poses = MOTIF_PERSONNE.subn(
+                lambda p: p.group(1) + echapper(entree["nom"]) + p.group(3),
+                interieur, count=1)
+            compteur["noms"] += poses
 
-        if entree["lien"]:
-            ouvrante, remplace = MOTIF_HREF.subn(
-                'href="%s"' % entree["lien"], ouvrante, count=1)
-            compteur["liens"] += remplace
+        if entree["lien"] and "lien" in ACCEPTE[famille]:
+            ouvrante, poses = poser_lien(ouvrante, entree["lien"])
+            compteur["liens"] += poses
 
-        return ouvrante + interieur + fermante
+        if entree["image"] and "image" in ACCEPTE[famille]:
+            ouvrante, interieur = poser_image(ouvrante, interieur, entree["image"])
+            compteur["images"] += 1
 
-    html = MOTIF_CARTE.sub(traiter_carte, html)
+        remplacements.append((m.start(), m.end(), ouvrante + interieur + fermante))
 
-    # --- Le nom du bandeau d'accueil, qui n'est pas une carte ---------------
-    entree_bandeau = entrees.get(normaliser(CLE_BANDEAU))
-    if entree_bandeau and entree_bandeau["nom"]:
-        def poser_bandeau(m):
-            if dans_un_commentaire(m.start(), zones):
-                return m.group(0)
-            compteur["noms"] += 1
-            return m.group(1) + echapper(entree_bandeau["nom"]) + m.group(3)
+    # --- Le nom du bandeau d'accueil, qui n'est pas une ancre --------------
+    cle_bandeau = normaliser(CLE_BANDEAU)
+    entree_bandeau = entrees.get(cle_bandeau)
 
-        html, n = re.subn(r'(<p class="entete-contact-nom">)(.*?)(</p>)',
-                          poser_bandeau, html, count=1, flags=re.S)
-        if n:
-            utilisees.add(normaliser(CLE_BANDEAU))
-            titres_vus[normaliser(CLE_BANDEAU)] = {"n": 1, "titre": CLE_BANDEAU}
+    for m in MOTIF_BANDEAU.finditer(visible):
+        noter(cle_bandeau, CLE_BANDEAU, "bandeau")
+        if entree_bandeau:
+            if cle_bandeau not in utilisees:
+                signaler_colonnes_inutiles(entree_bandeau, "bandeau", CLE_BANDEAU)
+            utilisees.add(cle_bandeau)
+            if entree_bandeau["nom"]:
+                decoupe = MOTIF_BANDEAU.match(html, m.start(), m.end())
+                if decoupe:
+                    compteur["noms"] += 1
+                    remplacements.append((
+                        m.start(), m.end(),
+                        decoupe.group(1) + echapper(entree_bandeau["nom"])
+                        + decoupe.group(3)))
+        break   # un seul bandeau d'accueil par page
 
-    return html, compteur, titres_vus, utilisees
+    # --- Reconstruction ----------------------------------------------------
+    remplacements.sort(key=lambda r: r[0])
+    morceaux, curseur = [], 0
+    for debut, fin, texte in remplacements:
+        morceaux.append(html[curseur:debut])
+        morceaux.append(texte)
+        curseur = fin
+    morceaux.append(html[curseur:])
+
+    return "".join(morceaux), compteur, vus, utilisees, ignores
 
 
 # ---------------------------------------------------------------------------
 # Mode --cartes : fabriquer le tableau a partir de la page
 # ---------------------------------------------------------------------------
 
-def lister_cartes(html):
-    """Renvoie les intitules des cartes, dans l'ordre de la page.
-
-    Sert a produire un tableau dont les titres sont forcement justes : c'est
-    la page qui les dicte, personne ne les retape.
-    """
-    zones = zones_de_commentaire(html)
-    titres = []
-    for m in MOTIF_CARTE.finditer(html):
-        if dans_un_commentaire(m.start(), zones):
-            continue
-        t = MOTIF_TITRE.search(m.group(2))
-        if not t:
-            continue
-        affiche = re.sub(r"\s+", " ", html_module.unescape(t.group(1))).strip()
-        if affiche not in titres:
-            titres.append(affiche)
-    return titres
+ETIQUETTE = {"carte": "cartes", "ligne": "lignes d'onglet",
+             "bouton": "boutons", "bandeau": "bandeau d'accueil"}
 
 
 def ecrire_modele(chemin_html, sortie):
-    """Aligne le tableau sur les cartes de la page, SANS perdre le travail deja
-    fait : les noms et liens deja saisis sont reportes tels quels. Seules les
-    cartes nouvelles apparaissent vides, et les lignes qui ne correspondent
-    plus a aucune carte disparaissent (elles sont annoncees avant)."""
+    """Aligne le tableau sur la page, SANS perdre le travail deja fait : les
+    valeurs deja saisies sont reportees telles quelles. Seuls les elements
+    nouveaux apparaissent vides, et les lignes qui ne correspondent plus a
+    rien disparaissent (elles sont annoncees avant)."""
     with open(chemin_html, encoding="utf-8", newline="") as f:
         html = f.read()
 
-    titres = lister_cartes(html)
-    if re.search(r'<p class="entete-contact-nom">', html):
-        titres.insert(0, CLE_BANDEAU)
+    elements = lister_elements(html)
 
     ancien = {}
     if sortie.exists():
         try:
-            ancien, _ = lire_tableau(sortie)
+            ancien = lire_tableau(sortie)
         except SystemExit:
             ancien = {}   # tableau illisible : on repart d'une page blanche
 
-    lignes = ["carte;nom;lien"]
-    nouvelles, conservees = [], []
-    for t in titres:
-        precedent = ancien.get(normaliser(t), {})
-        nom = precedent.get("nom", "")
-        lien = precedent.get("lien", "")
-        if nom or lien:
-            conservees.append(t)
+    lignes = [list(COLONNES)]
+    a_remplir, conservees = [], 0
+    for intitule, famille, actuelles in elements:
+        precedent = ancien.get(normaliser(intitule), {})
+        cellules = []
+        for colonne in ("nom", "lien", "image"):
+            if colonne not in ACCEPTE[famille]:
+                cellules.append("")
+                continue
+            # Le tableau fait foi s'il dit quelque chose ; sinon on releve ce
+            # que la page contient deja, pour ne rien perdre.
+            cellules.append(precedent.get(colonne, "") or actuelles[colonne])
+        if any(cellules):
+            conservees += 1
         else:
-            nouvelles.append(t)
-        lignes.append("%s;%s;%s" % (t, nom, lien))
+            a_remplir.append((intitule, famille))
+        lignes.append([intitule] + cellules)
 
-    connus = {normaliser(t) for t in titres}
+    connus = {normaliser(i) for i, _, _ in elements}
     perdues = sorted(v["titre"] for c, v in ancien.items()
-                     if c not in connus and (v["nom"] or v["lien"]))
+                     if c not in connus and (v["nom"] or v["lien"] or v["image"]))
 
-    sortie.write_text("\n".join(lignes) + "\n", encoding="utf-8-sig")
+    # csv.writer plutot qu'un simple join : un intitule contenant un
+    # point-virgule ou une virgule est alors protege par des guillemets, et
+    # Excel le relit correctement.
+    with open(sortie, "w", encoding="utf-8-sig", newline="") as f:
+        csv.writer(f, delimiter=";", lineterminator="\n").writerows(lignes)
 
     print("Page    : %s" % chemin_html)
     print("Tableau : %s" % sortie)
     print()
-    print("  %d carte(s) relevees dans la page." % len(titres))
+    print("  %d element(s) relevé(s) dans la page." % len(elements))
     if conservees:
-        print("  %d ligne(s) deja renseignee(s), conservees telles quelles."
-              % len(conservees))
-    if nouvelles:
+        print("  %d ligne(s) deja renseignee(s) (tableau precedent ou valeurs"
+              % conservees)
+        print("     deja presentes dans la page), conservees telles quelles.")
+
+    if a_remplir:
         print()
         print("  A remplir :")
-        for t in nouvelles:
-            print("    - %s" % t)
+        famille_courante = None
+        for intitule, famille in a_remplir:
+            if famille != famille_courante:
+                famille_courante = famille
+                print("    [%s]" % ETIQUETTE[famille])
+            print("      - %s" % intitule)
+
     if perdues:
         print()
         print("  ATTENTION — ces lignes etaient renseignees mais ne")
-        print("  correspondent plus a aucune carte de la page. Elles ont ete")
-        print("  retirees du tableau :")
+        print("  correspondent plus a aucun element de la page. Elles ont")
+        print("  ete retirees du tableau :")
         for t in perdues:
             print("    - %s" % t)
+
     print()
-    print("Ouvre ce fichier dans Excel, remplis les colonnes 'nom' et 'lien',")
-    print("enregistre en CSV UTF-8, puis relance le script sans --cartes.")
+    print("Colonnes : carte (repere, ne pas modifier) | nom | lien | image")
+    print("Ouvre ce fichier dans Excel, remplis ce qui change, enregistre en")
+    print("CSV UTF-8, puis relance le script sans --cartes.")
 
 
 # ---------------------------------------------------------------------------
@@ -325,13 +568,14 @@ def main():
         if not f.exists():
             raise SystemExit("Fichier introuvable : %s" % f)
 
-    entrees, _ordre = lire_tableau(chemin_csv)
+    entrees = lire_tableau(chemin_csv)
+
     # newline="" : les fins de ligne du fichier d'origine sont conservees
     # telles quelles (Windows ou Unix), le fichier ressort a l'identique.
     with open(chemin_html, encoding="utf-8", newline="") as f:
         html = f.read()
 
-    html_rempli, compteur, titres_vus, utilisees = remplir(html, entrees)
+    html_rempli, compteur, vus, utilisees, ignores = remplir(html, entrees)
 
     with open(sortie, "w", encoding="utf-8", newline="") as f:
         f.write(html_rempli)
@@ -340,37 +584,48 @@ def main():
     print("Page    : %s" % chemin_html)
     print("Sortie  : %s" % sortie)
     print()
-    print("  %d nom(s) et %d lien(s) remplis." % (compteur["noms"], compteur["liens"]))
+    print("  %d nom(s), %d lien(s) et %d image(s) en place."
+          % (compteur["noms"], compteur["liens"], compteur["images"]))
 
     souci = False
 
-    # --- Lignes du tableau qui ne correspondent a aucune carte -------------
-    renseignees = {c for c, v in entrees.items() if v["nom"] or v["lien"]}
+    # --- Lignes du tableau qui ne correspondent a aucun element -------------
+    renseignees = {c for c, v in entrees.items()
+                   if v["nom"] or v["lien"] or v["image"]}
     introuvables = sorted(entrees[c]["titre"] for c in (renseignees - utilisees))
     if introuvables:
         souci = True
         print()
-        print("  ATTENTION — ces lignes du tableau ne correspondent a aucune")
-        print("  carte de la page (titre mal orthographie ? carte supprimee ?) :")
+        print("  ATTENTION — ces lignes du tableau ne correspondent a aucun")
+        print("  element de la page (intitule mal orthographie ? supprime ?) :")
         for t in introuvables:
             print("    - %s" % t)
 
-    # --- Cartes de la page absentes du tableau -----------------------------
-    orphelines = sorted(v["titre"] for c, v in titres_vus.items() if c not in utilisees)
-    if orphelines:
+    # --- Colonnes remplies que l'element n'accepte pas ----------------------
+    if ignores:
+        souci = True
         print()
-        print("  Cartes de la page sans ligne dans le tableau")
-        print("  (elles gardent le texte ecrit dans le HTML) :")
-        for t in orphelines:
+        print("  ATTENTION — ces valeurs ont ete ignorees :")
+        for intitule, colonne, famille in ignores:
+            print("    - %s : la colonne '%s' ne s'applique pas a %s"
+                  % (intitule, colonne, ETIQUETTE[famille]))
+
+    # --- Elements de la page absents du tableau ----------------------------
+    orphelins = sorted(v["titre"] for c, v in vus.items() if c not in utilisees)
+    if orphelins:
+        print()
+        print("  Elements de la page sans ligne dans le tableau")
+        print("  (ils gardent ce qui est ecrit dans le HTML) :")
+        for t in orphelins:
             print("    - %s" % t)
 
-    # --- Titres en double : le remplissage devient ambigu ------------------
-    doublons = sorted((v["titre"], v["n"]) for v in titres_vus.values() if v["n"] > 1)
+    # --- Intitules en double : le remplissage devient ambigu ---------------
+    doublons = sorted((v["titre"], v["n"]) for v in vus.values() if v["n"] > 1)
     if doublons:
         souci = True
         print()
-        print("  ATTENTION — ces titres apparaissent plusieurs fois dans la")
-        print("  page. Seule la premiere carte de chaque titre a ete remplie :")
+        print("  ATTENTION — ces intitules apparaissent plusieurs fois dans")
+        print("  la page. Seul le premier de chaque intitule a ete rempli :")
         for t, n in doublons:
             print("    - %s  (%d fois)" % (t, n))
 
@@ -382,4 +637,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BrokenPipeError:
+        # Arrive quand la sortie est envoyee dans "head" ou "more" : le
+        # lecteur s'arrete avant nous. Ce n'est pas une erreur.
+        sys.stderr.close()

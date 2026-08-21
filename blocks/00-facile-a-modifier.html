@@ -71,29 +71,40 @@
         Tout est regle en haut de la feuille de style, dans "REGLAGES
         GENERAUX". Change une valeur la-bas, elle change partout.
 
-     9. METTRE A JOUR TOUS LES RESPONSABLES D'UN COUP
-        Tu peux piloter les noms depuis un tableau Excel plutot que de les
-        retaper ici un par un. Le tableau a trois colonnes :
+     9. TOUT PILOTER DEPUIS UN TABLEAU EXCEL
+        Plutot que de modifier ce fichier a chaque changement, tu peux
+        tenir un tableau a quatre colonnes :
 
-           carte                        nom              lien
-           A6 Dev                       Prenom Nom       https://...
-           Promethee . Maia . Themis    Prenom Nom
+           carte    l'intitule affiche sur la page (sert de repere)
+           nom      le titulaire
+           lien     l'adresse de la page Confluence a ouvrir
+           image    l'adresse de l'image de fond
 
-        La colonne "carte" reprend le TITRE affiche sur la carte, tel quel.
-        Rien a ajouter dans ce fichier HTML : c'est le titre qui sert de
-        point de repere.
+        Exemple :
 
-        Ensuite, sur ton poste :
+           carte        nom          lien                    image
+           A6 Dev       Prenom Nom   https://.../A6+Dev      https://.../a6.png
+           JLV          Prenom Nom   https://.../JLV
+           SYSTEM                    https://.../System
+
+        Une cellule vide veut dire "ne change rien" : on ne remplit que ce
+        qui bouge. Une carte qui n'a pas encore d'image en recoit une
+        automatiquement des que la colonne image est renseignee.
+
+        Le tableau couvre les cartes, les lignes des onglets et le bouton
+        du bandeau : plus aucune adresse a chercher dans ce fichier.
+
+        Sur ton poste :
            python3 outils/remplir-depuis-tableau.py --cartes
-              fabrique le tableau a partir de cette page (les titres sont
-              donc forcement justes, tu n'en tapes aucun ; les noms deja
-              saisis sont conserves)
+              fabrique le tableau a partir de cette page. Les intitules
+              sont releves ici, tu n'en tapes aucun ; les adresses et les
+              images deja en place y sont reportees ; ce que tu avais
+              deja saisi est conserve.
            python3 outils/remplir-depuis-tableau.py
               produit page-remplie.html, a copier-coller dans Confluence
 
-        Le script signale les titres du tableau qui ne correspondent a
-        aucune carte, et les cartes absentes du tableau. Voir README.md.
-
+        Le script signale les intitules du tableau qui ne correspondent a
+        rien dans la page, et inversement. Voir README.md.
      ============================================================================ -->
 
 <style>
@@ -344,7 +355,7 @@
   .carte-petite { min-height: 150px; padding: var(--e5); }
   .carte-moyenne { min-height: 300px; padding: var(--e5); }
   .carte-grande  { min-height: 400px; padding: var(--e5); }
-  
+
   .carte-grande .carte-titre { font-size: var(--txt-xl); }
   .carte-moyenne .carte-titre { font-size: var(--txt-xl); }
   .carte-petite .carte-titre { font-size: var(--txt-xl); }
@@ -765,145 +776,6 @@
 
   </section>
 
-  <!-- BLOC : CHIEF OF PMO -->
-  <section class="bloc">
-    <h2 class="titre-section">
-      Chief of PMO
-      <span class="titre-compteur">2</span>
-    </h2>
-
-    <div class="grille grille-large">
-
-      <!-- Sur chaque carte, 2 choses a remplir :
-             href="..."  l'adresse de la page Confluence a ouvrir
-             src="..."   l'adresse de l'image de fond
-           Pas d'image sur une carte ? Supprime sa ligne <img> et enleve
-           "carte-image" de son class. -->
-      <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20dev%20image.png?api=v2" alt="">
-        <p class="carte-titre">A6 Dev</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-      <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20exploit%20image.png?api=v2" alt="">
-        <p class="carte-titre">A6 Exploit</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-    </div>
-  </section>
-
-  <!-- BLOC : PROGRAM PMO -->
-  <section class="bloc">
-    <h2 class="titre-section">
-      Program PMO
-      <span class="titre-compteur">3</span>
-    </h2>
-
-    <div class="grille">
-
-      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Prom%C3%A9th%C3%A9e%20image.png?api=v2" alt="">
-        <p class="carte-titre">Promethee</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Themis%20image.png?api=v2" alt="">
-        <p class="carte-titre">Themis</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Astris%20image.png?api=v2" alt="">
-        <p class="carte-titre">Astris</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-    </div>
-  </section>
-
-  <!-- BLOC : PERIMETRES + MULTI-PROGRAMME SYNTHESIS (cote a cote)
-       Ces deux ensembles partagent une meme section a deux colonnes.
-       Chaque colonne est un <div> avec son propre titre.
-       - Pour les remettre l'un sous l'autre : enleve "deux-colonnes" de la
-         ligne <section class="bloc deux-colonnes"> ci-dessous.
-       - Pour inverser gauche/droite : intervertis les deux <div> colonnes.
-       - La largeur relative des colonnes se regle dans la feuille de style,
-         section "COLONNES COTE A COTE". -->
-  <section class="bloc deux-colonnes">
-
-    <!-- Colonne de gauche : le tableau a onglets.
-         Le titre est un intitule provisoire, remplace-le par le terme
-         employe dans ton equipe. -->
-    <div>
-      <h2 class="titre-section">Perimetres</h2>
-
-      <div class="onglets">
-
-        <div class="onglets-boutons">
-          <button class="onglet-bouton actif"
-                  onclick="afficherOnglet(event, 'contenu-groupe-pmo')">
-            Group PMO
-          </button>
-          <button class="onglet-bouton"
-                  onclick="afficherOnglet(event, 'contenu-transversal')">
-            Transversal
-          </button>
-        </div>
-
-        <!-- Contenu de l'onglet "Group PMO" -->
-        <div id="contenu-groupe-pmo" class="onglet-contenu actif">
-
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">SYSTEM</a>
-          <div class="sous-lignes">
-            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
-            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
-          </div>
-
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">Launcher</a>
-          <div class="sous-lignes">
-            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
-            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
-          </div>
-
-        </div>
-
-        <!-- Contenu de l'onglet "Transversal" -->
-        <div id="contenu-transversal" class="onglet-contenu">
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 1}}</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 2}}</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 3}}</a>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Colonne de droite : la synthese multi-programme -->
-    <div>
-      <h2 class="titre-section">
-        Multi-Programme Synthesis
-        <span class="titre-compteur">2</span>
-      </h2>
-
-      <a class="carte carte-grande" href="REMPLACE_PAR_LE_LIEN">
-        <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-      <a class="carte carte-grande" href="REMPLACE_PAR_LE_LIEN">
-        <p class="carte-titre">Ariane 6</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-      
-    </div>
-
-  </section>
-
   <!-- BLOC : JL BOARD MEMBER FOCAL POINT -->
   <section class="bloc">
     <h2 class="titre-section">
@@ -942,6 +814,148 @@
   </section>
 
 
+  <!-- BLOC : CHIEF OF PMO -->
+  <section class="bloc">
+    <h2 class="titre-section">
+      Chief of PMO
+      <span class="titre-compteur">2</span>
+    </h2>
+
+    <div class="grille grille-large">
+
+      <!-- Sur chaque carte, 2 choses a remplir :
+             href="..."  l'adresse de la page Confluence a ouvrir
+             src="..."   l'adresse de l'image de fond
+           Pas d'image sur une carte ? Supprime sa ligne <img> et enleve
+           "carte-image" de son class. -->
+      <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20dev%20image.png?api=v2" alt="">
+        <p class="carte-titre">A6 Dev</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20exploit%20image.png?api=v2" alt="">
+        <p class="carte-titre">A6 Exploit</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+    </div>
+  </section>
+
+
+
+  <!-- BLOC : PERIMETRES + MULTI-PROGRAMME SYNTHESIS (cote a cote)
+       Ces deux ensembles partagent une meme section a deux colonnes.
+       Chaque colonne est un <div> avec son propre titre.
+       - Pour les remettre l'un sous l'autre : enleve "deux-colonnes" de la
+         ligne <section class="bloc deux-colonnes"> ci-dessous.
+       - Pour inverser gauche/droite : intervertis les deux <div> colonnes.
+       - La largeur relative des colonnes se regle dans la feuille de style,
+         section "COLONNES COTE A COTE". -->
+  <section class="bloc deux-colonnes">
+
+    <!-- Colonne de gauche : le tableau a onglets.
+         Le titre est un intitule provisoire, remplace-le par le terme
+         employe dans ton equipe. -->
+    <div>
+      <h2 class="titre-section">Perimetres</h2>
+
+      <div class="onglets">
+
+        <div class="onglets-boutons">
+          <button class="onglet-bouton actif"
+                  onclick="afficherOnglet(event, 'contenu-groupe-pmo')">
+            Group PMO
+          </button>
+          <button class="onglet-bouton"
+                  onclick="afficherOnglet(event, 'contenu-transversal')">
+            Transversal
+          </button>
+        </div>
+
+        <!-- Contenu de l'onglet "Group PMO" -->
+        <div id="contenu-groupe-pmo" class="onglet-contenu actif">
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">SYSTEM</a>
+            <div class="sous-lignes">
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Launcher System</a>
+            </div>
+
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">Launcher</a>
+            <div class="sous-lignes">
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">ULPM</a>
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LLPM</a>
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LPRO</a>
+              <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Avionics and Flight Controls</a>
+            </div>
+
+        </div>
+
+        <!-- Contenu de l'onglet "Transversal" -->
+        <div id="contenu-transversal" class="onglet-contenu">
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Risks Management</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Process Method &Tools</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Doc & Data Security Export Control</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Continuous Improvment</a>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Colonne de droite : PROGRAM PMO -->
+    <div>
+      <h2 class="titre-section">
+        Program PMO
+        <span class="titre-compteur">3</span>
+      </h2>
+      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Prom%C3%A9th%C3%A9e%20image.png?api=v2" alt="">
+        <p class="carte-titre">Promethee</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Themis%20image.png?api=v2" alt="">
+        <p class="carte-titre">Themis</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Astris%20image.png?api=v2" alt="">
+        <p class="carte-titre">Astris</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+
+      
+    </div>
+
+  </section>
+  <!-- BLOC : Multi-Programme Synthesis -->
+  <section class="bloc">
+    <h2 class="titre-section">
+      Multi-Programme Synthesis
+      <span class="titre-compteur">2</span>
+    </h2>
+
+    <div class="grille">
+
+      <a class="carte carte-grande" href="REMPLACE_PAR_LE_LIEN">
+        <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+      <a class="carte carte-grande" href="REMPLACE_PAR_LE_LIEN">
+        <p class="carte-titre">Ariane 6</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
+
+    </div>
+  </section>
 
 </div>
 
@@ -963,3 +977,7 @@
     evenement.target.classList.add('actif');
   }
 </script>
+
+
+
+
