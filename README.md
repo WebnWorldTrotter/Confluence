@@ -37,6 +37,12 @@ blocks/
   04-onglets.html                      ← HTML Module 4 (Group PMO / Transversal)
   05-enhancement.js.html               ← HTML Module 5 (optionnel, en dernier)
   00-portail-complet-standalone.html   ← GÉNÉRÉ · variante tout-en-un
+  00-facile-a-modifier.html            ← variante tout-en-un, écrite pour être
+                                          reprise à la main (voir plus bas)
+donnees/
+  responsables.csv                     ← les titulaires, à ouvrir dans Excel
+outils/
+  remplir-depuis-tableau.py            ← injecte le tableau dans la page
 preview/
   index.html                           ← GÉNÉRÉ · aperçu navigateur
 build.sh                               ← régénère les deux fichiers GÉNÉRÉS
@@ -181,86 +187,88 @@ Pour régénérer l'aperçu et la version autonome après une modification :
 
 ## Mettre à jour les responsables depuis un tableau
 
-Les noms affichés sur la page peuvent être pilotés par un fichier tableur,
-pour ne plus avoir à éditer le HTML à chaque changement de titulaire.
+Les noms affichés sur la page sont pilotés par un fichier tableur, pour ne plus
+avoir à éditer le HTML à chaque changement de titulaire.
 
 ```
 donnees/responsables.csv              ← le tableau, à ouvrir dans Excel
-outils/remplir-depuis-tableau.py      ← solution de repli (voir plus bas)
+outils/remplir-depuis-tableau.py      ← le script qui fabrique la page remplie
 ```
 
 ### Principe
 
-Chaque nom affiché porte une étiquette invisible dans le HTML :
+Le script reconnaît chaque carte par **le titre affiché dessus**. Il n'y a donc
+rien à ajouter dans le HTML — pas d'identifiant, pas d'étiquette invisible :
 
 ```html
-<p class="carte-personne" data-cle="a6-dev">Prenom Nom</p>
-<a class="carte …" data-lien="a6-dev" href="…">
+<p class="carte-titre">A6 Dev</p>        <!-- repère -->
+<p class="carte-personne">…</p>          <!-- ligne remplacée -->
 ```
-
-Le tableau fait la correspondance :
 
 ```csv
-cle;nom;lien
-a6-dev;Anais Capiez;/confluence/display/JLS/A6-Dev
+carte;nom;lien
+A6 Dev;Prenom Nom;https://atlas.fr.space.corp/confluence/display/JLS/A6+Dev
 ```
 
-À chaque affichage de la page, un script lit le fichier et remplace les noms
-et les liens. **Tu modifies le tableau dans Excel, la page se met à jour au
-rechargement suivant** — aucune intervention dans le code.
+La colonne `lien` est facultative : laissée vide, la carte garde le `href`
+écrit dans le HTML. Le nom du bandeau d'accueil se pilote avec la ligne
+`Head of PMO`.
 
-### Mise en place (une seule fois)
+### Utilisation
 
-1. Remplir la colonne `nom` de `responsables.csv` dans Excel
-2. `Enregistrer sous` → format **CSV UTF-8**. Sans le « UTF-8 », les accents
-   s'affichent en caractères parasites.
-3. Attacher le fichier à la page Confluence
-4. Clic droit sur la pièce jointe → *Copier l'adresse du lien*
-5. Coller l'adresse dans `ADRESSE_DU_TABLEAU`, en bas du fichier HTML
+```bash
+# 1. fabriquer le tableau à partir de la page
+#    (les titres sont relevés dans le HTML : aucun n'est retapé à la main)
+python3 outils/remplir-depuis-tableau.py --cartes
 
-Le séparateur (`;` ou `,`) est détecté automatiquement : Excel français
-enregistre avec des points-virgules, Excel anglais avec des virgules.
+# 2. remplir les colonnes « nom » et « lien » dans Excel,
+#    puis « Enregistrer sous » → CSV UTF-8
 
-### Filet de sécurité
+# 3. produire la page remplie
+python3 outils/remplir-depuis-tableau.py
+```
 
-Si le fichier est introuvable, mal formé, ou si Confluence en bloque la
-lecture, **la page garde les noms écrits dans le HTML** — elle ne se retrouve
-jamais vide. La console du navigateur (F12) indique alors précisément ce qui
-a échoué, et signale les clés du tableau absentes de la page (fautes de
-frappe).
+Le second appel écrit `page-remplie.html` : on l'ouvre, on copie tout, on colle
+dans le module HTML de Confluence.
+
+Le séparateur (`;` ou `,`) est détecté automatiquement — Excel français
+enregistre avec des points-virgules, Excel anglais avec des virgules. Les fins
+de ligne du fichier d'origine sont conservées.
+
+Refaire l'étape 1 après avoir ajouté, supprimé ou renommé une carte : le
+tableau se resynchronise sur la page. **Les noms déjà saisis sont conservés** —
+seules les cartes nouvelles apparaissent vides, et les lignes devenues sans
+objet sont annoncées avant d'être retirées.
+
+### Ce que le script signale
+
+| Situation | Sortie |
+|---|---|
+| Ligne du tableau qui ne correspond à aucune carte | `ATTENTION` + le titre fautif |
+| Carte de la page absente du tableau | liste informative (la carte garde son texte) |
+| Deux cartes portant le même titre | `ATTENTION` — seule la première est remplie |
+
+C'est ce qui évite les fautes de frappe silencieuses : un titre mal orthographié
+dans Excel ne passe pas inaperçu.
+
+Les exemples de cartes écrits dans le **guide en commentaire**, en tête du
+fichier HTML, ne sont jamais touchés : le script repère les zones de
+commentaire et les exclut.
 
 ### Où va chaque fichier
 
 | Fichier | Où il vit | Qui s'en sert |
 |---|---|---|
-| le HTML de la page | collé dans le module HTML de Confluence | tout le monde |
-| `responsables.csv` | pièce jointe de la page Confluence | la personne qui met à jour |
-| `outil-mise-a-jour.html` | sur le poste, ou en pièce jointe | seulement si la lecture est bloquée |
-| `remplir-depuis-tableau.py` | ce dépôt | optionnel, profil technique |
+| `blocks/00-facile-a-modifier.html` | la source, dans ce dépôt | qui modifie la structure |
+| `donnees/responsables.csv` | sur le poste, ouvert dans Excel | qui met à jour les titulaires |
+| `outils/remplir-depuis-tableau.py` | ce dépôt, lancé depuis le poste | idem |
+| `page-remplie.html` | GÉNÉRÉ, à copier-coller dans Confluence | — |
 
-**Rien n'oblige à passer par ce dépôt au quotidien.** Il ne sert qu'à
-conserver les sources. Une fois la page collée dans Confluence et le CSV
-attaché, tout se fait depuis Confluence et Excel.
+Le dépôt n'est pas nécessaire au quotidien : une fois le dossier récupéré sur
+le poste (`Code` → `Download ZIP`), tout le cycle *Excel → script → coller dans
+Confluence* se fait en local, sans passer par GitHub.
 
-### Si Confluence bloque la lecture du fichier
-
-Deux solutions de repli, au choix.
-
-**`outils/outil-mise-a-jour.html` — sans rien installer.** Enregistrer le
-fichier sur le poste, double-cliquer dessus : il s'ouvre dans le navigateur.
-On y choisit le CSV et le code de la page, on clique sur *Générer*, on copie
-le résultat dans le module Confluence. Tout se passe en local, aucun envoi
-réseau, fonctionne hors connexion.
-
-**`outils/remplir-depuis-tableau.py` — en ligne de commande.** Même
-résultat, pour qui a Python installé.
-
-```bash
-python3 outils/remplir-depuis-tableau.py
-```
-
-Les deux signalent les clés du tableau absentes de la page et inversement,
-et annoncent les mêmes compteurs.
+Python 3 suffit — aucune bibliothèque à installer.
 
 ---
 

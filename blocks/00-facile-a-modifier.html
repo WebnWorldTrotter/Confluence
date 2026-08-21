@@ -71,28 +71,29 @@
         Tout est regle en haut de la feuille de style, dans "REGLAGES
         GENERAUX". Change une valeur la-bas, elle change partout.
 
-     9. METTRE A JOUR LES RESPONSABLES DEPUIS UN TABLEAU EXCEL
-        La page peut aller chercher les noms dans un fichier tableur, au
-        lieu qu'ils soient ecrits en dur ici. Tu changes un nom dans
-        Excel, la page l'affiche au rechargement suivant.
+     9. METTRE A JOUR TOUS LES RESPONSABLES D'UN COUP
+        Tu peux piloter les noms depuis un tableau Excel plutot que de les
+        retaper ici un par un. Le tableau a trois colonnes :
 
-        Chaque nom affiche porte une etiquette invisible :
-          <p class="carte-personne" data-cle="LA_CLE">Prenom Nom</p>
-        Et chaque lien :
-          <a class="carte ..." data-lien="LA_CLE" href="...">
-        (ci-dessus LA_CLE est un exemple ; les vraies cles sont en
-        minuscules, par exemple a6-dev)
+           carte                        nom              lien
+           A6 Dev                       Prenom Nom       https://...
+           Promethee . Maia . Themis    Prenom Nom
 
-        Le fichier "responsables.csv" fait la correspondance :
-          cle;nom;lien
-          a6-dev;Anais Capiez;/confluence/display/JLS/A6-Dev
+        La colonne "carte" reprend le TITRE affiche sur la carte, tel quel.
+        Rien a ajouter dans ce fichier HTML : c'est le titre qui sert de
+        point de repere.
 
-        La marche a suivre complete est ecrite en tete du script, tout en
-        bas de ce fichier (chercher "LECTURE AUTOMATIQUE DU TABLEAU").
+        Ensuite, sur ton poste :
+           python3 outils/remplir-depuis-tableau.py --cartes
+              fabrique le tableau a partir de cette page (les titres sont
+              donc forcement justes, tu n'en tapes aucun ; les noms deja
+              saisis sont conserves)
+           python3 outils/remplir-depuis-tableau.py
+              produit page-remplie.html, a copier-coller dans Confluence
 
-        Si tu ajoutes une carte, donne-lui une nouvelle cle (un mot court,
-        en minuscules, sans accent ni espace) et ajoute la meme cle dans
-        une nouvelle ligne du tableau.
+        Le script signale les titres du tableau qui ne correspondent a
+        aucune carte, et les cartes absentes du tableau. Voir README.md.
+
      ============================================================================ -->
 
 <style>
@@ -340,10 +341,13 @@
   /* --- Les 3 tailles ------------------------------------------------------
      Le padding ET la hauteur augmentent ensemble : les proportions internes
      restent les memes d'une taille a l'autre.                             */
-  .carte-moyenne { min-height: 116px; padding: var(--e5); }
-  .carte-grande  { min-height: 152px; padding: var(--e5); }
+  .carte-petite { min-height: 150px; padding: var(--e5); }
+  .carte-moyenne { min-height: 300px; padding: var(--e5); }
+  .carte-grande  { min-height: 400px; padding: var(--e5); }
+  
   .carte-grande .carte-titre { font-size: var(--txt-xl); }
-
+  .carte-moyenne .carte-titre { font-size: var(--txt-xl); }
+  .carte-petite .carte-titre { font-size: var(--txt-xl); }
   /* --- La fleche "ce lien mene quelque part" -------------------------------
      Presente sur TOUTES les cartes : une affordance identique partout, au
      lieu d'un signal present sur certaines cartes seulement.              */
@@ -742,7 +746,7 @@
         de transport spatial : gouvernance, jalons, points focaux et synthese
         multi-programmes.
       </p>
-      <a class="bouton" href="REMPLACE_PAR_LE_LIEN" data-lien="portail-jls">
+      <a class="bouton" href="https://atlas.fr.space.corp/confluence/pages/viewpage.action?pageId=2841785852">
         JLS Internal Portal
         <span class="bouton-fleche" aria-hidden="true">&rarr;</span>
       </a>
@@ -753,7 +757,7 @@
       <div class="entete-contact-ligne">
         <span class="rond-initiales" aria-hidden="true">NN</span>
         <div>
-          <p class="entete-contact-nom" data-cle="head-of-pmo">{{Prenom Nom}}</p>
+          <p class="entete-contact-nom">{{Prenom Nom}}</p>
           <p class="entete-contact-role">JLS PMO</p>
         </div>
       </div>
@@ -775,16 +779,16 @@
              src="..."   l'adresse de l'image de fond
            Pas d'image sur une carte ? Supprime sa ligne <img> et enleve
            "carte-image" de son class. -->
-      <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN" data-lien="a6-dev">
-        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
+      <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20dev%20image.png?api=v2" alt="">
         <p class="carte-titre">A6 Dev</p>
-        <p class="carte-personne" data-cle="a6-dev">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN" data-lien="a6-exploit">
-        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
+      <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20exploit%20image.png?api=v2" alt="">
         <p class="carte-titre">A6 Exploit</p>
-        <p class="carte-personne" data-cle="a6-exploit">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
     </div>
@@ -799,22 +803,22 @@
 
     <div class="grille">
 
-      <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN" data-lien="promethee">
-        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
+      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Prom%C3%A9th%C3%A9e%20image.png?api=v2" alt="">
         <p class="carte-titre">Promethee</p>
-        <p class="carte-personne" data-cle="promethee">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN" data-lien="themis">
-        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
+      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Themis%20image.png?api=v2" alt="">
         <p class="carte-titre">Themis</p>
-        <p class="carte-personne" data-cle="themis">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN" data-lien="astris">
-        <img class="carte-fond" src="REMPLACE_PAR_ADRESSE_IMAGE" alt="">
+      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Astris%20image.png?api=v2" alt="">
         <p class="carte-titre">Astris</p>
-        <p class="carte-personne" data-cle="astris">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
     </div>
@@ -852,27 +856,27 @@
         <!-- Contenu de l'onglet "Group PMO" -->
         <div id="contenu-groupe-pmo" class="onglet-contenu actif">
 
-          <a href="REMPLACE_PAR_LE_LIEN" data-lien="system" class="ligne ligne-titre">SYSTEM</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">SYSTEM</a>
           <div class="sous-lignes">
-            <a href="REMPLACE_PAR_LE_LIEN" data-lien="system-liod" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-            <a href="REMPLACE_PAR_LE_LIEN" data-lien="system-decoupling" class="ligne">Decoupling point</a>
-            <a href="REMPLACE_PAR_LE_LIEN" data-lien="system-spro" class="ligne">SPRO / ESR</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
           </div>
 
-          <a href="REMPLACE_PAR_LE_LIEN" data-lien="launcher" class="ligne ligne-titre">Launcher</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">Launcher</a>
           <div class="sous-lignes">
-            <a href="REMPLACE_PAR_LE_LIEN" data-lien="launcher-liod" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-            <a href="REMPLACE_PAR_LE_LIEN" data-lien="launcher-decoupling" class="ligne">Decoupling point</a>
-            <a href="REMPLACE_PAR_LE_LIEN" data-lien="launcher-spro" class="ligne">SPRO / ESR</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
           </div>
 
         </div>
 
         <!-- Contenu de l'onglet "Transversal" -->
         <div id="contenu-transversal" class="onglet-contenu">
-          <a href="REMPLACE_PAR_LE_LIEN" data-lien="transversal-1" class="ligne">{{Sujet transversal 1}}</a>
-          <a href="REMPLACE_PAR_LE_LIEN" data-lien="transversal-2" class="ligne">{{Sujet transversal 2}}</a>
-          <a href="REMPLACE_PAR_LE_LIEN" data-lien="transversal-3" class="ligne">{{Sujet transversal 3}}</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 1}}</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 2}}</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 3}}</a>
         </div>
 
       </div>
@@ -885,19 +889,17 @@
         <span class="titre-compteur">2</span>
       </h2>
 
-      <div class="grille grille-large">
+      <a class="carte carte-grande" href="REMPLACE_PAR_LE_LIEN">
+        <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
 
-        <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN" data-lien="synthese-promethee-maia-themis">
-          <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
-          <p class="carte-personne" data-cle="synthese-promethee-maia-themis">{{Prenom Nom}}</p>
-        </a>
+      <a class="carte carte-grande" href="REMPLACE_PAR_LE_LIEN">
+        <p class="carte-titre">Ariane 6</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
+      </a>
 
-        <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN" data-lien="synthese-ariane-6">
-          <p class="carte-titre">Ariane 6</p>
-          <p class="carte-personne" data-cle="synthese-ariane-6">{{Prenom Nom}}</p>
-        </a>
-
-      </div>
+      
     </div>
 
   </section>
@@ -911,29 +913,29 @@
 
     <div class="grille grille-compacte">
 
-      <a class="carte" href="REMPLACE_PAR_LE_LIEN" data-lien="jlv">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLV</p>
-        <p class="carte-personne" data-cle="jlv">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="REMPLACE_PAR_LE_LIEN" data-lien="jle">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLE</p>
-        <p class="carte-personne" data-cle="jle">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="REMPLACE_PAR_LE_LIEN" data-lien="jll">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLL</p>
-        <p class="carte-personne" data-cle="jll">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="REMPLACE_PAR_LE_LIEN" data-lien="jli">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLI</p>
-        <p class="carte-personne" data-cle="jli">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
-      <a class="carte" href="REMPLACE_PAR_LE_LIEN" data-lien="jlo">
+      <a class="carte" href="REMPLACE_PAR_LE_LIEN">
         <p class="carte-titre">JLO</p>
-        <p class="carte-personne" data-cle="jlo">{{Prenom Nom}}</p>
+        <p class="carte-personne">{{Prenom Nom}}</p>
       </a>
 
     </div>
@@ -942,148 +944,6 @@
 
 
 </div>
-
-<script>
-/* ============================================================================
-   LECTURE AUTOMATIQUE DU TABLEAU DES RESPONSABLES
-   ----------------------------------------------------------------------------
-   A chaque affichage de la page, ce script va lire le fichier CSV indique
-   ci-dessous et remplace les noms et les liens dans la page.
-   Tu modifies le tableau dans Excel -> la page se met a jour toute seule au
-   rechargement suivant. Aucune modification de ce code n'est necessaire.
-
-   MISE EN PLACE, UNE SEULE FOIS
-     1. Ouvre "responsables.csv" dans Excel et remplis la colonne "nom"
-        (et "lien" si tu veux que la carte pointe vers une page).
-     2. Enregistre. IMPORTANT : dans Excel, "Enregistrer sous" et choisis
-        le format "CSV UTF-8 (delimite par des virgules)". Sans le "UTF-8",
-        les accents s'affichent en caracteres bizarres.
-     3. Attache le fichier a cette page Confluence
-        (menu "..." en haut a droite > Attachments > Attach file).
-     4. Clic droit sur le fichier attache > "Copier l'adresse du lien".
-     5. Colle cette adresse entre les guillemets de ADRESSE_DU_TABLEAU
-        juste en dessous.
-
-   POUR CHANGER UN RESPONSABLE PAR LA SUITE
-     Modifie le nom dans Excel, reattache le fichier (meme nom) a la page.
-     C'est tout : la page affichera le nouveau nom au rechargement.
-
-   SI RIEN NE CHANGE
-     Ouvre la console du navigateur (touche F12, onglet "Console") : ce
-     script y ecrit un message clair indiquant si le tableau a ete lu,
-     combien de noms ont ete remplaces, ou pourquoi ca a echoue.
-
-   FILET DE SECURITE
-     Si le fichier est introuvable, mal forme, ou si Confluence bloque sa
-     lecture, la page garde simplement les noms ecrits en dur dans le HTML.
-     Elle ne se retrouve jamais vide.
-   ========================================================================= */
-(function () {
-  "use strict";
-
-  /* >>>>>>>>>>  LA SEULE LIGNE A MODIFIER  <<<<<<<<<< */
-  var ADRESSE_DU_TABLEAU = "REMPLACE_PAR_ADRESSE_DU_CSV";
-
-  /* --- Detection du separateur ------------------------------------------
-     Excel en français enregistre les CSV avec des points-virgules, Excel en
-     anglais avec des virgules. On regarde lequel est le plus present dans
-     la ligne d'en-tete plutot que d'en imposer un.                       */
-  function trouverSeparateur(ligneEntete) {
-    return ligneEntete.split(";").length > ligneEntete.split(",").length ? ";" : ",";
-  }
-
-  /* --- Decoupage d'une ligne CSV ----------------------------------------
-     Gere les champs entre guillemets, qui peuvent contenir le separateur
-     (ex: "Dupont, Jean").                                                */
-  function decouper(ligne, sep) {
-    var champs = [], courant = "", dansGuillemets = false;
-    for (var i = 0; i < ligne.length; i++) {
-      var c = ligne.charAt(i);
-      if (c === '"') {
-        if (dansGuillemets && ligne.charAt(i + 1) === '"') { courant += '"'; i++; }
-        else { dansGuillemets = !dansGuillemets; }
-      } else if (c === sep && !dansGuillemets) {
-        champs.push(courant); courant = "";
-      } else {
-        courant += c;
-      }
-    }
-    champs.push(courant);
-    return champs.map(function (x) { return x.trim(); });
-  }
-
-  function appliquerTableau(texte) {
-    // Retire le marqueur invisible que Windows place en debut de fichier
-    var lignes = texte.replace(/^\uFEFF/, "").split(/\r?\n/)
-                      .filter(function (l) { return l.trim() !== ""; });
-    if (lignes.length < 2) {
-      console.warn("[JLS] Le tableau est vide ou ne contient que l'en-tete.");
-      return;
-    }
-
-    var sep = trouverSeparateur(lignes[0]);
-    var entetes = decouper(lignes[0], sep).map(function (e) { return e.toLowerCase(); });
-    var iCle  = entetes.indexOf("cle");
-    var iNom  = entetes.indexOf("nom");
-    var iLien = entetes.indexOf("lien");
-
-    if (iCle < 0 || iNom < 0) {
-      console.warn("[JLS] Le tableau doit contenir au minimum les colonnes " +
-                   "'cle' et 'nom'. Colonnes trouvees : " + entetes.join(", "));
-      return;
-    }
-
-    var noms = 0, liens = 0, clesInconnues = [];
-
-    for (var i = 1; i < lignes.length; i++) {
-      var champs = decouper(lignes[i], sep);
-      var cle = champs[iCle];
-      if (!cle) continue;
-
-      var nom  = champs[iNom]  || "";
-      var lien = iLien >= 0 ? (champs[iLien] || "") : "";
-      var trouve = false;
-
-      if (nom) {
-        document.querySelectorAll('[data-cle="' + cle + '"]').forEach(function (el) {
-          el.textContent = nom; noms++; trouve = true;
-        });
-      }
-      if (lien) {
-        document.querySelectorAll('[data-lien="' + cle + '"]').forEach(function (el) {
-          el.setAttribute("href", lien); liens++; trouve = true;
-        });
-      }
-      if ((nom || lien) && !trouve) clesInconnues.push(cle);
-    }
-
-    console.log("[JLS] Tableau lu : " + noms + " nom(s) et " + liens +
-                " lien(s) mis a jour.");
-    if (clesInconnues.length) {
-      console.warn("[JLS] Cles presentes dans le tableau mais absentes de la " +
-                   "page (verifie l'orthographe) : " + clesInconnues.join(", "));
-    }
-  }
-
-  if (ADRESSE_DU_TABLEAU.indexOf("REMPLACE") === 0) {
-    console.info("[JLS] Aucun tableau configure : la page affiche les noms " +
-                 "ecrits directement dans le HTML. Pour brancher un tableau, " +
-                 "renseigne ADRESSE_DU_TABLEAU dans le script.");
-    return;
-  }
-
-  fetch(ADRESSE_DU_TABLEAU, { credentials: "same-origin", cache: "no-cache" })
-    .then(function (reponse) {
-      if (!reponse.ok) { throw new Error("reponse HTTP " + reponse.status); }
-      return reponse.text();
-    })
-    .then(appliquerTableau)
-    .catch(function (erreur) {
-      console.warn("[JLS] Tableau non lu (" + erreur.message + "). La page " +
-                   "conserve les noms ecrits dans le HTML.");
-    });
-})();
-</script>
 
 <script>
   // Affiche le contenu d'onglet dont l'identifiant est passe en parametre,
