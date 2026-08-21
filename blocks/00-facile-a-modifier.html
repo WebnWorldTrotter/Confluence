@@ -111,6 +111,34 @@
 
         Le script signale les intitules du tableau qui ne correspondent a
         rien dans la page, et inversement. Voir README.md.
+
+    10. LES TUILES DE L'ONGLET TRANSVERSAL
+        Les quatre sujets de cet onglet n'utilisent pas la ligne des autres
+        onglets mais la TUILE : coin superieur droit coupe, triangle de
+        couleur dans la coupe, icone a gauche.
+
+          <a href="..." class="tuile tuile-risques">
+            <span class="tuile-icone" aria-hidden="true"> ...icone... </span>
+            <span>Risks Management</span>
+          </a>
+
+        POUR CHANGER LA COULEUR D'UNE TUILE
+        Change sa deuxieme classe : tuile-risques, tuile-methode,
+        tuile-securite, tuile-amelioration. Pour changer la teinte elle-meme,
+        va dans la feuille de style, section "TUILES TRANSVERSALES" : une
+        seule valeur par tuile, --tuile-accent.
+
+        POUR CHANGER UNE ICONE
+        Remplace ce qu'il y a entre <svg> et </svg>. Les icones sont
+        dessinees directement dans la page (pas de fichier a heberger, rien
+        que Confluence puisse bloquer). Elles prennent automatiquement la
+        couleur de leur tuile.
+
+        POUR AJOUTER UNE 5e TUILE
+        Copie un bloc <a class="tuile ..."> entier et colle-le dans la meme
+        <div class="grille grille-tuiles">. La grille reste sur deux
+        colonnes.
+
      ============================================================================ -->
 
 <style>
@@ -736,7 +764,117 @@
   }
 
   /* ==========================================================================
-     10. ACCESSIBILITE
+     10. TUILES TRANSVERSALES
+     Le contenu de l'onglet "Transversal" n'est pas une arborescence comme
+     "Group PMO" : ce sont quatre sujets de meme niveau. Ils ont donc une
+     forme a eux, qui les distingue au premier coup d'oeil des lignes
+     hierarchiques de l'autre onglet.
+     --------------------------------------------------------------------------
+     LA FORME : le coin superieur droit est coupe en biais, et la coupe
+     laisse apparaitre un triangle de couleur. Angulaire la ou tout le reste
+     de la page est arrondi. La meme coupe est reprise, en plus petit, sur
+     la pastille de l'icone.
+
+     POUR CHANGER LA COULEUR D'UNE TUILE
+     Une seule valeur a modifier : --tuile-accent, dans les quatre classes
+     tuile-... plus bas. Elle pilote a la fois le triangle du coin, l'icone
+     et le fond au survol.
+
+     POUR CHANGER LA TAILLE DE LA COUPE
+     La valeur --coupe (20px par defaut).
+     ========================================================================== */
+  /* Deux colonnes, pas "autant que la place permet" : avec quatre sujets,
+     un calcul automatique donne selon la largeur 2+2 ou 3+1, et le 3+1
+     laisse une tuile isolee en bas. Deux colonnes fixes gardent toujours
+     un carre regulier. En dessous de 640px, une seule colonne. */
+  .grille-tuiles {
+    gap: var(--e3);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @container jls (min-width: 640px) {
+    .grille-tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  .tuile {
+    --coupe: 20px;
+    --tuile-accent: var(--ardoise);
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--e3);
+    padding: var(--e3) var(--e4);
+    min-height: 78px;
+    /* Ce fond ne se voit que dans la coupe : c'est lui, le triangle. */
+    background: var(--tuile-accent);
+    clip-path: polygon(0 0, calc(100% - var(--coupe)) 0,
+                       100% var(--coupe), 100% 100%, 0 100%);
+    text-decoration: none;
+    color: var(--encre);
+    font-size: var(--txt-sm);
+    font-weight: 650;
+    line-height: 1.35;
+    transition: transform var(--glisse), color var(--glisse),
+                filter var(--glisse);
+  }
+
+  /* La surface de la tuile, posee par-dessus le fond colore. Sa decoupe
+     epargne le carre du coin : le triangle reste donc visible, et rien
+     d'autre. */
+  .tuile::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--gris-50);
+    box-shadow: inset 0 0 0 1px var(--gris-200);
+    clip-path: polygon(0 0, calc(100% - var(--coupe)) 0,
+                       calc(100% - var(--coupe)) var(--coupe),
+                       100% var(--coupe), 100% 100%, 0 100%);
+    transition: background var(--glisse), box-shadow var(--glisse);
+  }
+
+  .tuile > * { position: relative; z-index: 1; }
+
+  /* Au survol la tuile se remplit de sa couleur, coupe comprise.
+     drop-shadow et non box-shadow : une ombre de boite serait rognee par
+     la decoupe, alors que drop-shadow en epouse la forme. */
+  .tuile:hover {
+    transform: translateY(-3px);
+    color: var(--papier);
+    filter: drop-shadow(0 8px 16px rgba(28,34,51,.20));
+  }
+  .tuile:hover::before {
+    background: var(--tuile-accent);
+    box-shadow: none;
+  }
+  .tuile:active { transform: translateY(-1px); }
+
+  /* La pastille de l'icone reste claire au survol : l'icone garde sa
+     couleur et se detache du fond devenu colore. */
+  .tuile-icone {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    color: var(--tuile-accent);
+    background: var(--papier);
+    box-shadow: inset 0 0 0 1px var(--gris-200);
+    clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
+  }
+  .tuile-icone svg { width: 20px; height: 20px; }
+
+  /* --- Les quatre couleurs -------------------------------------------------
+     Choisies pour rester lisibles dans les deux etats : icone posee sur la
+     surface claire, puis libelle blanc sur la couleur au survol.          */
+  .tuile-risques      { --tuile-accent: #B8501C; }   /* corail foncé   */
+  .tuile-methode      { --tuile-accent: #2F5D8C; }   /* bleu           */
+  .tuile-securite     { --tuile-accent: #5B4B8A; }   /* violet         */
+  .tuile-amelioration { --tuile-accent: #2F6B4F; }   /* vert           */
+  /* ==========================================================================
+     11. ACCESSIBILITE
      ========================================================================== */
 
   /* Contour visible pour ceux qui naviguent au clavier (touche Tab) */
@@ -760,6 +898,7 @@
     .carte:hover,
     .bouton:hover,
     .ligne:hover { transform: none; }
+    .tuile:hover { transform: none; filter: none; }
     .carte-image:hover .carte-fond { transform: none; }
   }
 
@@ -915,13 +1054,69 @@
 
         </div>
 
-        <!-- Contenu de l'onglet "Transversal" -->
+        <!-- Contenu de l'onglet "Transversal"
+             Ces quatre sujets sont de meme niveau : ils utilisent la TUILE
+             (coin coupe + icone), et non la ligne hierarchique de l'autre
+             onglet. Chaque tuile porte sa couleur via sa classe tuile-... ;
+             les couleurs sont definies dans la feuille de style, section
+             "TUILES TRANSVERSALES". -->
         <div id="contenu-transversal" class="onglet-contenu">
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Risks Management</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Process Method &Tools</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Doc & Data Security Export Control</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Continuous Improvment</a>
+          <div class="grille grille-tuiles">
 
+            <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-risques">
+              <span class="tuile-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round">
+                  <path d="M12 3.8 2.9 19.4h18.2L12 3.8Z"/>
+                  <path d="M12 9.9v4.1"/>
+                  <path d="M12 16.8h.01"/>
+                </svg>
+              </span>
+              <span>Risks Management</span>
+            </a>
+
+            <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-methode">
+              <span class="tuile-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round">
+                  <path d="M3.6 7.4h8.1M16.5 7.4h3.9"/>
+                  <circle cx="14.1" cy="7.4" r="2.4"/>
+                  <path d="M3.6 16.6h3.9M12.3 16.6h8.1"/>
+                  <circle cx="9.9" cy="16.6" r="2.4"/>
+                </svg>
+              </span>
+              <span>Process Method &amp;Tools</span>
+            </a>
+
+            <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-securite">
+              <span class="tuile-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round">
+                  <path d="M12 3.2 4.8 6.1v5.4c0 4.3 2.9 7.6 7.2 9.3 4.3-1.7 7.2-5 7.2-9.3V6.1L12 3.2Z"/>
+                  <path d="m9.4 12.2 1.9 1.9 3.5-3.6"/>
+                </svg>
+              </span>
+              <span>Doc &amp; Data Security Export Control</span>
+            </a>
+
+            <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-amelioration">
+              <span class="tuile-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round">
+                  <path d="M4.7 12a7.3 7.3 0 0 1 12.4-5.2l2.2 2.2"/>
+                  <path d="M19.3 12a7.3 7.3 0 0 1-12.4 5.2l-2.2-2.2"/>
+                  <path d="M19.5 4.6v4.4h-4.4"/>
+                  <path d="M4.5 19.4V15h4.4"/>
+                </svg>
+              </span>
+              <span>Continuous Improvment</span>
+            </a>
+
+          </div>
         </div>
 
       </div>

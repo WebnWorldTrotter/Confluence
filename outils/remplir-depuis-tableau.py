@@ -34,7 +34,8 @@ LES COLONNES DU TABLEAU
 
 CE QUE LE SCRIPT SAIT REMPLIR
     les cartes    <a class="carte ...">   -> nom, lien, image
-    les lignes    <a class="ligne ...">   -> lien          (contenu des onglets)
+    les lignes    <a class="ligne ...">   -> lien          (onglet Group PMO)
+    les tuiles    <a class="tuile ...">   -> lien          (onglet Transversal)
     les boutons   <a class="bouton">      -> lien
     le bandeau    "Head of PMO"           -> nom
 
@@ -75,6 +76,7 @@ COLONNES = ("carte", "nom", "lien", "image")
 ACCEPTE = {
     "carte":   {"nom", "lien", "image"},
     "ligne":   {"lien"},
+    "tuile":   {"lien"},
     "bouton":  {"lien"},
     "bandeau": {"nom"},
 }
@@ -255,6 +257,8 @@ def identifier(ouvrante, interieur):
         return texte_visible(titre.group(1)), "carte"
     if "ligne" in classes:
         return texte_visible(interieur), "ligne"
+    if "tuile" in classes:
+        return texte_visible(interieur), "tuile"
     if "bouton" in classes:
         return texte_visible(interieur), "bouton"
     return None, None
@@ -462,7 +466,8 @@ def remplir(html, entrees):
 # ---------------------------------------------------------------------------
 
 ETIQUETTE = {"carte": "cartes", "ligne": "lignes d'onglet",
-             "bouton": "boutons", "bandeau": "bandeau d'accueil"}
+             "tuile": "tuiles transversales", "bouton": "boutons",
+             "bandeau": "bandeau d'accueil"}
 
 
 def ecrire_modele(chemin_html, sortie):
