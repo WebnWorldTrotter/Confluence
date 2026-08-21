@@ -8,6 +8,16 @@ tableaux, et les pose directement dans la page.
 
   jl-organisation.csv  +  jl-programmes.csv  +  page HTML  ->  page HTML a jour
 
+Les deux ne sont PAS dessines de la meme facon, parce qu'ils ne racontent
+pas la meme chose :
+
+  organisation   un ARBRE vertical, comme un organigramme classique. Ce qui
+                 compte, c'est qui depend de qui.
+  programmes     un FLUX horizontal, de gauche a droite. Ce qui compte, c'est
+                 ou passe l'argent : l'epaisseur de chaque ruban est
+                 proportionnelle a l'ETC, on voit donc du premier coup d'oeil
+                 quel portefeuille pese, et comment il se repartit.
+
 UTILISATION
     python3 outils/organigrammes.py
 
@@ -65,20 +75,29 @@ LE TABLEAU DES PROGRAMMES  (jl-programmes.csv)
     portefeuille nv1 / etc nv1                  le portefeuille
     programme nv2 / etc nv2                     le programme
     projet nv3 / etc nv3                        le projet
-    revue     encadre le noeud en pointilles et l'ajoute a la legende
-              (exemple : PMO/MPR reviews, MBR reviews)
     lien      l'adresse de la page Confluence a ouvrir
 
     Les ETC s'ecrivent en MILLIONS D'EUROS, en chiffres seulement : 752.
-    Le script se charge de l'affichage (752 M€, 6 500 M€). Une valeur qui
-    n'est pas un nombre est affichee telle quelle : on peut donc ecrire
-    "9 G€" ou "a consolider" si besoin.
+    Le script se charge de l'affichage (752 M€, 6 500 M€).
+
+    Ici les chiffres ne servent pas qu'a etre lus : ils DESSINENT le
+    diagramme. Un ETC absent ou illisible ramene le noeud a la hauteur
+    minimale, et le script le signale.
+
+L'ECHELLE DU DIAGRAMME DE FLUX
+    L'epaisseur suit l'ETC, a une reserve pres : un noeud ne descend jamais
+    sous un plancher de quelques pixels (reglage "plancher"). Sans lui, un
+    programme a 1 M€ face a un portefeuille a 6 500 M€ ferait un trait
+    invisible, impossible a survoler et impossible a lire. Les proportions
+    sont donc exactes partout, sauf pour les plus petits montants, qui sont
+    remontes au plancher. C'est le seul ecart, et il est volontaire.
 
 CE QUE LE SCRIPT SIGNALE
     - un repere absent de la page                    -> ATTENTION
     - une colonne attendue absente du tableau        -> ATTENTION
     - un niveau vide alors qu'un niveau plus bas est rempli
     - deux sommets differents dans le meme tableau
+    - un ETC manquant ou illisible dans les programmes
 =============================================================================
 """
 
@@ -117,35 +136,49 @@ ORGANIGRAMMES = [
     {
         "cle": "organisation",
         "csv": "jl-organisation.csv",
+        "rendu": "arbre",
         "niveaux": [
             {"nom": "direction",           "acronyme": "acronyme"},
             {"nom": "sous-direction",      "acronyme": "acronyme sous-direction"},
             {"nom": "sous-sous-direction", "acronyme": "acronyme sous-sous-direction"},
         ],
-        # Les colonnes qui ne decrivent pas un niveau.
         # Les colonnes attendues en plus des niveaux. Une colonne citee ici
         # et absente du tableau est signalee : c'est ce qui rattrape les
         # fautes de frappe dans la ligne d'entete.
         "extras": ["place", "mention", "lien"],
         "place": True,      # support / adjoint : le hors-hierarchie
-        "legende": False,   # pas de revues dans cet organigramme
     },
     {
         "cle": "programmes",
         "csv": "jl-programmes.csv",
+        "rendu": "flux",
         "niveaux": [
             {"nom": "racine",           "etc": "etc racine"},
             {"nom": "portefeuille nv1", "etc": "etc nv1"},
             {"nom": "programme nv2",    "etc": "etc nv2"},
             {"nom": "projet nv3",       "etc": "etc nv3"},
         ],
-        "extras": ["revue", "lien"],
+        "extras": ["lien"],
         "place": False,
-        "legende": True,
     },
 ]
 
 PLACES = ("support", "adjoint")
+
+# --- Reglages du diagramme de flux -----------------------------------------
+# Tout le dessin decoule de ces sept valeurs. Les changer suffit a resserrer
+# ou a etaler le diagramme ; il n'y a aucune coordonnee ecrite en dur plus
+# bas.
+FLUX = {
+    "hauteur":     780,   # hauteur visee pour la colonne la plus chargee
+    "colonne":     252,   # ecart entre deux colonnes, libelle compris
+    "epaisseur":    13,   # largeur du rectangle d'un noeud
+    "ecart":         7,   # espace vertical minimal entre deux noeuds
+    "plancher":     17,   # hauteur minimale d'un noeud (voir le guide)
+    "marge":        18,   # marge autour du dessin
+    "marge_droite":174,   # place laissee aux libelles de la derniere colonne
+    "teintes":       6,   # nombre de couleurs disponibles pour les branches
+}
 
 
 # ---------------------------------------------------------------------------
@@ -220,7 +253,7 @@ def nettoyer(intitule):
 
 def nouveau_noeud(nom, acronyme, etc):
     return {"nom": nom, "acronyme": acronyme, "etc": etc,
-            "lien": "", "mention": "", "revue": "", "place": "",
+            "lien": "", "mention": "", "place": "",
             "enfants": [], "index": {}}
 
 
@@ -229,7 +262,7 @@ def rattacher(parent, nom, acronyme, etc):
 
     L'index rend la recherche immediate, et l'ordre d'apparition dans le
     tableau est conserve : ce qu'on lit dans Excel de haut en bas se
-    retrouve de gauche a droite sur la page.
+    retrouve de haut en bas sur la page.
     """
     cle = nettoyer(nom) + "|" + nettoyer(acronyme)
     if cle in parent["index"]:
@@ -288,7 +321,7 @@ def construire_arbre(lignes, config, alertes):
         # Elles se rapportent a l'entite la plus fine de la ligne : c'est
         # celle que la ligne decrit vraiment.
         feuille = chaine[-1]
-        for colonne in ("lien", "mention", "revue"):
+        for colonne in ("lien", "mention"):
             valeur = ligne.get(colonne, "")
             if valeur and not feuille[colonne]:
                 feuille[colonne] = valeur
@@ -331,32 +364,42 @@ def colonnes_manquantes(config, colonnes):
 
 
 # ---------------------------------------------------------------------------
-# Mise en forme des montants
+# Les montants
 # ---------------------------------------------------------------------------
+
+def nombre(valeur):
+    """La valeur numerique d'une cellule d'ETC, ou None si ce n'en est pas une.
+
+    L'espace insecable vient d'Excel, la virgule est la decimale francaise.
+    """
+    brut = (valeur or "").strip()
+    if not brut:
+        return None
+    essai = brut.replace(" ", "").replace(" ", "").replace(",", ".")
+    try:
+        return abs(float(essai))
+    except ValueError:
+        return None
+
 
 def montant(valeur):
     """"752" -> "752 M€".  "6500" -> "6 500 M€".
 
     Une valeur qui n'est pas un nombre ressort telle quelle : le tableau
-    peut ainsi contenir "9 G€" ou "a consolider" sans que le script s'y
-    oppose.
+    peut ainsi contenir "a consolider" sans que le script s'y oppose.
     """
     brut = (valeur or "").strip()
     if not brut:
         return ""
-
-    # L'espace insecable vient d'Excel, la virgule est la decimale francaise.
-    essai = brut.replace("\u00a0", "").replace(" ", "").replace(",", ".")
-    try:
-        nombre = float(essai)
-    except ValueError:
+    valeur_lue = nombre(brut)
+    if valeur_lue is None:
         return brut
 
-    if nombre == int(nombre):
-        chiffres = "{:,}".format(int(nombre)).replace(",", " ")
+    if valeur_lue == int(valeur_lue):
+        chiffres = "{:,}".format(int(valeur_lue)).replace(",", " ")
     else:
-        chiffres = "{:,.1f}".format(nombre).replace(",", " ").replace(".", ",")
-    return chiffres + " M€"
+        chiffres = "{:,.1f}".format(valeur_lue).replace(",", " ").replace(".", ",")
+    return chiffres + " M€"
 
 
 # ---------------------------------------------------------------------------
@@ -384,25 +427,35 @@ def attribut(valeur):
 REMPLIR_PLUS_TARD = {"REMPLACE_PAR_LE_LIEN", "ADRESSE_DE_LA_PAGE", "#", ""}
 
 
-def rendu_noeud(noeud, rang, revues, marge):
-    """Une boite de l'organigramme.
+def lien_de(noeud):
+    """L'adresse du noeud, ou la chaine vide si elle reste a renseigner."""
+    lien = html_module.unescape(noeud["lien"].strip())
+    return "" if lien in REMPLIR_PLUS_TARD else lien
+
+
+def intitule(noeud):
+    """Ce qu'on lit sur la boite : l'acronyme s'il existe, sinon le nom."""
+    return noeud["acronyme"] or noeud["nom"]
+
+
+# ===========================================================================
+# RENDU 1 : L'ARBRE  (organigramme de l'organisation)
+# ===========================================================================
+
+def rendu_noeud(noeud, rang, marge):
+    """Une boite de l'arbre.
 
     Avec un lien c'est un <a>, sans lien un <div> : une boite sur laquelle
     il n'y a rien a cliquer ne doit pas se comporter comme un lien.
     """
-    classes = ["orga-noeud", "orga-noeud-%d" % rang]
-    if noeud["revue"] and noeud["revue"] in revues:
-        classes.append("orga-revue-%d" % revues[noeud["revue"]])
-
-    lien = noeud["lien"].strip()
-    if lien in REMPLIR_PLUS_TARD:
-        lien = ""
+    classes = "orga-noeud orga-noeud-%d" % rang
+    lien = lien_de(noeud)
 
     if lien:
-        ouvrante = '<a class="%s" href="%s">' % (" ".join(classes), attribut(lien))
+        ouvrante = '<a class="%s" href="%s">' % (classes, attribut(lien))
         fermante = "</a>"
     else:
-        ouvrante = '<div class="%s">' % " ".join(classes)
+        ouvrante = '<div class="%s">' % classes
         fermante = "</div>"
 
     dedans = []
@@ -425,7 +478,7 @@ def rendu_noeud(noeud, rang, revues, marge):
     return lignes
 
 
-def rendu_enfants(noeuds, rang, revues, marge):
+def rendu_enfants(noeuds, rang, marge):
     """La colonne d'entites accrochee sous une boite, avec son filet vertical.
 
     Se rappelle elle-meme : un enfant qui a lui-meme des enfants est rendu
@@ -440,43 +493,16 @@ def rendu_enfants(noeuds, rang, revues, marge):
         # ainsi le milieu de la BOITE, et non le milieu de tout ce qui pend
         # en dessous d'elle.
         lignes.append(marge + '    <div class="orga-tige">')
-        lignes += rendu_noeud(noeud, rang, revues, marge + "      ")
+        lignes += rendu_noeud(noeud, rang, marge + "      ")
         lignes.append(marge + "    </div>")
-        lignes += rendu_enfants(noeud["enfants"], rang + 1, revues, marge + "    ")
+        lignes += rendu_enfants(noeud["enfants"], rang + 1, marge + "    ")
         lignes.append(marge + "  </div>")
     lignes.append(marge + "</div>")
     return lignes
 
 
-def rendu_legende(revues, marge):
-    """Les pastilles qui rappellent ce que veut dire chaque encadre pointille."""
-    if not revues:
-        return []
-    lignes = [marge + '<div class="orga-legende">']
-    for libelle, numero in revues.items():
-        lignes.append(marge + '  <span class="orga-legende-item orga-revue-%d">%s</span>'
-                      % (numero, echapper(libelle)))
-    lignes.append(marge + "</div>")
-    return lignes
-
-
-def relever_revues(noeud, revues):
-    """Les valeurs de la colonne "revue", dans l'ordre ou elles apparaissent.
-
-    L'ordre compte : c'est lui qui attribue sa couleur a chacune, et une
-    couleur qui change d'un passage a l'autre rendrait la page instable.
-    """
-    if noeud["revue"] and noeud["revue"] not in revues:
-        revues[noeud["revue"]] = len(revues) + 1
-    for enfant in noeud["enfants"]:
-        relever_revues(enfant, revues)
-    return revues
-
-
-def rendu(racine, config, marge):
-    """L'organigramme complet."""
-    revues = relever_revues(racine, {}) if config["legende"] else {}
-
+def rendu_arbre(racine, marge, alertes):
+    """L'organigramme en arbre, du sommet vers le bas."""
     # Le hors-hierarchie (support a gauche, adjoint a droite) est retire des
     # branches : il se pose de part et d'autre du trait, pas dans la rangee.
     branches = [n for n in racine["enfants"] if not n["place"]]
@@ -486,10 +512,8 @@ def rendu(racine, config, marge):
               % max(len(branches), 1)]
     m1 = marge + "  "
 
-    lignes += rendu_legende(revues, m1)
-
     lignes.append(m1 + '<div class="orga-sommet">')
-    lignes += rendu_noeud(racine, 1, revues, m1 + "  ")
+    lignes += rendu_noeud(racine, 1, m1 + "  ")
     lignes.append(m1 + "</div>")
 
     if cotes["support"] or cotes["adjoint"]:
@@ -498,8 +522,8 @@ def rendu(racine, config, marge):
             lignes.append(m1 + '  <div class="orga-cote orga-cote-%s">' % place)
             for noeud in cotes[place]:
                 lignes.append(m1 + '    <div class="orga-adjoint">')
-                lignes += rendu_noeud(noeud, 2, revues, m1 + "      ")
-                lignes += rendu_enfants(noeud["enfants"], 3, revues, m1 + "      ")
+                lignes += rendu_noeud(noeud, 2, m1 + "      ")
+                lignes += rendu_enfants(noeud["enfants"], 3, m1 + "      ")
                 lignes.append(m1 + "    </div>")
             lignes.append(m1 + "  </div>")
         lignes.append(m1 + "</div>")
@@ -507,13 +531,326 @@ def rendu(racine, config, marge):
     lignes.append(m1 + '<div class="orga-branches">')
     for noeud in branches:
         lignes.append(m1 + '  <div class="orga-branche">')
-        lignes += rendu_noeud(noeud, 2, revues, m1 + "    ")
-        lignes += rendu_enfants(noeud["enfants"], 3, revues, m1 + "    ")
+        lignes += rendu_noeud(noeud, 2, m1 + "    ")
+        lignes += rendu_enfants(noeud["enfants"], 3, m1 + "    ")
         lignes.append(m1 + "  </div>")
     lignes.append(m1 + "</div>")
 
     lignes.append(marge + "</div>")
     return lignes
+
+
+# ===========================================================================
+# RENDU 2 : LE FLUX  (organigramme des programmes)
+# ===========================================================================
+#
+# Le principe, en trois temps :
+#
+#   1. RANGER      chaque noeud rejoint la colonne de son niveau, dans
+#                  l'ordre du tableau. Les freres restent groupes : c'est ce
+#                  qui suffit a ce qu'aucun ruban n'en croise un autre.
+#   2. MESURER     une echelle unique, en pixels par million d'euros, telle
+#                  que la colonne la plus chargee remplisse exactement la
+#                  hauteur voulue. On la cherche par dichotomie plutot que
+#                  par une division : le plancher rend le calcul direct
+#                  impossible, mais la hauteur d'une colonne ne fait que
+#                  croitre avec l'echelle, donc la dichotomie tombe juste.
+#   3. PLACER      les enfants se centrent sur leur parent, puis une passe
+#                  de degagement ecarte ce qui se chevauche encore.
+#
+# Le dessin lui-meme est un SVG ecrit a la main : rien a heberger, rien que
+# Confluence puisse bloquer, et le texte reste du vrai texte (donc
+# selectionnable et cherchable).
+
+def ranger_colonnes(racine):
+    """Les noeuds regroupes par niveau, dans l'ordre du tableau."""
+    colonnes = []
+
+    def parcourir(noeud, profondeur):
+        while len(colonnes) <= profondeur:
+            colonnes.append([])
+        colonnes[profondeur].append(noeud)
+        for enfant in noeud["enfants"]:
+            parcourir(enfant, profondeur + 1)
+
+    parcourir(racine, 0)
+    return colonnes
+
+
+def hauteur_colonne(colonne, echelle):
+    ecart, plancher = FLUX["ecart"], FLUX["plancher"]
+    total = sum(max(plancher, n["_valeur"] * echelle) for n in colonne)
+    return total + ecart * (len(colonne) - 1)
+
+
+def chercher_echelle(colonnes):
+    """Les pixels par million d'euros.
+
+    Dichotomie : on encadre la reponse, puis on resserre. Quarante tours
+    suffisent largement -- l'intervalle est divise par deux a chaque fois.
+    """
+    vise = FLUX["hauteur"]
+
+    def trop_haut(echelle):
+        return max(hauteur_colonne(c, echelle) for c in colonnes) >= vise
+
+    if trop_haut(0.0):
+        # Deja trop haut sans aucun montant : il y a tant de noeuds que les
+        # planchers a eux seuls remplissent la colonne. Tout au plancher.
+        return 0.0
+
+    bas, haut = 0.0, 1.0
+    while not trop_haut(haut) and haut < 1e6:
+        haut *= 2
+    for _ in range(40):
+        milieu = (bas + haut) / 2
+        if trop_haut(milieu):
+            haut = milieu
+        else:
+            bas = milieu
+    return bas
+
+
+def degager(colonne):
+    """Ecarte les noeuds d'une colonne qui se chevauchent encore.
+
+    Deux passes : la premiere pousse vers le bas ce qui se marche dessus,
+    la seconde remonte l'ensemble s'il a fini par deborder. L'ordre des
+    noeuds n'est jamais modifie -- c'est lui qui garantit que les rubans ne
+    se croisent pas.
+    """
+    ecart, vise = FLUX["ecart"], FLUX["hauteur"]
+
+    bas = -1e9
+    for noeud in colonne:
+        if noeud["_y"] < bas:
+            noeud["_y"] = bas
+        bas = noeud["_y"] + noeud["_h"] + ecart
+
+    debord = (bas - ecart) - vise
+    if debord > 0:
+        haut = vise
+        for noeud in reversed(colonne):
+            if noeud["_y"] + noeud["_h"] > haut:
+                noeud["_y"] = haut - noeud["_h"]
+            haut = noeud["_y"] - ecart
+
+
+def disposer_flux(racine, alertes):
+    """Donne a chaque noeud sa position et sa taille. Renvoie les colonnes."""
+    colonnes = ranger_colonnes(racine)
+
+    sans_etc = []
+    for colonne in colonnes:
+        for noeud in colonne:
+            valeur = nombre(noeud["etc"])
+            if valeur is None:
+                sans_etc.append(intitule(noeud) or noeud["nom"])
+                valeur = 0.0
+            noeud["_valeur"] = valeur
+
+    if sans_etc:
+        alertes.append(
+            "%d noeud(s) sans ETC exploitable, ramene(s) a la hauteur "
+            "minimale : %s%s"
+            % (len(sans_etc), ", ".join(sans_etc[:4]),
+               ", ..." if len(sans_etc) > 4 else ""))
+
+    echelle = chercher_echelle(colonnes)
+    for colonne in colonnes:
+        for noeud in colonne:
+            noeud["_h"] = max(FLUX["plancher"], noeud["_valeur"] * echelle)
+
+    # --- Le sommet, puis chaque colonne a partir de la precedente ----------
+    racine["_y"] = (FLUX["hauteur"] - racine["_h"]) / 2
+
+    for rang in range(1, len(colonnes)):
+        for parent in colonnes[rang - 1]:
+            enfants = parent["enfants"]
+            if not enfants:
+                continue
+            total = (sum(e["_h"] for e in enfants)
+                     + FLUX["ecart"] * (len(enfants) - 1))
+            y = parent["_y"] + (parent["_h"] - total) / 2
+            for enfant in enfants:
+                enfant["_y"] = y
+                y += enfant["_h"] + FLUX["ecart"]
+        degager(colonnes[rang])
+
+    # --- Les points de depart des rubans, chez le parent -------------------
+    # Ils se touchent, sans espace : c'est ce qui fait lire la boite du
+    # parent comme la somme de ce qui en sort.
+    for colonne in colonnes:
+        for parent in colonne:
+            depart = (parent["_y"]
+                      + (parent["_h"] - sum(e["_h"] for e in parent["enfants"])) / 2)
+            for enfant in parent["enfants"]:
+                enfant["_depart"] = depart
+                depart += enfant["_h"]
+
+    # --- Les couleurs : une par branche de premier niveau ------------------
+    for rang, branche in enumerate(racine["enfants"]):
+        teinte = rang % FLUX["teintes"] + 1
+
+        def teinter(noeud, teinte=teinte):
+            noeud["_teinte"] = teinte
+            for enfant in noeud["enfants"]:
+                teinter(enfant)
+
+        teinter(branche)
+    racine["_teinte"] = 0
+
+    # --- Tout ramener dans le cadre ---------------------------------------
+    # Le degagement a pu faire depasser vers le haut ; on redescend
+    # l'ensemble d'un bloc plutot que de tronquer.
+    tous = [n for colonne in colonnes for n in colonne]
+    decalage = FLUX["marge"] - min(n["_y"] for n in tous)
+    for noeud in tous:
+        noeud["_y"] += decalage
+        if "_depart" in noeud:
+            noeud["_depart"] += decalage
+
+    return colonnes
+
+
+def abscisse(rang):
+    return FLUX["marge"] + rang * FLUX["colonne"]
+
+
+def arrondir(valeur):
+    """Un chiffre apres la virgule suffit, et le fichier reste lisible."""
+    return ("%.1f" % valeur).rstrip("0").rstrip(".")
+
+
+def ruban(x0, y0, x1, y1, epaisseur):
+    """Le chemin d'un ruban : deux courbes qui se rejoignent.
+
+    Les poignees des courbes sont posees a mi-chemin en abscisse. C'est ce
+    qui donne le depart et l'arrivee horizontaux, et donc le raccord net
+    contre les boites.
+    """
+    milieu = (x0 + x1) / 2
+    a, b = y0 + epaisseur, y1 + epaisseur
+    r = arrondir
+    return ("M%s,%s C%s,%s %s,%s %s,%s L%s,%s C%s,%s %s,%s %s,%s Z"
+            % (r(x0), r(y0), r(milieu), r(y0), r(milieu), r(y1), r(x1), r(y1),
+               r(x1), r(b), r(milieu), r(b), r(milieu), r(a), r(x0), r(a)))
+
+
+def raccourcir(texte, limite):
+    return texte if len(texte) <= limite else texte[:limite - 1].rstrip() + "…"
+
+
+def rendu_libelle(noeud, x, marge):
+    """Le texte pose a droite d'une boite.
+
+    Trois formes selon la place disponible : deux lignes quand la boite est
+    haute, une seule ligne quand elle est courte, et rien du tout quand elle
+    est minuscule -- l'infobulle prend alors le relais. Ecrire un libelle
+    qui chevauche son voisin serait pire que de ne pas l'ecrire.
+    """
+    milieu = noeud["_y"] + noeud["_h"] / 2
+    nom = echapper(raccourcir(noeud["nom"] or noeud["acronyme"], 30))
+    somme = montant(noeud["etc"])
+    r = arrondir
+
+    if noeud["_h"] >= 30:
+        lignes = [
+            '%s<text class="flux-nom" x="%s" y="%s">%s</text>'
+            % (marge, r(x), r(milieu - 2), nom)]
+        if somme:
+            lignes.append(
+                '%s<text class="flux-etc" x="%s" y="%s">%s</text>'
+                % (marge, r(x), r(milieu + 12), echapper(somme)))
+        return lignes
+
+    if noeud["_h"] >= 13:
+        texte = nom + ("  ·  " + somme if somme else "")
+        return ['%s<text class="flux-nom flux-nom-court" x="%s" y="%s">%s</text>'
+                % (marge, r(x), r(milieu + 4), echapper(texte))]
+
+    return []
+
+
+def rendu_flux(racine, marge, alertes):
+    """Le diagramme de flux, de gauche a droite."""
+    colonnes = disposer_flux(racine, alertes)
+
+    largeur = (abscisse(len(colonnes) - 1) + FLUX["epaisseur"]
+               + FLUX["marge_droite"])
+    hauteur = (max(n["_y"] + n["_h"] for colonne in colonnes for n in colonne)
+               + FLUX["marge"])
+    r = arrondir
+
+    m1 = marge + "  "
+    m2 = marge + "    "
+
+    lignes = [
+        # tabindex : le cadre se prend au clavier, et les fleches le font
+        # alors defiler comme n'importe quelle zone deroulante.
+        marge + '<div class="flux-cadre" data-deplacable="oui" tabindex="0" '
+                'role="group" aria-label="Diagramme de repartition de l\'ETC">',
+        m1 + '<svg class="flux" role="img" viewBox="0 0 %s %s" '
+             'width="%s" height="%s" aria-label="Repartition de l\'ETC, '
+             'du sommet vers les projets">' % (r(largeur), r(hauteur),
+                                               r(largeur), r(hauteur)),
+    ]
+
+    # --- Les rubans d'abord : ils passent SOUS les boites et les libelles --
+    lignes.append(m2 + '<g class="flux-liens">')
+    for rang, colonne in enumerate(colonnes[:-1]):
+        x0 = abscisse(rang) + FLUX["epaisseur"]
+        x1 = abscisse(rang + 1)
+        for parent in colonne:
+            for enfant in parent["enfants"]:
+                somme = montant(enfant["etc"])
+                lignes.append(
+                    m2 + '  <path class="flux-lien flux-teinte-%d" d="%s">'
+                         '<title>%s%s</title></path>'
+                    % (enfant["_teinte"],
+                       ruban(x0, enfant["_depart"], x1, enfant["_y"], enfant["_h"]),
+                       echapper(enfant["nom"] or enfant["acronyme"]),
+                       echapper("  ·  " + somme if somme else "")))
+    lignes.append(m2 + "</g>")
+
+    # --- Puis les boites et leurs libelles ---------------------------------
+    lignes.append(m2 + '<g class="flux-noeuds">')
+    for rang, colonne in enumerate(colonnes):
+        x = abscisse(rang)
+        for noeud in colonne:
+            classes = "flux-noeud flux-teinte-%d" % noeud["_teinte"]
+            if rang == 0:
+                classes += " flux-noeud-sommet"
+            somme = montant(noeud["etc"])
+            lien = lien_de(noeud)
+
+            lignes.append(m2 + '  <g class="flux-boite">')
+            if lien:
+                lignes.append(m2 + '    <a href="%s">' % attribut(lien))
+            dedans = m2 + ("      " if lien else "    ")
+
+            lignes.append(
+                dedans + '<rect class="%s" x="%s" y="%s" width="%s" '
+                         'height="%s" rx="3"><title>%s%s</title></rect>'
+                % (classes, r(x), r(noeud["_y"]), FLUX["epaisseur"],
+                   r(noeud["_h"]),
+                   echapper(noeud["nom"] or noeud["acronyme"]),
+                   echapper("  ·  " + somme if somme else "")))
+            lignes += rendu_libelle(noeud, x + FLUX["epaisseur"] + 8, dedans)
+
+            if lien:
+                lignes.append(m2 + "    </a>")
+            lignes.append(m2 + "  </g>")
+    lignes.append(m2 + "</g>")
+
+    lignes.append(m1 + "</svg>")
+    lignes.append(marge + "</div>")
+    return lignes
+
+
+# ---------------------------------------------------------------------------
+
+RENDUS = {"arbre": rendu_arbre, "flux": rendu_flux}
 
 
 def compter(noeud):
@@ -629,23 +966,24 @@ def main():
         chemin = chercher_tableau(page, config["csv"])
         lignes, colonnes = lire_tableau(chemin)
 
-        absentes = colonnes_manquantes(config, colonnes)
-        propres = []
-        for c in absentes:
+        for absente in colonnes_manquantes(config, colonnes):
             alertes.append("%s : colonne \"%s\" absente du tableau."
-                           % (config["csv"], c))
+                           % (config["csv"], absente))
 
+        propres = []
         racine = construire_arbre(lignes, config, propres)
+        dessiner = RENDUS[config["rendu"]]
+        html, pose = injecter(
+            html, config["cle"],
+            lambda marge, r=racine, p=propres: dessiner(r, marge, p))
         alertes += ["%s : %s" % (config["csv"], p) for p in propres]
 
-        html, pose = injecter(html, config["cle"],
-                              lambda marge, r=racine, c=config: rendu(r, c, marge))
-
         compte = compter(racine)
-        print("  %-20s %s" % (config["cle"],
-                              "  ->  ".join("%d au niveau %d" % (n, i + 1)
-                                            for i, n in enumerate(compte))))
-        print("  %-20s tableau : %s" % ("", chemin))
+        print("  %-14s %-6s %s"
+              % (config["cle"], "(%s)" % config["rendu"],
+                 "  ->  ".join("%d au niveau %d" % (n, i + 1)
+                               for i, n in enumerate(compte))))
+        print("  %-14s %-6s tableau : %s" % ("", "", chemin))
         if not pose:
             alertes.append(
                 "repere \"<!-- ORGANIGRAMME : %s -->\" introuvable dans la "

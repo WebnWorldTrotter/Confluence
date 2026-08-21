@@ -1259,34 +1259,111 @@
         background: var(--orga-trait);
       }
     
-      /* --- Les encadres de revue ----------------------------------------------
-         La colonne "revue" du tableau entoure la boite de pointilles et la
-         rappelle dans la legende. Les couleurs sont attribuees dans l'ordre
-         d'apparition dans le tableau.                                        */
-      .orga-revue-1 { --orga-revue: #B8501C; }   /* corail fonce */
-      .orga-revue-2 { --orga-revue: #2F6B4F; }   /* vert         */
-      .orga-revue-3 { --orga-revue: #2F5D8C; }   /* bleu         */
-      .orga-revue-4 { --orga-revue: #5B4B8A; }   /* violet       */
+      /* ==========================================================================
+         DIAGRAMME DE FLUX  (organigramme des programmes)
+         Une colonne par niveau, de gauche a droite, et un ruban par
+         rattachement dont l'EPAISSEUR suit l'ETC.
+         --------------------------------------------------------------------------
+         Le dessin est un SVG ecrit par outils/organigrammes.py. Ici, rien que
+         les couleurs, le texte et le cadre qui porte le deplacement.
+
+         POURQUOI UN DIAGRAMME ET PAS UN ARBRE
+         Un arbre repond a "qui depend de qui". Ici la question est "ou passe
+         l'argent" : c'est l'epaisseur qui porte l'information, la position ne
+         fait que la ranger.
+
+         LES SIX TEINTES
+         Une par branche de premier niveau, attribuees dans l'ordre du tableau
+         et reprises par tout ce qui en descend. Ce sont les memes couleurs
+         que les tuiles transversales : la page garde une seule palette.
+         ========================================================================== */
+      .flux-teinte-0 { --flux-teinte: var(--encre);   }   /* le sommet      */
+      .flux-teinte-1 { --flux-teinte: #2F5D8C;        }   /* bleu           */
+      .flux-teinte-2 { --flux-teinte: #B8501C;        }   /* corail fonce   */
+      .flux-teinte-3 { --flux-teinte: #2F6B4F;        }   /* vert           */
+      .flux-teinte-4 { --flux-teinte: #5B4B8A;        }   /* violet         */
+      .flux-teinte-5 { --flux-teinte: #4F5D75;        }   /* ardoise        */
+      .flux-teinte-6 { --flux-teinte: #8A6A2F;        }   /* bronze         */
     
-      .orga-noeud[class*="orga-revue-"] {
-        outline: 1px dashed var(--orga-revue);
-        outline-offset: 2px;
+      /* --- Le cadre : on saisit, on tire, le dessin suit ----------------------
+         Le diagramme est plus large que la place disponible, et c'est voulu :
+         le comprimer rendrait les petits montants invisibles. Le cadre defile
+         donc dans les deux sens, a la molette comme au curseur.             */
+      .flux-cadre {
+        overflow: auto;
+        max-height: 600px;
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-md);
+        background: var(--gris-50);
+        cursor: grab;
+        overscroll-behavior: contain;   /* la page ne part pas avec le dessin */
+      }
+      .flux-cadre.cadre-saisi { cursor: grabbing; }
+    
+      /* Pendant qu'on tire, le curseur ne doit pas selectionner les libelles. */
+      .flux-cadre.cadre-saisi .flux { user-select: none; }
+    
+      .flux { display: block; }
+    
+      /* --- Les rubans ----------------------------------------------------------
+         Assez pales pour que les libelles restent lisibles par-dessus, assez
+         francs pour qu'on suive un flux du regard. Au survol, celui qu'on
+         designe se detache du reste.                                        */
+      .flux-lien {
+        fill: var(--flux-teinte, var(--ardoise));
+        /* Le lisere a la couleur du fond : deux rubans qui se touchent
+           restent distincts, et sur le pourtour il ne se voit pas. */
+        stroke: var(--gris-50);
+        stroke-width: 1px;
+        opacity: .20;
+        transition: opacity var(--glisse);
+      }
+      .flux-lien:hover { opacity: .52; }
+    
+      /* --- Les boites ---------------------------------------------------------
+         Un simple trait epais a l'entree de chaque colonne : la boite n'est
+         pas le sujet, elle marque le passage.                               */
+      .flux-noeud {
+        fill: var(--flux-teinte, var(--ardoise));
+        transition: opacity var(--glisse);
+      }
+      .flux-noeud-sommet { fill: var(--encre); }
+      .flux-boite:hover .flux-noeud { opacity: .75; }
+      .flux-boite a { cursor: pointer; }
+      .flux-boite a:hover .flux-nom { text-decoration: underline; }
+    
+      /* --- Les libelles -------------------------------------------------------
+         Ils sont poses PAR-DESSUS les rubans : un lisere blanc les detache du
+         fond quel qu'il soit. paint-order fait passer ce liseré sous la
+         lettre, sinon il la mangerait.                                      */
+      .flux-nom,
+      .flux-etc {
+        stroke: var(--gris-50);
+        stroke-width: 3px;
+        paint-order: stroke;
+        pointer-events: none;
+        font-family: inherit;
+      }
+      .flux-nom {
+        fill: var(--encre);
+        font-size: 12px;
+        font-weight: 650;
+      }
+      .flux-nom-court { font-size: 11px; font-weight: 600; }
+      .flux-etc {
+        fill: var(--corail-fonce);
+        font-size: 11px;
+        font-weight: 700;
       }
     
-      .orga-legende {
+      /* La note qui annonce qu'on peut deplacer le dessin. */
+      .flux-note {
         display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
+        align-items: center;
         gap: var(--e2);
-        margin-bottom: var(--e3);
-      }
-      .orga-legende-item {
-        padding: 1px var(--e2);
-        border: 1px dashed var(--orga-revue, var(--gris-300));
-        border-radius: var(--rond-sm);
+        margin-bottom: var(--e2);
         font-size: var(--txt-xs);
-        font-weight: 600;
-        color: var(--orga-revue, var(--gris-600));
+        color: var(--gris-500);
       }
     
       /* --- Quand la place manque vraiment --------------------------------------
@@ -1965,312 +2042,206 @@
     
                                 <!-- Contenu de l'onglet "JL Programs" -->
                                 <div id="contenu-jl-programs" class="onglet-contenu">
-                                    <div class="orga-cadre">
-                                        <!-- ORGANIGRAMME : programmes -->
-                                        <div class="organigramme" style="--branches: 5;">
-                                          <div class="orga-legende">
-                                            <span class="orga-legende-item orga-revue-1">PMO/MPR reviews</span>
-                                            <span class="orga-legende-item orga-revue-2">MBR reviews</span>
-                                          </div>
-                                          <div class="orga-sommet">
-                                            <div class="orga-noeud orga-noeud-1">
-                                              <span class="orga-nom">Programmes Lambda</span>
-                                              <span class="orga-etc">ETC&nbsp;: 8 901 M€</span>
-                                            </div>
-                                          </div>
-                                          <div class="orga-branches">
-                                            <div class="orga-branche">
-                                              <div class="orga-noeud orga-noeud-2">
-                                                <span class="orga-nom">Portefeuille Alpha</span>
-                                                <span class="orga-etc">ETC&nbsp;: 752 M€</span>
-                                              </div>
-                                              <div class="orga-enfants">
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
-                                                      <span class="orga-nom">Programme Alpha 1</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 217 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
-                                                      <span class="orga-nom">Programme Alpha 2</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 215 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
-                                                      <span class="orga-nom">Programme Alpha 3</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 139 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3">
-                                                      <span class="orga-nom">Programme Alpha 4</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 129 M€</span>
-                                                    </div>
-                                                  </div>
-                                                  <div class="orga-enfants">
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
-                                                          <span class="orga-nom">Projet Alpha 4.1</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 19 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
-                                                          <span class="orga-nom">Projet Alpha 4.2</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 46 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
-                                                          <span class="orga-nom">Projet Alpha 4.3</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 54 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4">
-                                                          <span class="orga-nom">Autres Alpha 4</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 10 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3">
-                                                      <span class="orga-nom">Programme Alpha 5</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 52 M€</span>
-                                                    </div>
-                                                  </div>
-                                                  <div class="orga-enfants">
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
-                                                          <span class="orga-nom">Projet Alpha 5.1</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 40 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4">
-                                                          <span class="orga-nom">Autres Alpha 5</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 12 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div class="orga-branche">
-                                              <div class="orga-noeud orga-noeud-2">
-                                                <span class="orga-nom">Portefeuille Bravo</span>
-                                                <span class="orga-etc">ETC&nbsp;: 6 500 M€</span>
-                                              </div>
-                                              <div class="orga-enfants">
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
-                                                      <span class="orga-nom">Programme Bravo 1</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 1 400 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
-                                                      <span class="orga-nom">Programme Bravo 2</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 4 800 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
-                                                      <span class="orga-nom">Programme Bravo 3</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 300 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div class="orga-branche">
-                                              <div class="orga-noeud orga-noeud-2">
-                                                <span class="orga-nom">Portefeuille Charlie</span>
-                                                <span class="orga-etc">ETC&nbsp;: 455 M€</span>
-                                              </div>
-                                              <div class="orga-enfants">
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3">
-                                                      <span class="orga-nom">Programme Charlie 1</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 11 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3">
-                                                      <span class="orga-nom">Programme Charlie 2</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 82 M€</span>
-                                                    </div>
-                                                  </div>
-                                                  <div class="orga-enfants">
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4">
-                                                          <span class="orga-nom">Projet Charlie 2.1</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 29 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4">
-                                                          <span class="orga-nom">Autres Charlie 2</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 53 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
-                                                      <span class="orga-nom">Programme Charlie 3</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 361 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3">
-                                                      <span class="orga-nom">Programme Charlie 4</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 1 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div class="orga-branche">
-                                              <div class="orga-noeud orga-noeud-2">
-                                                <span class="orga-nom">Portefeuille Delta</span>
-                                                <span class="orga-etc">ETC&nbsp;: 643 M€</span>
-                                              </div>
-                                              <div class="orga-enfants">
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3">
-                                                      <span class="orga-nom">Programme Delta 1</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 444 M€</span>
-                                                    </div>
-                                                  </div>
-                                                  <div class="orga-enfants">
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4 orga-revue-2">
-                                                          <span class="orga-nom">Projet Delta 1.1</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 295 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div class="orga-enfant">
-                                                      <div class="orga-tige">
-                                                        <div class="orga-noeud orga-noeud-4 orga-revue-2">
-                                                          <span class="orga-nom">Autres Delta 1</span>
-                                                          <span class="orga-etc">ETC&nbsp;: 149 M€</span>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
-                                                      <span class="orga-nom">Programme Delta 2</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 84 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
-                                                      <span class="orga-nom">Programme Delta 3</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 70 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
-                                                      <span class="orga-nom">Programme Delta 4</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 45 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div class="orga-branche">
-                                              <div class="orga-noeud orga-noeud-2">
-                                                <span class="orga-nom">Portefeuille Echo</span>
-                                                <span class="orga-etc">ETC&nbsp;: 551 M€</span>
-                                              </div>
-                                              <div class="orga-enfants">
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
-                                                      <span class="orga-nom">Programme Echo 1</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 177 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
-                                                      <span class="orga-nom">Programme Echo 2</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 100 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
-                                                      <span class="orga-nom">Programme Echo 3</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 170 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="orga-enfant">
-                                                  <div class="orga-tige">
-                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
-                                                      <span class="orga-nom">Programme Echo 4</span>
-                                                      <span class="orga-etc">ETC&nbsp;: 104 M€</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                        <!-- FIN ORGANIGRAMME : programmes -->
+                                    <p class="flux-note">
+                                        <span aria-hidden="true">&#8596;</span>
+                                        Cliquer-glisser dans le cadre pour deplacer le diagramme.
+                                        L'epaisseur des rubans suit l'ETC.
+                                    </p>
+                                    <!-- ORGANIGRAMME : programmes -->
+                                    <div class="flux-cadre" data-deplacable="oui" tabindex="0" role="group" aria-label="Diagramme de repartition de l'ETC">
+                                      <svg class="flux" role="img" viewBox="0 0 961 816" width="961" height="816" aria-label="Repartition de l'ETC, du sommet vers les projets">
+                                        <g class="flux-liens">
+                                          <path class="flux-lien flux-teinte-1" d="M31,169.8 C150.5,169.8 150.5,155.8 270,155.8 L270,196 C150.5,196 150.5,210 31,210 Z"><title>Portefeuille Alpha  ·  752 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M31,210 C150.5,210 150.5,203 270,203 L270,551 C150.5,551 150.5,558 31,558 Z"><title>Portefeuille Bravo  ·  6 500 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M31,558 C150.5,558 150.5,558 270,558 L270,582.3 C150.5,582.3 150.5,582.3 31,582.3 Z"><title>Portefeuille Charlie  ·  455 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M31,582.3 C150.5,582.3 150.5,589.3 270,589.3 L270,623.8 C150.5,623.8 150.5,616.8 31,616.8 Z"><title>Portefeuille Delta  ·  643 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M31,616.8 C150.5,616.8 150.5,630.8 270,630.8 L270,660.2 C150.5,660.2 150.5,646.2 31,646.2 Z"><title>Portefeuille Echo  ·  551 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,133.4 C402.5,133.4 402.5,18 522,18 L522,35 C402.5,35 402.5,150.4 283,150.4 Z"><title>Programme Alpha 1  ·  217 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,150.4 C402.5,150.4 402.5,42 522,42 L522,59 C402.5,59 402.5,167.4 283,167.4 Z"><title>Programme Alpha 2  ·  215 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,167.4 C402.5,167.4 402.5,66 522,66 L522,83 C402.5,83 402.5,184.4 283,184.4 Z"><title>Programme Alpha 3  ·  139 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,184.4 C402.5,184.4 402.5,90 522,90 L522,107 C402.5,107 402.5,201.4 283,201.4 Z"><title>Programme Alpha 4  ·  129 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,201.4 C402.5,201.4 402.5,114 522,114 L522,131 C402.5,131 402.5,218.4 283,218.4 Z"><title>Programme Alpha 5  ·  52 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M283,202.5 C402.5,202.5 402.5,138 522,138 L522,212.9 C402.5,212.9 402.5,277.5 283,277.5 Z"><title>Programme Bravo 1  ·  1 400 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M283,277.5 C402.5,277.5 402.5,219.9 522,219.9 L522,476.9 C402.5,476.9 402.5,534.4 283,534.4 Z"><title>Programme Bravo 2  ·  4 800 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M283,534.4 C402.5,534.4 402.5,483.9 522,483.9 L522,500.9 C402.5,500.9 402.5,551.4 283,551.4 Z"><title>Programme Bravo 3  ·  300 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,535 C402.5,535 402.5,507.9 522,507.9 L522,524.9 C402.5,524.9 402.5,552 283,552 Z"><title>Programme Charlie 1  ·  11 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,552 C402.5,552 402.5,531.9 522,531.9 L522,548.9 C402.5,548.9 402.5,569 283,569 Z"><title>Programme Charlie 2  ·  82 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,569 C402.5,569 402.5,555.9 522,555.9 L522,575.2 C402.5,575.2 402.5,588.3 283,588.3 Z"><title>Programme Charlie 3  ·  361 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,588.3 C402.5,588.3 402.5,582.2 522,582.2 L522,599.2 C402.5,599.2 402.5,605.3 283,605.3 Z"><title>Programme Charlie 4  ·  1 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,569.2 C402.5,569.2 402.5,606.2 522,606.2 L522,630 C402.5,630 402.5,592.9 283,592.9 Z"><title>Programme Delta 1  ·  444 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,592.9 C402.5,592.9 402.5,637 522,637 L522,654 C402.5,654 402.5,609.9 283,609.9 Z"><title>Programme Delta 2  ·  84 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,609.9 C402.5,609.9 402.5,661 522,661 L522,678 C402.5,678 402.5,626.9 283,626.9 Z"><title>Programme Delta 3  ·  70 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,626.9 C402.5,626.9 402.5,685 522,685 L522,702 C402.5,702 402.5,643.9 283,643.9 Z"><title>Programme Delta 4  ·  45 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,611.5 C402.5,611.5 402.5,709 522,709 L522,726 C402.5,726 402.5,628.5 283,628.5 Z"><title>Programme Echo 1  ·  177 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,628.5 C402.5,628.5 402.5,733 522,733 L522,750 C402.5,750 402.5,645.5 283,645.5 Z"><title>Programme Echo 2  ·  100 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,645.5 C402.5,645.5 402.5,757 522,757 L522,774 C402.5,774 402.5,662.5 283,662.5 Z"><title>Programme Echo 3  ·  170 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,662.5 C402.5,662.5 402.5,781 522,781 L522,798 C402.5,798 402.5,679.5 283,679.5 Z"><title>Programme Echo 4  ·  104 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,64.5 C654.5,64.5 654.5,54 774,54 L774,71 C654.5,71 654.5,81.5 535,81.5 Z"><title>Projet Alpha 4.1  ·  19 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,81.5 C654.5,81.5 654.5,78 774,78 L774,95 C654.5,95 654.5,98.5 535,98.5 Z"><title>Projet Alpha 4.2  ·  46 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,98.5 C654.5,98.5 654.5,102 774,102 L774,119 C654.5,119 654.5,115.5 535,115.5 Z"><title>Projet Alpha 4.3  ·  54 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,115.5 C654.5,115.5 654.5,126 774,126 L774,143 C654.5,143 654.5,132.5 535,132.5 Z"><title>Autres Alpha 4  ·  10 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,105.5 C654.5,105.5 654.5,150 774,150 L774,167 C654.5,167 654.5,122.5 535,122.5 Z"><title>Projet Alpha 5.1  ·  40 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,122.5 C654.5,122.5 654.5,174 774,174 L774,191 C654.5,191 654.5,139.5 535,139.5 Z"><title>Autres Alpha 5  ·  12 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M535,523.4 C654.5,523.4 654.5,519.9 774,519.9 L774,536.9 C654.5,536.9 654.5,540.4 535,540.4 Z"><title>Projet Charlie 2.1  ·  29 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M535,540.4 C654.5,540.4 654.5,543.9 774,543.9 L774,560.9 C654.5,560.9 654.5,557.4 535,557.4 Z"><title>Autres Charlie 2  ·  53 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M535,601.1 C654.5,601.1 654.5,597.6 774,597.6 L774,614.6 C654.5,614.6 654.5,618.1 535,618.1 Z"><title>Projet Delta 1.1  ·  295 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M535,618.1 C654.5,618.1 654.5,621.6 774,621.6 L774,638.6 C654.5,638.6 654.5,635.1 535,635.1 Z"><title>Autres Delta 1  ·  149 M€</title></path>
+                                        </g>
+                                        <g class="flux-noeuds">
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-0 flux-noeud-sommet" x="18" y="169.8" width="13" height="476.5" rx="3"><title>Programmes Lambda  ·  8 901 M€</title></rect>
+                                            <text class="flux-nom" x="39" y="406">Programmes Lambda</text>
+                                            <text class="flux-etc" x="39" y="420">8 901 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="270" y="155.8" width="13" height="40.3" rx="3"><title>Portefeuille Alpha  ·  752 M€</title></rect>
+                                            <text class="flux-nom" x="291" y="173.9">Portefeuille Alpha</text>
+                                            <text class="flux-etc" x="291" y="187.9">752 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="270" y="203" width="13" height="348" rx="3"><title>Portefeuille Bravo  ·  6 500 M€</title></rect>
+                                            <text class="flux-nom" x="291" y="375">Portefeuille Bravo</text>
+                                            <text class="flux-etc" x="291" y="389">6 500 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="270" y="558" width="13" height="24.4" rx="3"><title>Portefeuille Charlie  ·  455 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="291" y="574.2">Portefeuille Charlie  ·  455 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="270" y="589.3" width="13" height="34.4" rx="3"><title>Portefeuille Delta  ·  643 M€</title></rect>
+                                            <text class="flux-nom" x="291" y="604.5">Portefeuille Delta</text>
+                                            <text class="flux-etc" x="291" y="618.5">643 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="270" y="630.8" width="13" height="29.5" rx="3"><title>Portefeuille Echo  ·  551 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="291" y="649.5">Portefeuille Echo  ·  551 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="18" width="13" height="17" rx="3"><title>Programme Alpha 1  ·  217 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="30.5">Programme Alpha 1  ·  217 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="42" width="13" height="17" rx="3"><title>Programme Alpha 2  ·  215 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="54.5">Programme Alpha 2  ·  215 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="66" width="13" height="17" rx="3"><title>Programme Alpha 3  ·  139 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="78.5">Programme Alpha 3  ·  139 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="90" width="13" height="17" rx="3"><title>Programme Alpha 4  ·  129 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="102.5">Programme Alpha 4  ·  129 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="114" width="13" height="17" rx="3"><title>Programme Alpha 5  ·  52 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="126.5">Programme Alpha 5  ·  52 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="522" y="138" width="13" height="74.9" rx="3"><title>Programme Bravo 1  ·  1 400 M€</title></rect>
+                                            <text class="flux-nom" x="543" y="173.5">Programme Bravo 1</text>
+                                            <text class="flux-etc" x="543" y="187.5">1 400 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="522" y="219.9" width="13" height="257" rx="3"><title>Programme Bravo 2  ·  4 800 M€</title></rect>
+                                            <text class="flux-nom" x="543" y="346.4">Programme Bravo 2</text>
+                                            <text class="flux-etc" x="543" y="360.4">4 800 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="522" y="483.9" width="13" height="17" rx="3"><title>Programme Bravo 3  ·  300 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="496.4">Programme Bravo 3  ·  300 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="507.9" width="13" height="17" rx="3"><title>Programme Charlie 1  ·  11 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="520.4">Programme Charlie 1  ·  11 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="531.9" width="13" height="17" rx="3"><title>Programme Charlie 2  ·  82 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="544.4">Programme Charlie 2  ·  82 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="555.9" width="13" height="19.3" rx="3"><title>Programme Charlie 3  ·  361 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="569.6">Programme Charlie 3  ·  361 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="582.2" width="13" height="17" rx="3"><title>Programme Charlie 4  ·  1 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="594.7">Programme Charlie 4  ·  1 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="606.2" width="13" height="23.8" rx="3"><title>Programme Delta 1  ·  444 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="622.1">Programme Delta 1  ·  444 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="637" width="13" height="17" rx="3"><title>Programme Delta 2  ·  84 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="649.5">Programme Delta 2  ·  84 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="661" width="13" height="17" rx="3"><title>Programme Delta 3  ·  70 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="673.5">Programme Delta 3  ·  70 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="685" width="13" height="17" rx="3"><title>Programme Delta 4  ·  45 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="697.5">Programme Delta 4  ·  45 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="709" width="13" height="17" rx="3"><title>Programme Echo 1  ·  177 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="721.5">Programme Echo 1  ·  177 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="733" width="13" height="17" rx="3"><title>Programme Echo 2  ·  100 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="745.5">Programme Echo 2  ·  100 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="757" width="13" height="17" rx="3"><title>Programme Echo 3  ·  170 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="769.5">Programme Echo 3  ·  170 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="781" width="13" height="17" rx="3"><title>Programme Echo 4  ·  104 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="793.5">Programme Echo 4  ·  104 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="54" width="13" height="17" rx="3"><title>Projet Alpha 4.1  ·  19 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="66.5">Projet Alpha 4.1  ·  19 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="78" width="13" height="17" rx="3"><title>Projet Alpha 4.2  ·  46 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="90.5">Projet Alpha 4.2  ·  46 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="102" width="13" height="17" rx="3"><title>Projet Alpha 4.3  ·  54 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="114.5">Projet Alpha 4.3  ·  54 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="126" width="13" height="17" rx="3"><title>Autres Alpha 4  ·  10 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="138.5">Autres Alpha 4  ·  10 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="150" width="13" height="17" rx="3"><title>Projet Alpha 5.1  ·  40 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="162.5">Projet Alpha 5.1  ·  40 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="174" width="13" height="17" rx="3"><title>Autres Alpha 5  ·  12 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="186.5">Autres Alpha 5  ·  12 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="774" y="519.9" width="13" height="17" rx="3"><title>Projet Charlie 2.1  ·  29 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="532.4">Projet Charlie 2.1  ·  29 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="774" y="543.9" width="13" height="17" rx="3"><title>Autres Charlie 2  ·  53 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="556.4">Autres Charlie 2  ·  53 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="774" y="597.6" width="13" height="17" rx="3"><title>Projet Delta 1.1  ·  295 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="610.1">Projet Delta 1.1  ·  295 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="774" y="621.6" width="13" height="17" rx="3"><title>Autres Delta 1  ·  149 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="634.1">Autres Delta 1  ·  149 M€</text>
+                                          </g>
+                                        </g>
+                                      </svg>
                                     </div>
+                                    <!-- FIN ORGANIGRAMME : programmes -->
                                 </div>
     
                             </div>
@@ -2349,4 +2320,47 @@
         cible.classList.add('actif');
         bouton.classList.add('actif');
       }
+    
+      // ----------------------------------------------------------------------
+      // DEPLACER UN CADRE AU CURSEUR
+      // Le diagramme de flux est plus large que la place disponible. La barre
+      // de defilement suffirait, mais on attrape mal une barre horizontale a
+      // la souris : on rend donc le cadre lui-meme saisissable, comme une
+      // carte qu'on ferait glisser sur une table.
+      //
+      // Les deux ecoutes de deplacement et de relachement sont posees sur la
+      // FENETRE, pas sur le cadre : sans cela, sortir du cadre en tirant
+      // laisserait le dessin colle au curseur.
+      // ----------------------------------------------------------------------
+      function rendreDeplacable(cadre) {
+        var saisi = false, departX = 0, departY = 0, gauche = 0, haut = 0;
+    
+        cadre.addEventListener('mousedown', function (evenement) {
+          if (evenement.button !== 0) { return; }   // clic gauche seulement
+          saisi = true;
+          departX = evenement.clientX;
+          departY = evenement.clientY;
+          gauche = cadre.scrollLeft;
+          haut = cadre.scrollTop;
+          cadre.classList.add('cadre-saisi');
+          evenement.preventDefault();
+        });
+    
+        window.addEventListener('mousemove', function (evenement) {
+          if (!saisi) { return; }
+          cadre.scrollLeft = gauche - (evenement.clientX - departX);
+          cadre.scrollTop = haut - (evenement.clientY - departY);
+        });
+    
+        window.addEventListener('mouseup', function () {
+          if (!saisi) { return; }
+          saisi = false;
+          cadre.classList.remove('cadre-saisi');
+        });
+      }
+    
+      // Sur telephone et tablette, le defilement au doigt fait deja ce
+      // travail : rien a ajouter.
+      var cadres = document.querySelectorAll('[data-deplacable]');
+      for (var i = 0; i < cadres.length; i++) { rendreDeplacable(cadres[i]); }
     </script>

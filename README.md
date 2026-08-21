@@ -63,16 +63,27 @@ colonnes de gauche, comme dans un tableau croise. Les lignes qui partagent
 un debut de chemin partagent les memes boites : une sous-direction citee
 dix fois n'apparait qu'une fois sur la page, avec ses dix entites dessous.
 
-Deux colonnes sortent de la hierarchie :
+Les deux ne sont pas dessines de la meme facon, parce qu'ils ne repondent
+pas a la meme question :
 
-- `place` (organisation) pose une sous-direction a cote du trait plutot que
-  dans la rangee : `support` a gauche, `adjoint` a droite.
-- `revue` (programmes) entoure la boite de pointilles et l'ajoute a la
-  legende. Chaque boite porte son propre encadre ; des boites voisines qui
-  partagent la meme valeur se lisent comme un groupe.
+- **l'organisation** est un ARBRE vertical. La question est "qui depend de
+  qui". La colonne `place` sort une sous-direction de la rangee pour la
+  poser a cote du trait : `support` a gauche, `adjoint` a droite.
+- **les programmes** sont un FLUX horizontal, de gauche a droite. La
+  question est "ou passe l'argent" : l'epaisseur de chaque ruban suit
+  l'ETC, on voit donc du premier coup d'oeil quel portefeuille pese et
+  comment il se repartit. Le diagramme est plus large que l'ecran, et c'est
+  voulu : on le deplace au curseur (cliquer-glisser) ou a la molette.
 
 Les ETC s'ecrivent en millions d'euros, en chiffres seulement (`752`) :
 l'affichage (`752 M€`, `6 500 M€`) est du ressort du script.
+
+Une reserve sur l'echelle du flux : un noeud ne descend jamais sous un
+plancher de quelques pixels. Sans lui, un programme a 1 M€ face a un
+portefeuille a 6 500 M€ ferait un trait invisible, impossible a survoler et
+impossible a lire. Les proportions sont donc exactes partout, sauf pour les
+plus petits montants, remontes au plancher. Le reglage se trouve en tete de
+`outils/organigrammes.py`, dans `FLUX`.
 
 ## Bon a savoir
 
