@@ -144,6 +144,12 @@
        l'ensemble parait plus soigne.                                      */
     --glisse: 220ms cubic-bezier(.2, .7, .3, 1);
 
+    /* Permet aux colonnes de reagir a la largeur de CE bloc plutot qu'a
+       celle de la fenetre : utile si la page vit dans une colonne etroite
+       de la Content Layout Macro. */
+    container-type: inline-size;
+    container-name: jls;
+
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
                  "Helvetica Neue", Arial, sans-serif;
     font-size: var(--txt-md);
@@ -227,6 +233,40 @@
   .grille-compacte .carte { min-height: 78px; padding: var(--e3) var(--e4); }
   .grille-compacte .carte-titre { font-size: var(--txt-md); }
   .grille-compacte .carte::after { bottom: var(--e2); right: var(--e3); font-size: 15px; }
+
+  /* ==========================================================================
+     COLONNES COTE A COTE
+     Met deux ensembles l'un a cote de l'autre, alignes par le HAUT.
+     --------------------------------------------------------------------------
+     Par defaut les colonnes sont empilees ; elles passent cote a cote des
+     que la place le permet. Les deux colonnes gardent leur hauteur propre :
+     la plus courte ne s'etire pas pour rattraper la plus longue.
+
+     POUR REGLER LA LARGEUR DES COLONNES
+     Change les deux chiffres "fr" plus bas :
+        1.5fr et 1fr  -> la colonne de gauche est 1,5 fois plus large
+        1fr   et 1fr  -> les deux colonnes font la meme largeur
+        1fr   et 1.5fr-> c'est la colonne de droite qui est plus large
+
+     POUR REMETTRE LES DEUX ENSEMBLES L'UN SOUS L'AUTRE
+     Enleve simplement "deux-colonnes" du <section> concerne dans le HTML.
+     ========================================================================== */
+  .deux-colonnes {
+    display: grid;
+    gap: var(--e5);
+    align-items: start;                  /* alignes par le haut */
+    grid-template-columns: minmax(0, 1fr);   /* empilees par defaut */
+  }
+
+  @container jls (min-width: 820px) {
+    .deux-colonnes {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    }
+  }
+
+  /* Le titre de chaque colonne ne doit pas ajouter d'espace au-dessus :
+     les deux colonnes demarrent ainsi exactement a la meme hauteur. */
+  .deux-colonnes > div > .titre-section { margin-top: 0; }
 
   /* ==========================================================================
      5. CARTE
@@ -757,54 +797,86 @@
     </div>
   </section>
 
-  <!-- BLOC : ONGLETS GROUP PMO / TRANSVERSAL
-       Le titre ci-dessous est un intitule provisoire : remplace-le par le
-       terme employe dans ton equipe.
-       Pour deplacer ce bloc, coupe TOUT depuis "<section class="bloc">"
-       jusqu'au "</section>" qui lui correspond. -->
-  <section class="bloc">
-    <h2 class="titre-section">Perimetres</h2>
+  <!-- BLOC : PERIMETRES + MULTI-PROGRAMME SYNTHESIS (cote a cote)
+       Ces deux ensembles partagent une meme section a deux colonnes.
+       Chaque colonne est un <div> avec son propre titre.
+       - Pour les remettre l'un sous l'autre : enleve "deux-colonnes" de la
+         ligne <section class="bloc deux-colonnes"> ci-dessous.
+       - Pour inverser gauche/droite : intervertis les deux <div> colonnes.
+       - La largeur relative des colonnes se regle dans la feuille de style,
+         section "COLONNES COTE A COTE". -->
+  <section class="bloc deux-colonnes">
 
-    <div class="onglets">
+    <!-- Colonne de gauche : le tableau a onglets.
+         Le titre est un intitule provisoire, remplace-le par le terme
+         employe dans ton equipe. -->
+    <div>
+      <h2 class="titre-section">Perimetres</h2>
 
-      <div class="onglets-boutons">
-        <button class="onglet-bouton actif"
-                onclick="afficherOnglet(event, 'contenu-groupe-pmo')">
-          Group PMO
-        </button>
-        <button class="onglet-bouton"
-                onclick="afficherOnglet(event, 'contenu-transversal')">
-          Transversal
-        </button>
-      </div>
+      <div class="onglets">
 
-      <!-- Contenu de l'onglet "Group PMO" -->
-      <div id="contenu-groupe-pmo" class="onglet-contenu actif">
-
-        <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">SYSTEM</a>
-        <div class="sous-lignes">
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
+        <div class="onglets-boutons">
+          <button class="onglet-bouton actif"
+                  onclick="afficherOnglet(event, 'contenu-groupe-pmo')">
+            Group PMO
+          </button>
+          <button class="onglet-bouton"
+                  onclick="afficherOnglet(event, 'contenu-transversal')">
+            Transversal
+          </button>
         </div>
 
-        <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">Launcher</a>
-        <div class="sous-lignes">
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
-          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
+        <!-- Contenu de l'onglet "Group PMO" -->
+        <div id="contenu-groupe-pmo" class="onglet-contenu actif">
+
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">SYSTEM</a>
+          <div class="sous-lignes">
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
+          </div>
+
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">Launcher</a>
+          <div class="sous-lignes">
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
+            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
+          </div>
+
+        </div>
+
+        <!-- Contenu de l'onglet "Transversal" -->
+        <div id="contenu-transversal" class="onglet-contenu">
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 1}}</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 2}}</a>
+          <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 3}}</a>
         </div>
 
       </div>
-
-      <!-- Contenu de l'onglet "Transversal" -->
-      <div id="contenu-transversal" class="onglet-contenu">
-        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 1}}</a>
-        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 2}}</a>
-        <a href="REMPLACE_PAR_LE_LIEN" class="ligne">{{Sujet transversal 3}}</a>
-      </div>
-
     </div>
+
+    <!-- Colonne de droite : la synthese multi-programme -->
+    <div>
+      <h2 class="titre-section">
+        Multi-Programme Synthesis
+        <span class="titre-compteur">2</span>
+      </h2>
+
+      <div class="grille grille-large">
+
+        <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN">
+          <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
+          <p class="carte-personne">{{Prenom Nom}}</p>
+        </a>
+
+        <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN">
+          <p class="carte-titre">Ariane 6</p>
+          <p class="carte-personne">{{Prenom Nom}}</p>
+        </a>
+
+      </div>
+    </div>
+
   </section>
 
   <!-- BLOC : JL BOARD MEMBER FOCAL POINT -->
@@ -844,32 +916,7 @@
     </div>
   </section>
 
-  <!-- BLOC : MULTI-PROGRAMME SYNTHESIS -->
-  <section class="bloc">
-    <h2 class="titre-section">
-      Multi-Programme Synthesis
-      <span class="titre-compteur">2</span>
-    </h2>
 
-    <div class="grille grille-large">
-
-      <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN">
-        <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-      <a class="carte carte-moyenne" href="REMPLACE_PAR_LE_LIEN">
-        <p class="carte-titre">Ariane 6</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
-
-      <a class="carte carte-moyenne carte-sombre" href="REMPLACE_PAR_LE_LIEN">
-        <p class="carte-titre">JLS Internal Portal</p>
-        <p class="carte-personne">Acces aux outils et referentiels de l'equipe</p>
-      </a>
-
-    </div>
-  </section>
 
 </div>
 
