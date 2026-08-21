@@ -86,6 +86,7 @@ TRAVAIL = Path.cwd()                             # d'ou la commande est lancee
 
 NOM_HTML = "00-facile-a-modifier.html"
 NOM_CSV = "responsables.csv"
+NOM_SORTIE = "page-remplie.html"
 
 # Ordre de recherche de la page. Le premier chemin qui existe gagne.
 PISTES_HTML = [
@@ -95,19 +96,40 @@ PISTES_HTML = [
 ]
 
 
+def pages_du_dossier(dossier):
+    """Les .html d'un dossier, sans celui que le script produit lui-meme.
+
+    Sans cette exclusion, le deuxieme passage trouverait deux fichiers --
+    la page source et la page remplie du passage precedent -- et ne saurait
+    plus lequel choisir.
+    """
+    return sorted(p for p in dossier.glob("*.html")
+                  if p.name.lower() != NOM_SORTIE)
+
+
 def chercher_page():
     """Trouve la page a remplir, ou renvoie None.
 
-    A defaut du nom attendu, un dossier qui ne contient qu'un seul fichier
-    .html fait l'affaire : c'est forcement celui-la.
+    A defaut du nom attendu, un dossier qui ne contient qu'une seule page
+    fait l'affaire : c'est forcement celle-la. S'il y en a plusieurs, mieux
+    vaut s'arreter et demander laquelle que d'en tirer une au hasard.
     """
     for piste in PISTES_HTML:
         if piste.exists():
             return piste
+
     for dossier in (DOSSIER, TRAVAIL):
-        candidats = sorted(dossier.glob("*.html"))
+        candidats = pages_du_dossier(dossier)
         if len(candidats) == 1:
             return candidats[0]
+        if len(candidats) > 1:
+            raise SystemExit(
+                "Plusieurs pages HTML dans %s :\n%s\n\n"
+                "Indique celle a remplir :\n"
+                "    python %s --cartes \"%s\""
+                % (dossier,
+                   "\n".join("    %s" % c.name for c in candidats),
+                   Path(sys.argv[0]).name, candidats[0].name))
     return None
 
 
@@ -156,6 +178,46 @@ ACCEPTE = {
 
 
 # ---------------------------------------------------------------------------
+# Lecture des fichiers texte
+# ---------------------------------------------------------------------------
+
+# Essayes dans cet ordre. Excel en francais enregistre par defaut en
+# Windows-1252 : "CSV UTF-8" est une entree distincte du menu, souvent
+# manquee. Refuser ces fichiers obligerait a re-enregistrer avant chaque
+# usage. latin-1 en dernier ne peut jamais echouer, il accepte tout octet.
+ENCODAGES = (("utf-8-sig", "UTF-8"),
+             ("cp1252", "Windows-1252"),
+             ("latin-1", "Latin-1"))
+
+
+MARQUEUR_UTF8 = b"\xef\xbb\xbf"    # le "BOM" que Windows pose parfois en tete
+
+
+def lire_texte(chemin):
+    """Renvoie (contenu, encodage a utiliser pour reecrire, nom lisible).
+
+    On decode les octets nous-memes plutot que de passer par read_text :
+    cela evite toute traduction des fins de ligne, donc le CRLF de Windows
+    ressort intact.
+
+    Le marqueur de tete est traite a part. utf-8-sig le retire a la lecture
+    et en repose un a l'ecriture ; reecrire un fichier qui n'en avait pas
+    lui en ajouterait un. On note donc s'il etait la.
+    """
+    donnees = chemin.read_bytes()
+    for encodage, etiquette in ENCODAGES:
+        try:
+            texte = donnees.decode(encodage)
+        except UnicodeDecodeError:
+            continue
+        pour_reecrire = encodage
+        if encodage == "utf-8-sig" and not donnees.startswith(MARQUEUR_UTF8):
+            pour_reecrire = "utf-8"
+        return texte, pour_reecrire, etiquette
+    raise SystemExit("Impossible de lire %s : encodage non reconnu." % chemin)
+
+
+# ---------------------------------------------------------------------------
 # Comparaison des intitules
 # ---------------------------------------------------------------------------
 
@@ -191,9 +253,11 @@ def lire_tableau(chemin):
     """Renvoie {cle: {"titre":, "nom":, "lien":, "image":}}.
 
     Le separateur est detecte automatiquement : Excel en francais enregistre
-    avec des points-virgules, Excel en anglais avec des virgules.
+    avec des points-virgules, Excel en anglais avec des virgules. L'encodage
+    l'est aussi, voir lire_texte.
     """
-    texte = chemin.read_text(encoding="utf-8-sig")  # -sig retire le marqueur Windows
+    texte, _, etiquette = lire_texte(chemin)
+    lire_tableau.encodage = etiquette       # pour l'afficher en fin de course
     lignes_brutes = texte.splitlines()
     if not lignes_brutes:
         raise SystemExit("Le tableau est vide.")
@@ -548,8 +612,7 @@ def ecrire_modele(chemin_html, sortie):
     valeurs deja saisies sont reportees telles quelles. Seuls les elements
     nouveaux apparaissent vides, et les lignes qui ne correspondent plus a
     rien disparaissent (elles sont annoncees avant)."""
-    with open(chemin_html, encoding="utf-8", newline="") as f:
-        html = f.read()
+    html, _, _ = lire_texte(chemin_html)
 
     elements = lister_elements(html)
 
@@ -677,7 +740,7 @@ def main():
     chemin_csv = (Path(arguments[0]) if arguments
                   else chercher_tableau(chemin_html))
     sortie = (Path(arguments[2]) if len(arguments) > 2
-              else cote_a_cote(chemin_html, "page-remplie.html"))
+              else cote_a_cote(chemin_html, NOM_SORTIE))
 
     for f in (chemin_csv, chemin_html):
         if not f.exists():
@@ -690,17 +753,20 @@ def main():
 
     entrees = lire_tableau(chemin_csv)
 
-    # newline="" : les fins de ligne du fichier d'origine sont conservees
-    # telles quelles (Windows ou Unix), le fichier ressort a l'identique.
-    with open(chemin_html, encoding="utf-8", newline="") as f:
-        html = f.read()
+    # Les fins de ligne du fichier d'origine sont conservees
+    # telles quelles (Windows ou Unix). La page ressort dans l'encodage ou
+    # elle est entree : a tableau inchange, le fichier produit est identique
+    # a l'original, ce qui rend la verification triviale.
+    html, encodage_page, _ = lire_texte(chemin_html)
 
     html_rempli, compteur, vus, utilisees, ignores = remplir(html, entrees)
 
-    with open(sortie, "w", encoding="utf-8", newline="") as f:
+    with open(sortie, "w", encoding=encodage_page, newline="") as f:
         f.write(html_rempli)
 
-    print("Tableau : %s" % chemin_csv)
+    etiquette = getattr(lire_tableau, "encodage", "UTF-8")
+    print("Tableau : %s%s" % (chemin_csv,
+          "" if etiquette == "UTF-8" else "   (lu en %s)" % etiquette))
     print("Page    : %s" % chemin_html)
     print("Sortie  : %s" % sortie)
     print()

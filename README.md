@@ -267,7 +267,7 @@ L'adresse doit commencer par `https://` ou `/confluence/…`. Une adresse en
 python3 outils/remplir-depuis-tableau.py --cartes
 
 # 2. remplir ce qui change dans Excel,
-#    puis « Enregistrer sous » → CSV UTF-8
+#    puis « Enregistrer sous » → CSV
 
 # 3. produire la page remplie
 python3 outils/remplir-depuis-tableau.py
@@ -282,9 +282,14 @@ images déjà en place, et conserve ce que tu avais déjà saisi. Le refaire apr
 avoir ajouté, supprimé ou renommé un élément : les lignes devenues sans objet
 sont annoncées avant d'être retirées.
 
-Le séparateur (`;` ou `,`) est détecté automatiquement — Excel français
-enregistre avec des points-virgules, Excel anglais avec des virgules. Les fins
-de ligne du fichier d'origine sont conservées.
+Le séparateur (`;` ou `,`) **et l'encodage** sont détectés automatiquement.
+Excel français enregistre avec des points-virgules et en Windows-1252 ; Excel
+anglais avec des virgules et souvent en UTF-8. Les deux passent, sans avoir à
+choisir « CSV UTF-8 » dans le menu d'enregistrement. Le script indique en
+Windows-1252 quand c'est le cas.
+
+Les fins de ligne et l'encodage du fichier d'origine sont conservés : à tableau
+inchangé, la page produite est identique à l'original.
 
 ### Ce que le script signale
 
