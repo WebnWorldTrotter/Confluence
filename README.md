@@ -247,6 +247,16 @@ L'adresse doit commencer par `https://` ou `/confluence/…`. Une adresse en
 
 ### Utilisation
 
+> **Sous Windows, toujours écrire `python` devant.** Taper un fichier `.py`
+> tout seul ne l'exécute pas : Windows l'ouvre dans l'éditeur associé (VSCode,
+> le plus souvent). C'est la confusion la plus fréquente.
+
+> **Le rangement des fichiers est libre.** Le script fonctionne dans
+> l'arborescence du dépôt comme dans un dossier où tout est posé à plat : il
+> prend alors la page `.html` qu'il trouve à côté de lui et écrit le tableau au
+> même endroit. S'il ne trouve rien, il affiche la liste des endroits où il a
+> cherché.
+
 ```bash
 # 1. fabriquer le tableau à partir de la page
 python3 outils/remplir-depuis-tableau.py --cartes

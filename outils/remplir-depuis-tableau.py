@@ -22,6 +22,16 @@ UTILISATION
     Ou en precisant les fichiers :
     python3 outils/remplir-depuis-tableau.py mon-tableau.csv ma-page.html
 
+OU POSER LES FICHIERS
+    Peu importe. Le script fonctionne aussi bien dans l'arborescence du
+    depot (blocks/, donnees/, outils/) que dans un dossier ou tout est
+    pose a plat. Dans ce cas il prend la page .html qu'il trouve a cote
+    de lui, et ecrit le tableau au meme endroit. S'il ne trouve rien, il
+    dit ou il a cherche.
+
+    Toujours ecrire "python" devant : sous Windows, taper un fichier .py
+    tout seul ne l'execute pas, cela l'ouvre dans l'editeur associe.
+
 LES COLONNES DU TABLEAU
     carte   l'intitule affiche sur la page. C'est lui qui sert de repere :
             rien a ajouter dans le HTML, pas d'identifiant a inventer.
@@ -63,10 +73,55 @@ import re
 import sys
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parent.parent
-CSV_PAR_DEFAUT = RACINE / "donnees" / "responsables.csv"
-HTML_PAR_DEFAUT = RACINE / "blocks" / "00-facile-a-modifier.html"
-SORTIE_PAR_DEFAUT = RACINE / "page-remplie.html"
+# ---------------------------------------------------------------------------
+# Ou sont les fichiers
+# ---------------------------------------------------------------------------
+# Le script tourne aussi bien depuis l'arborescence du depot que depuis un
+# dossier ou tout est pose a plat. Il regarde donc a plusieurs endroits
+# plutot que d'imposer un rangement.
+
+DOSSIER = Path(__file__).resolve().parent        # ou vit ce script
+RACINE = DOSSIER.parent                          # la racine du depot
+TRAVAIL = Path.cwd()                             # d'ou la commande est lancee
+
+NOM_HTML = "00-facile-a-modifier.html"
+NOM_CSV = "responsables.csv"
+
+# Ordre de recherche de la page. Le premier chemin qui existe gagne.
+PISTES_HTML = [
+    RACINE / "blocks" / NOM_HTML,     # arborescence du depot
+    DOSSIER / NOM_HTML,               # a cote du script
+    TRAVAIL / NOM_HTML,               # dans le dossier courant
+]
+
+
+def chercher_page():
+    """Trouve la page a remplir, ou renvoie None.
+
+    A defaut du nom attendu, un dossier qui ne contient qu'un seul fichier
+    .html fait l'affaire : c'est forcement celui-la.
+    """
+    for piste in PISTES_HTML:
+        if piste.exists():
+            return piste
+    for dossier in (DOSSIER, TRAVAIL):
+        candidats = sorted(dossier.glob("*.html"))
+        if len(candidats) == 1:
+            return candidats[0]
+    return None
+
+
+def cote_a_cote(page, nom):
+    """Un fichier range au meme endroit que la page.
+
+    Dans le depot, la page vit dans blocks/ et le tableau dans donnees/ :
+    on respecte ce rangement. Ailleurs, tout reste ensemble.
+    """
+    if page is not None and page.parent.name == "blocks":
+        dossier = page.parent.parent / ("donnees" if nom.endswith(".csv") else "")
+        dossier.mkdir(parents=True, exist_ok=True)
+        return dossier / nom
+    return (page.parent if page is not None else TRAVAIL) / nom
 
 CLE_BANDEAU = "Head of PMO"
 
@@ -550,6 +605,23 @@ def ecrire_modele(chemin_html, sortie):
 
 # ---------------------------------------------------------------------------
 
+def introuvable(quoi, pistes):
+    """Message d'erreur qui dit OU le script a cherche, pas seulement qu'il
+    n'a pas trouve : c'est ce qui permet de corriger sans deviner."""
+    vues, uniques = set(), []
+    for chemin in pistes:
+        if str(chemin) not in vues:
+            vues.add(str(chemin))
+            uniques.append(chemin)
+
+    lignes = ["Impossible de trouver %s." % quoi, "", "Cherche ici :"]
+    lignes += ["    %s" % p for p in uniques]
+    lignes += ["", "Indique-la directement :",
+               "    python %s --cartes chemin\\vers\\ma-page.html"
+               % Path(sys.argv[0]).name]
+    return "\n".join(lignes)
+
+
 def main():
     arguments = [a for a in sys.argv[1:] if not a.startswith("--")]
     options = {a for a in sys.argv[1:] if a.startswith("--")}
@@ -557,20 +629,35 @@ def main():
     if options - {"--cartes"}:
         raise SystemExit("Option inconnue. Seule --cartes existe.")
 
+    page = chercher_page()
+
     if "--cartes" in options:
-        chemin_html = Path(arguments[0]) if arguments else HTML_PAR_DEFAUT
-        sortie = Path(arguments[1]) if len(arguments) > 1 else CSV_PAR_DEFAUT
+        chemin_html = Path(arguments[0]) if arguments else page
+        if chemin_html is None:
+            raise SystemExit(introuvable("la page HTML", PISTES_HTML))
         if not chemin_html.exists():
             raise SystemExit("Fichier introuvable : %s" % chemin_html)
+        sortie = (Path(arguments[1]) if len(arguments) > 1
+                  else cote_a_cote(chemin_html, NOM_CSV))
         ecrire_modele(chemin_html, sortie)
         return
 
-    chemin_csv = Path(arguments[0]) if arguments else CSV_PAR_DEFAUT
-    chemin_html = Path(arguments[1]) if len(arguments) > 1 else HTML_PAR_DEFAUT
-    sortie = Path(arguments[2]) if len(arguments) > 2 else SORTIE_PAR_DEFAUT
+    chemin_html = Path(arguments[1]) if len(arguments) > 1 else page
+    if chemin_html is None:
+        raise SystemExit(introuvable("la page HTML", PISTES_HTML))
+
+    chemin_csv = (Path(arguments[0]) if arguments
+                  else cote_a_cote(chemin_html, NOM_CSV))
+    sortie = (Path(arguments[2]) if len(arguments) > 2
+              else cote_a_cote(chemin_html, "page-remplie.html"))
 
     for f in (chemin_csv, chemin_html):
         if not f.exists():
+            if f == chemin_csv:
+                raise SystemExit(
+                    "Tableau introuvable : %s\n"
+                    "Lance d'abord :  python %s --cartes"
+                    % (f, Path(sys.argv[0]).name))
             raise SystemExit("Fichier introuvable : %s" % f)
 
     entrees = lire_tableau(chemin_csv)
