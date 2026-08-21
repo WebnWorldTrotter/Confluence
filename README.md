@@ -247,14 +247,19 @@ L'adresse doit commencer par `https://` ou `/confluence/…`. Une adresse en
 
 ### Utilisation
 
+> **Ne jamais taper `python` tout seul.** Cela ouvre l'interpréteur interactif,
+> reconnaissable à son invite `>>>`, qui attend du code Python et non des
+> commandes. Si tu t'y retrouves, tape `exit()` pour en sortir. La commande
+> doit s'écrire d'un seul tenant : `python nom-du-script.py --cartes`.
+
 > **Sous Windows, toujours écrire `python` devant.** Taper un fichier `.py`
 > tout seul ne l'exécute pas : Windows l'ouvre dans l'éditeur associé (VSCode,
 > le plus souvent). C'est la confusion la plus fréquente.
 
 > **Le rangement des fichiers est libre.** Le script fonctionne dans
 > l'arborescence du dépôt comme dans un dossier où tout est posé à plat : il
-> prend alors la page `.html` qu'il trouve à côté de lui et écrit le tableau au
-> même endroit. S'il ne trouve rien, il affiche la liste des endroits où il a
+> prend alors la page `.html` qu'il trouve à côté de lui, réutilise le `.csv`
+> présent quel que soit son nom, et écrit tout au même endroit. S'il ne trouve rien, il affiche la liste des endroits où il a
 > cherché.
 
 ```bash

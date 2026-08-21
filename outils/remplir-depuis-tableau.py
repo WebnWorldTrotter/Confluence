@@ -111,6 +111,24 @@ def chercher_page():
     return None
 
 
+def chercher_tableau(page):
+    """Trouve le tableau existant, ou renvoie la ou il faudra l'ecrire.
+
+    Meme logique que pour la page : le nom attendu d'abord, puis, a defaut,
+    l'unique fichier .csv du dossier. Cela evite d'avoir a renommer un
+    tableau qu'on tient deja.
+    """
+    attendu = cote_a_cote(page, NOM_CSV)
+    if attendu.exists():
+        return attendu
+    for dossier in (page.parent if page is not None else TRAVAIL,
+                    DOSSIER, TRAVAIL):
+        candidats = sorted(dossier.glob("*.csv"))
+        if len(candidats) == 1:
+            return candidats[0]
+    return attendu
+
+
 def cote_a_cote(page, nom):
     """Un fichier range au meme endroit que la page.
 
@@ -539,8 +557,18 @@ def ecrire_modele(chemin_html, sortie):
     if sortie.exists():
         try:
             ancien = lire_tableau(sortie)
-        except SystemExit:
-            ancien = {}   # tableau illisible : on repart d'une page blanche
+        except SystemExit as souci:
+            # Ecraser un tableau qu'on ne sait pas relire ferait perdre ce
+            # qu'il contient. On s'arrete et on laisse le choix.
+            raise SystemExit(
+                "%s\n\n"
+                "Ce fichier existe deja et n'a pas le format attendu :\n"
+                "    %s\n\n"
+                "Le remplacer effacerait ce qu'il contient. Au choix :\n"
+                "  - renomme-le, puis relance la commande\n"
+                "  - ou ecris le modele ailleurs :\n"
+                "        python %s --cartes ma-page.html nouveau-tableau.csv"
+                % (souci, sortie, Path(sys.argv[0]).name))
 
     lignes = [list(COLONNES)]
     a_remplir, conservees = [], 0
@@ -638,7 +666,7 @@ def main():
         if not chemin_html.exists():
             raise SystemExit("Fichier introuvable : %s" % chemin_html)
         sortie = (Path(arguments[1]) if len(arguments) > 1
-                  else cote_a_cote(chemin_html, NOM_CSV))
+                  else chercher_tableau(chemin_html))
         ecrire_modele(chemin_html, sortie)
         return
 
@@ -647,7 +675,7 @@ def main():
         raise SystemExit(introuvable("la page HTML", PISTES_HTML))
 
     chemin_csv = (Path(arguments[0]) if arguments
-                  else cote_a_cote(chemin_html, NOM_CSV))
+                  else chercher_tableau(chemin_html))
     sortie = (Path(arguments[2]) if len(arguments) > 2
               else cote_a_cote(chemin_html, "page-remplie.html"))
 
