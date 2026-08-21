@@ -44,8 +44,8 @@ LES COLONNES DU TABLEAU
 
 CE QUE LE SCRIPT SAIT REMPLIR
     les cartes    <a class="carte ...">   -> nom, lien, image
-    les lignes    <a class="ligne ...">   -> lien          (onglet Group PMO)
-    les tuiles    <a class="tuile ...">   -> lien          (onglet Transversal)
+    les lignes    <a class="ligne ...">   -> nom, lien    (onglet Group PMO)
+    les tuiles    <a class="tuile ...">   -> nom, lien    (onglet Transversal)
     les boutons   <a class="bouton">      -> lien
     le bandeau    "Head of PMO"           -> nom
 
@@ -170,8 +170,8 @@ COLONNES = ("carte", "nom", "lien", "image")
 # Ce que chaque famille d'element accepte comme colonnes.
 ACCEPTE = {
     "carte":   {"nom", "lien", "image"},
-    "ligne":   {"lien"},
-    "tuile":   {"lien"},
+    "ligne":   {"nom", "lien"},
+    "tuile":   {"nom", "lien"},
     "bouton":  {"lien"},
     "bandeau": {"nom"},
 }
@@ -323,7 +323,18 @@ def masquer_commentaires(html):
 
 MOTIF_ANCRE = re.compile(r'(<a\s[^>]*>)(.*?)(</a>)', re.S)
 MOTIF_TITRE = re.compile(r'<p class="carte-titre">(.*?)</p>', re.S)
-MOTIF_PERSONNE = re.compile(r'(<p class="carte-personne">)(.*?)(</p>)', re.S)
+# Un seul motif pour tous les emplacements de nom, quelle que soit la
+# famille : la convention est une classe finissant par "-personne".
+# La retro-reference \2 garantit que la balise fermante est bien celle de
+# la balise ouvrante.
+MOTIF_PERSONNE = re.compile(
+    r'(<(p|span) class="[\w-]*-personne">)(.*?)(</\2>)', re.S)
+
+# L'intitule d'une ligne ou d'une tuile. Sans lui, le texte entier de
+# l'element servirait de repere -- nom du responsable compris -- et le
+# tableau ne s'y retrouverait plus des qu'un titulaire change.
+MOTIF_LIBELLE = re.compile(
+    r'<span class="[\w-]*-libelle">(.*?)</span>', re.S)
 MOTIF_BANDEAU = re.compile(r'(<p class="entete-contact-nom">)(.*?)(</p>)', re.S)
 MOTIF_CLASSE = re.compile(r'class="([^"]*)"')
 MOTIF_HREF = re.compile(r'href="[^"]*"')
@@ -366,7 +377,8 @@ def valeurs_actuelles(ouvrante, interieur, famille):
         motif = MOTIF_BANDEAU if famille == "bandeau" else MOTIF_PERSONNE
         personne = motif.search(interieur)
         if personne:
-            valeurs["nom"] = vraie_valeur(texte_visible(personne.group(2)))
+            contenu = personne.group(2 if famille == "bandeau" else 3)
+            valeurs["nom"] = vraie_valeur(texte_visible(contenu))
 
     if "image" in ACCEPTE[famille]:
         img = MOTIF_IMG.search(interieur)
@@ -383,6 +395,13 @@ def classes_de(balise):
     return set(trouve.group(1).split()) if trouve else set()
 
 
+def intitule_ou_texte(interieur):
+    libelle = MOTIF_LIBELLE.search(interieur)
+    if libelle:
+        return texte_visible(libelle.group(1))
+    return texte_visible(interieur)
+
+
 def identifier(ouvrante, interieur):
     """Renvoie (intitule, famille) pour une ancre, ou (None, None) si l'ancre
     n'est pas un element pilotable."""
@@ -392,10 +411,12 @@ def identifier(ouvrante, interieur):
         if not titre:
             return None, None
         return texte_visible(titre.group(1)), "carte"
+    # Le libelle dedie fait foi. A defaut -- page ecrite avant l'ajout des
+    # noms -- on retombe sur le texte entier de l'element.
     if "ligne" in classes:
-        return texte_visible(interieur), "ligne"
+        return intitule_ou_texte(interieur), "ligne"
     if "tuile" in classes:
-        return texte_visible(interieur), "tuile"
+        return intitule_ou_texte(interieur), "tuile"
     if "bouton" in classes:
         return texte_visible(interieur), "bouton"
     return None, None
@@ -552,7 +573,7 @@ def remplir(html, entrees):
 
         if entree["nom"] and "nom" in ACCEPTE[famille]:
             interieur, poses = MOTIF_PERSONNE.subn(
-                lambda p: p.group(1) + echapper(entree["nom"]) + p.group(3),
+                lambda p: p.group(1) + echapper(entree["nom"]) + p.group(4),
                 interieur, count=1)
             compteur["noms"] += poses
 

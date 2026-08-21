@@ -227,8 +227,8 @@ Le tableau couvre tout ce qui est cliquable ou nominatif :
 | Élément | `nom` | `lien` | `image` |
 |---|:-:|:-:|:-:|
 | cartes (`<a class="carte">`) | ✓ | ✓ | ✓ |
-| lignes de l'onglet Group PMO (`<a class="ligne">`) | | ✓ | |
-| tuiles de l'onglet Transversal (`<a class="tuile">`) | | ✓ | |
+| lignes de l'onglet Group PMO (`<a class="ligne">`) | ✓ | ✓ | |
+| tuiles de l'onglet Transversal (`<a class="tuile">`) | ✓ | ✓ | |
 | bouton du bandeau (`<a class="bouton">`) | | ✓ | |
 | bandeau d'accueil (`Head of PMO`) | ✓ | | |
 

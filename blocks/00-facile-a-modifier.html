@@ -77,6 +77,17 @@
         Tout est regle en haut de la feuille de style, dans "REGLAGES
         GENERAUX". Change une valeur la-bas, elle change partout.
 
+        Ce qui porte un nom de responsable :
+           les cartes         <p class="carte-personne">
+           les lignes         <span class="ligne-personne">   (Group PMO)
+           les tuiles         <span class="tuile-personne">   (Transversal)
+           le bandeau         <p class="entete-contact-nom">
+
+        A cote de chaque nom, un libelle sert de repere au tableau :
+        carte-titre pour les cartes, ligne-libelle et tuile-libelle pour
+        les autres. Ne change pas ce libelle sans changer la colonne
+        "carte" du tableau, sinon la correspondance est perdue.
+
      9. TOUT PILOTER DEPUIS UN TABLEAU EXCEL
         Plutot que de modifier ce fichier a chaque changement, tu peux
         tenir un tableau a quatre colonnes :
@@ -119,7 +130,10 @@
 
           <a href="..." class="tuile tuile-risques">
             <span class="tuile-icone" aria-hidden="true"> ...icone... </span>
-            <span>Risks Management</span>
+            <span class="tuile-texte">
+              <span class="tuile-libelle">Risks Management</span>
+              <span class="tuile-personne">{{Prenom Nom}}</span>
+            </span>
           </a>
 
         POUR CHANGER LA COULEUR D'UNE TUILE
@@ -724,6 +738,23 @@
   }
   .ligne:last-child { margin-bottom: 0; }
 
+  /* Le nom du responsable, pousse a droite de la ligne. margin-left:auto
+     plutot qu'une largeur fixe : les intitules n'ont pas tous la meme
+     longueur, et le nom reste malgre tout aligne a droite. */
+  .ligne-libelle { min-width: 0; }
+
+  .ligne-personne {
+    flex: none;
+    margin-left: auto;
+    padding-left: var(--e3);
+    font-size: var(--txt-xs);
+    font-weight: 600;
+    color: var(--gris-600);
+  }
+
+  /* Sur fond sombre (SYSTEM, Launcher), le gris ne passe plus. */
+  .ligne-titre .ligne-personne { color: rgba(255,255,255,.72); }
+
   /* Ligne de tete (SYSTEM, Launcher) */
   .ligne-titre {
     background: var(--encre);
@@ -868,6 +899,27 @@
     clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
   }
   .tuile-icone svg { width: 20px; height: 20px; }
+
+
+  /* Libelle et responsable empiles dans la tuile. */
+  .tuile-texte {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .tuile-personne {
+    font-size: var(--txt-xs);
+    font-weight: 600;
+    color: var(--gris-600);
+    transition: color var(--glisse);
+  }
+  /* .94 et non .82 : sur le corail, la teinte la plus claire des quatre,
+     un blanc a 82% tombe a 3,90:1 -- sous le seuil de lisibilite. A .94 le
+     cas le plus defavorable remonte a 4,60:1. La hierarchie entre libelle
+     et nom repose donc sur la taille, pas sur la couleur. */
+  .tuile:hover .tuile-personne { color: rgba(255,255,255,.94); }
 
   /* --- Les quatre couleurs -------------------------------------------------
      Choisies pour rester lisibles dans les deux etats : icone posee sur la
@@ -1056,20 +1108,20 @@
 
                         <!-- Contenu de l'onglet "Group PMO" -->
                         <div id="contenu-groupe-pmo" class="onglet-contenu actif">
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">Launcher</a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre"><span class="ligne-libelle">Launcher</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
                             <div class="sous-lignes">
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">ULPM</a>
-                            <a href="https://atlas.fr.space.corp/confluence/display/LLPMA6EX" class="ligne">LLPM</a>
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">SPRO / ESR</a>
-                            <a href="https://atlas.fr.space.corp/confluence/display/LPROEXP" class="ligne">LPRO</a>
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Avionics and Flight Controls</a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">ULPM</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
+                            <a href="https://atlas.fr.space.corp/confluence/display/LLPMA6EX" class="ligne"><span class="ligne-libelle">LLPM</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">SPRO / ESR</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
+                            <a href="https://atlas.fr.space.corp/confluence/display/LPROEXP" class="ligne"><span class="ligne-libelle">LPRO</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Avionics and Flight Controls</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
                             </div>
 
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre">SYSTEM</a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre"><span class="ligne-libelle">SYSTEM</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
                             <div class="sous-lignes">
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">LIOD, Kourou Focal Point &amp; Ground Industrialists</a>
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Decoupling point</a>
-                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne">Launcher System</a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">LIOD, Kourou Focal Point &amp; Ground Industrialists</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Decoupling point</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
+                            <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Launcher System</span><span class="ligne-personne">{{Prenom Nom}}</span></a>
                             </div>
 
 
@@ -1095,7 +1147,10 @@
                                 <path d="M12 16.8h.01"/>
                               </svg>
                             </span>
-                            <span>Risks Management</span>
+                            <span class="tuile-texte">
+                              <span class="tuile-libelle">Risks Management</span>
+                              <span class="tuile-personne">{{Prenom Nom}}</span>
+                            </span>
                           </a>
 
                           <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-methode">
@@ -1109,7 +1164,10 @@
                                 <circle cx="9.9" cy="16.6" r="2.4"/>
                               </svg>
                             </span>
-                            <span>Process Method &amp;Tools</span>
+                            <span class="tuile-texte">
+                              <span class="tuile-libelle">Process Method &amp;Tools</span>
+                              <span class="tuile-personne">{{Prenom Nom}}</span>
+                            </span>
                           </a>
 
                           <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-securite">
@@ -1121,7 +1179,10 @@
                                 <path d="m9.4 12.2 1.9 1.9 3.5-3.6"/>
                               </svg>
                             </span>
-                            <span>Doc &amp; Data Security Export Control</span>
+                            <span class="tuile-texte">
+                              <span class="tuile-libelle">Doc &amp; Data Security Export Control</span>
+                              <span class="tuile-personne">{{Prenom Nom}}</span>
+                            </span>
                           </a>
 
                           <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-amelioration">
@@ -1135,7 +1196,10 @@
                                 <path d="M4.5 19.4V15h4.4"/>
                               </svg>
                             </span>
-                            <span>Continuous Improvment</span>
+                            <span class="tuile-texte">
+                              <span class="tuile-libelle">Continuous Improvment</span>
+                              <span class="tuile-personne">{{Prenom Nom}}</span>
+                            </span>
                           </a>
 
                         </div>
