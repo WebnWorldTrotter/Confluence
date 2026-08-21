@@ -1,0 +1,1324 @@
+<!-- ============================================================================
+     JLS PMO — VERSION FACILE A MODIFIER
+     ----------------------------------------------------------------------
+     Ce fichier n'est PAS genere par build.sh : c'est une version ecrite a
+     la main, volontairement simple, pour que tu puisses la reprendre et la
+     modifier sans connaitre le CSS.
+     ----------------------------------------------------------------------
+     GUIDE RAPIDE — A LIRE AVANT DE MODIFIER
+
+     1. LA PAGE EST DECOUPEE EN "BLOCS"
+        Chaque partie visible de la page (le bandeau sombre, "Chief of PMO",
+        "Program PMO", le tableau a onglets, etc.) est un bloc qui commence
+        par :   <section class="bloc">
+        et se termine par :   </section>
+        Un commentaire en majuscules annonce chaque bloc (BLOC : PROGRAM PMO).
+
+     2. POUR DEPLACER UN BLOC ENTIER
+        - Repere la ligne "BLOC : ..." (en commentaire) qui commence le bloc
+        - Repere la balise </section> qui le termine (juste avant le
+          prochain "BLOC : ...")
+        - Selectionne TOUT depuis <section jusqu'a </section> inclus
+        - Coupe, colle a l'endroit voulu, entre deux autres blocs
+        - NE COUPE JAMAIS un morceau au milieu d'un bloc : le tableau a
+          onglets par exemple a besoin de ses boutons ET de son contenu
+          ensemble, sinon plus rien ne s'affiche.
+
+     3. POUR AJOUTER / SUPPRIMER UNE CARTE
+        Une carte ressemble a ca :
+          <a class="carte carte-moyenne" href="ADRESSE_DE_LA_PAGE">
+            <p class="carte-titre">Nom du programme</p>
+            <p class="carte-personne">Prenom Nom</p>
+          </a>
+        Pour en ajouter une, copie ce bloc entier (de <a a </a>) et colle-le
+        juste apres une carte existante, dans la meme <div class="grille">.
+        Pour en supprimer une, efface le bloc <a>...</a> correspondant.
+
+        Ce qui espace les cartes, c'est leur CONTENEUR, jamais la carte
+        elle-meme :
+           <div class="grille">   autant de colonnes que la place permet
+           <div class="pile">     toujours une seule colonne
+        Des cartes posees directement dans un <div> ordinaire se touchent.
+
+     4. LES 3 TAILLES DE CARTE
+          <a class="carte">                 taille normale
+          <a class="carte carte-moyenne">   plus haute
+          <a class="carte carte-grande">    la plus haute
+        Une seule de ces classes a la fois.
+
+     5. LES ACCOLADES {{ }}
+        Tout ce qui ressemble a {{Prenom Nom}} est un texte a remplacer par
+        une vraie valeur. Les {{ }} eux-memes doivent disparaitre.
+
+     6. LES LIENS VERS D'AUTRES PAGES CONFLUENCE
+        Les cartes et les boutons sont deja des liens (balise <a>). Remplace
+        ce qu'il y a entre les guillemets de href="..." :
+
+          AVANT :  href="REMPLACE_PAR_LE_LIEN"
+          APRES :  href="/confluence/display/JLS/A6+Dev"
+
+        Ouvre la page cible, copie l'adresse dans la barre du navigateur,
+        colle-la. Adresse complete ou partie apres le nom du serveur, les
+        deux marchent. ATTENTION : ne laisse pas de diese (#) devant
+        l'adresse, sinon le lien ne mene nulle part.
+        Pour ouvrir dans un nouvel onglet, ajoute  target="_blank".
+
+     7. LES IMAGES DE FOND
+        Elles se mettent dans la carte, en PREMIERE ligne, avec une balise
+        <img> ordinaire :
+          <img class="carte-fond" src="ADRESSE_DE_L_IMAGE" alt="">
+        Si l'image n'apparait pas, ouvre son adresse seule dans un onglet du
+        navigateur : si tu tombes sur une erreur ou un ecran de connexion,
+        c'est l'adresse ou les droits d'acces qui posent probleme, pas ce
+        code. L'adresse doit commencer par /confluence/... ou https://...
+        (une adresse en "data:" est bloquee par Confluence).
+
+     8. LES COULEURS ET LES ESPACEMENTS
+        Tout est regle en haut de la feuille de style, dans "REGLAGES
+        GENERAUX". Change une valeur la-bas, elle change partout.
+
+        Ce qui porte un nom de responsable :
+           les cartes         <p class="carte-personne">
+           les lignes         <span class="ligne-personne">   (Group PMO)
+           les tuiles         <span class="tuile-personne">   (Transversal)
+           le bandeau         <p class="entete-contact-nom">
+
+        A cote de chaque nom, un libelle sert de repere au tableau :
+        carte-titre pour les cartes, ligne-libelle et tuile-libelle pour
+        les autres. Ne change pas ce libelle sans changer la colonne
+        "carte" du tableau, sinon la correspondance est perdue.
+
+     9. TOUT PILOTER DEPUIS UN TABLEAU EXCEL
+        Plutot que de modifier ce fichier a chaque changement, tu peux
+        tenir un tableau a quatre colonnes :
+
+           carte    l'intitule affiche sur la page (sert de repere)
+           nom      le titulaire
+           lien     l'adresse de la page Confluence a ouvrir
+           image    l'adresse de l'image de fond
+
+        Exemple :
+
+           carte        nom          lien                    image
+           A6 Dev       Prenom Nom   https://.../A6+Dev      https://.../a6.png
+           JLV          Prenom Nom   https://.../JLV
+           SYSTEM                    https://.../System
+
+        Une cellule vide veut dire "ne change rien" : on ne remplit que ce
+        qui bouge. Une carte qui n'a pas encore d'image en recoit une
+        automatiquement des que la colonne image est renseignee.
+
+        Le tableau couvre les cartes, les lignes des onglets et le bouton
+        du bandeau : plus aucune adresse a chercher dans ce fichier.
+
+        Sur ton poste :
+           python3 outils/remplir-depuis-tableau.py --cartes
+              fabrique le tableau a partir de cette page. Les intitules
+              sont releves ici, tu n'en tapes aucun ; les adresses et les
+              images deja en place y sont reportees ; ce que tu avais
+              deja saisi est conserve.
+           python3 outils/remplir-depuis-tableau.py
+              produit page-remplie.html, a copier-coller dans Confluence
+
+        Le script signale les intitules du tableau qui ne correspondent a
+        rien dans la page, et inversement. Voir README.md.
+
+    10. LES TUILES DE L'ONGLET TRANSVERSAL
+        Les quatre sujets de cet onglet n'utilisent pas la ligne des autres
+        onglets mais la TUILE : coin superieur droit coupe, triangle de
+        couleur dans la coupe, icone a gauche.
+
+          <a href="..." class="tuile tuile-risques">
+            <span class="tuile-icone" aria-hidden="true"> ...icone... </span>
+            <span class="tuile-texte">
+              <span class="tuile-libelle">Risks Management</span>
+              <span class="tuile-personne">{{Prenom Nom}}</span>
+            </span>
+          </a>
+
+        POUR CHANGER LA COULEUR D'UNE TUILE
+        Change sa deuxieme classe : tuile-risques, tuile-methode,
+        tuile-securite, tuile-amelioration. Pour changer la teinte elle-meme,
+        va dans la feuille de style, section "TUILES TRANSVERSALES" : une
+        seule valeur par tuile, --tuile-accent.
+
+        POUR CHANGER UNE ICONE
+        Remplace ce qu'il y a entre <svg> et </svg>. Les icones sont
+        dessinees directement dans la page (pas de fichier a heberger, rien
+        que Confluence puisse bloquer). Elles prennent automatiquement la
+        couleur de leur tuile.
+
+        POUR AJOUTER UNE 5e TUILE
+        Copie un bloc <a class="tuile ..."> entier et colle-le dans la meme
+        <div class="grille grille-tuiles">. La grille reste sur deux
+        colonnes.
+
+     ============================================================================ -->
+
+     <style>
+
+      /* ==========================================================================
+         1. REGLAGES GENERAUX  —  le seul endroit a modifier pour changer
+            l'apparence de toute la page
+         ========================================================================== */
+      .jls {
+    
+        /* --- Couleurs de la charte ------------------------------------------- */
+        --encre:          #2D3142;   /* texte principal, fonds sombres */
+        --ardoise:        #4F5D75;   /* texte secondaire */
+        --corail:         #EF8354;   /* accent : bouton principal, onglet actif */
+        --corail-fonce:   #B8501C;   /* accent pour du TEXTE (le corail clair
+                                        n'est pas assez lisible sur blanc) */
+        --papier:         #FFFFFF;
+    
+        /* --- Gris derives ----------------------------------------------------
+           Une gamme reguliere du plus clair au plus fonce. Utiliser ces gris
+           plutot que des valeurs au hasard est ce qui donne une impression
+           d'ensemble coherent.                                                */
+        --gris-50:        #F7F8FA;   /* fond de page */
+        --gris-100:       #EFF1F5;   /* fonds creuses (barre d'onglets) */
+        --gris-200:       #E3E6EC;   /* bordures */
+        --gris-300:       #CBD0DA;   /* bordures marquees */
+        --gris-500:       #7A8496;   /* texte tertiaire */
+        --gris-600:       #5F6B80;   /* texte secondaire */
+    
+        /* --- Espacements ------------------------------------------------------
+           Une echelle reguliere. Utiliser TOUJOURS une de ces valeurs (jamais
+           17px ou 23px au hasard) est le principal secret d'une page qui
+           parait "propre".                                                     */
+        --e1:  4px;
+        --e2:  8px;
+        --e3: 12px;
+        --e4: 16px;
+        --e5: 24px;
+        --e6: 32px;
+        --e7: 48px;
+        --e8: 64px;
+    
+        /* --- Tailles de texte -------------------------------------------------
+           Meme principe : une echelle, pas des valeurs au hasard.             */
+        --txt-xs:  11px;   /* petites majuscules */
+        --txt-sm:  13px;   /* texte secondaire, noms */
+        --txt-md:  15px;   /* texte courant */
+        --txt-lg:  17px;   /* titres de carte */
+        --txt-xl:  20px;   /* titres de section */
+        --txt-hero: clamp(26px, 3.4vw, 38px);   /* titre du bandeau, s'adapte
+                                                   a la largeur de l'ecran */
+    
+        /* --- Coins arrondis --------------------------------------------------- */
+        --rond-sm:  8px;
+        --rond-md: 12px;
+        --rond-lg: 16px;
+        --rond-xl: 24px;
+    
+        /* --- Ombres -----------------------------------------------------------
+           Deux couches par ombre : une tres serree qui "pose" l'element sur la
+           page, une plus large et diffuse qui cree la profondeur. C'est ce
+           doublage qui fait la difference avec une ombre plate.               */
+        --ombre-1: 0 1px 2px rgba(28,34,51,.05),
+                   0 1px 3px rgba(28,34,51,.06);
+        --ombre-2: 0 2px 4px rgba(28,34,51,.04),
+                   0 8px 18px rgba(28,34,51,.09);
+        --ombre-3: 0 4px 8px rgba(28,34,51,.05),
+                   0 18px 36px rgba(28,34,51,.13);
+    
+        /* --- Animations -------------------------------------------------------
+           Une seule courbe pour toute la page : les mouvements se ressemblent,
+           l'ensemble parait plus soigne.                                      */
+        --glisse: 220ms cubic-bezier(.2, .7, .3, 1);
+    
+        /* Permet aux colonnes de reagir a la largeur de CE bloc plutot qu'a
+           celle de la fenetre : utile si la page vit dans une colonne etroite
+           de la Content Layout Macro. */
+        container-type: inline-size;
+        container-name: jls;
+    
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                     "Helvetica Neue", Arial, sans-serif;
+        font-size: var(--txt-md);
+        line-height: 1.55;
+        color: var(--encre);
+        -webkit-font-smoothing: antialiased;
+      }
+    
+      .jls, .jls * { box-sizing: border-box; }
+      .jls p { margin: 0; }
+    
+      /* ==========================================================================
+         2. RYTHME VERTICAL
+         Un seul espacement entre les blocs : c'est ce qui donne la sensation
+         de regularite quand on fait defiler la page.
+         ========================================================================== */
+      .bloc { margin-top: var(--e7); }
+      .bloc:first-child { margin-top: 0; }
+    
+      /* ==========================================================================
+         3. TITRE DE SECTION
+         Titre + compteur optionnel + filet qui occupe la place restante.
+         Le filet aligne visuellement toutes les sections entre elles.
+         ========================================================================== */
+      .titre-section {
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+        margin: 0 0 var(--e4);
+        font-size: var(--txt-xl);
+        font-weight: 650;
+        letter-spacing: -.01em;
+        color: var(--encre);
+      }
+    
+      /* Le petit compteur rond a cote du titre (facultatif) */
+      .titre-compteur {
+        flex: none;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 var(--e2);
+        border-radius: 999px;
+        background: var(--gris-100);
+        border: 1px solid var(--gris-200);
+        font-size: var(--txt-xs);
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+        color: var(--gris-600);
+      }
+    
+      /* Le filet degrade qui remplit l'espace restant */
+      .titre-section::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(to right, var(--gris-200), transparent);
+      }
+    
+      /* ==========================================================================
+         4. GRILLE DE CARTES
+         Les colonnes se calculent toutes seules selon la place disponible.
+         Les cartes remplissent toujours leur colonne : toutes les rangees ont
+         donc la meme largeur de carte, ce qui evite l'effet "patchwork".
+         --------------------------------------------------------------------------
+         Pour des cartes plus larges ou plus etroites, change la valeur
+         --carte-min de la grille concernee.
+         ========================================================================== */
+      .grille {
+        display: grid;
+        gap: var(--e4);
+        grid-template-columns: repeat(auto-fit,
+                               minmax(min(100%, var(--carte-min, 240px)), 1fr));
+        margin-bottom: 40px;
+        margin-top: 30px
+      }
+    
+      .grille-large   { --carte-min: 300px; }  /* peu de cartes, larges */
+      .grille-compacte{ --carte-min: 150px; }  /* beaucoup de petites cartes */
+    
+      /* Les cartes d'une grille compacte n'ont que 2 lignes de texte : on
+         reduit leur hauteur plancher pour qu'elles ne paraissent pas vides. */
+      .grille-compacte .carte { min-height: 78px; padding: var(--e3) var(--e4); }
+      .grille-compacte .carte-titre { font-size: var(--txt-md); }
+      .grille-compacte .carte::after { bottom: var(--e2); right: var(--e3); font-size: 15px; }
+    
+      /* --- Cartes empilees ----------------------------------------------------
+         Une colonne, quelle que soit la largeur disponible, avec le meme
+         espacement que la grille.
+    
+         A utiliser des qu'on met plusieurs cartes les unes sous les autres :
+         une carte ne porte aucune marge, l'espace vient toujours du conteneur.
+         Sans .pile (ou sans .grille), les cartes se touchent.
+    
+         .grille  ->  autant de colonnes que la place le permet
+         .pile    ->  toujours une seule colonne                              */
+      .pile {
+        display: grid;
+        gap: var(--e4);
+        margin-top: 40px;
+      }
+    
+      /* ==========================================================================
+         COLONNES COTE A COTE
+         Met deux ensembles l'un a cote de l'autre, alignes par le HAUT.
+         --------------------------------------------------------------------------
+         Par defaut les colonnes sont empilees ; elles passent cote a cote des
+         que la place le permet. Les deux colonnes gardent leur hauteur propre :
+         la plus courte ne s'etire pas pour rattraper la plus longue.
+    
+         POUR REGLER LA LARGEUR DES COLONNES
+         Change les deux chiffres "fr" plus bas :
+            1.5fr et 1fr  -> la colonne de gauche est 1,5 fois plus large
+            1fr   et 1fr  -> les deux colonnes font la meme largeur
+            1fr   et 1.5fr-> c'est la colonne de droite qui est plus large
+    
+         POUR REMETTRE LES DEUX ENSEMBLES L'UN SOUS L'AUTRE
+         Enleve simplement "deux-colonnes" du <section> concerne dans le HTML.
+         ========================================================================== */
+      .deux-colonnes {
+        display: grid;
+        gap: var(--e5);
+        align-items: start;                  /* alignes par le haut */
+        grid-template-columns: minmax(0, 1fr);   /* empilees par defaut */
+      }
+    
+      @container jls (min-width: 820px) {
+        .deux-colonnes {
+          grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        }
+      }
+    
+      /* Le titre de chaque colonne ne doit pas ajouter d'espace au-dessus :
+         les deux colonnes demarrent ainsi exactement a la meme hauteur. */
+      .deux-colonnes > div > .titre-section { margin-top: 0; }
+    
+      /* ==========================================================================
+         5. CARTE
+         ========================================================================== */
+      .carte {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: var(--e5);
+        padding: var(--e4);
+        min-height: 92px;
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-lg);
+        box-shadow: var(--ombre-1);
+        text-decoration: none;
+        color: inherit;
+        overflow: hidden;
+        transition: transform var(--glisse),
+                    box-shadow var(--glisse),
+                    border-color var(--glisse);
+      }
+    
+      .carte:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--ombre-3);
+        border-color: var(--gris-300);
+      }
+    
+      /* La carte se "repose" quand on clique : petit retour tactile */
+      .carte:active { transform: translateY(-1px); box-shadow: var(--ombre-1); }
+    
+      .carte-titre {
+        font-size: var(--txt-lg);
+        font-weight: 650;
+        letter-spacing: -.005em;
+        line-height: 1.3;
+      }
+    
+      /* Le nom de la personne est pousse en bas de la carte : toutes les cartes
+         d'une rangee alignent donc leur nom sur la meme ligne. */
+      .carte-personne {
+        margin-top: auto;
+        font-size: var(--txt-sm);
+        color: var(--gris-600);
+      }
+    
+      /* --- Les 3 tailles ------------------------------------------------------
+         Le padding ET la hauteur augmentent ensemble : les proportions internes
+         restent les memes d'une taille a l'autre.                             */
+      .carte-petite { min-height: 200px; padding: var(--e5);    gap: var(--e5); }
+      .carte-moyenne { min-height: 300px; padding: var(--e5);    gap: var(--e5);}
+      .carte-grande  { min-height: 400px; padding: var(--e5);    gap: var(--e5);
+     }
+    
+      .carte-grande .carte-titre { font-size: var(--txt-xl); }
+      .carte-moyenne .carte-titre { font-size: var(--txt-xl); }
+      .carte-petite .carte-titre { font-size: var(--txt-xl); }
+      /* --- La fleche "ce lien mene quelque part" -------------------------------
+         Presente sur TOUTES les cartes : une affordance identique partout, au
+         lieu d'un signal present sur certaines cartes seulement.              */
+      .carte::after {
+        content: "\2192";
+        position: absolute;
+        right: var(--e4);
+        bottom: var(--e3);
+        z-index: 2;
+        font-size: 17px;
+        line-height: 1;
+        color: var(--corail);
+        opacity: .55;
+        transition: transform var(--glisse), opacity var(--glisse);
+      }
+      .carte:hover::after { transform: translateX(3px); opacity: 1; }
+    
+      .carte-moyenne::after,
+      .carte-grande::after { right: var(--e5); bottom: var(--e4); }
+    
+      /* --- Carte sombre (mise en avant) --------------------------------------- */
+      .carte-sombre {
+        background:
+          radial-gradient(120% 140% at 100% 0%, #3C4359 0%, transparent 60%),
+          var(--encre);
+        border-color: transparent;
+        color: var(--papier);
+      }
+      .carte-sombre .carte-personne { color: rgba(255,255,255,.72); }
+      .carte-sombre:hover { border-color: rgba(239,131,84,.5); }
+    
+      /* --- Carte avec image de fond -------------------------------------------
+         Trois couches empilees : l'image (z-index 0), un voile sombre (1), le
+         texte (2). Le voile garantit que le texte blanc reste lisible meme sur
+         une image tres claire.                                                */
+      .carte-image {
+        border-color: transparent;
+        color: var(--papier);
+        background: var(--encre);   /* visible tant qu'aucune image n'est mise */
+      }
+    
+      .carte-fond {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;          /* remplit sans deformer */
+        object-position: center;
+        transition: transform 600ms cubic-bezier(.2,.7,.3,1);
+      }
+    
+      /* Leger zoom de l'image au survol — effet discret, jamais brutal */
+      .carte-image:hover .carte-fond { transform: scale(1.05); }
+    
+      .carte-image::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        /* Voile plus dense en bas qu'en haut : l'image respire, et le texte
+           (qui est en haut) comme le nom (en bas) restent lisibles.
+           Ne pas descendre en dessous de .72 en bas sans reverifier. */
+        background: linear-gradient(180deg,
+                    rgba(45,49,66,.70) 0%,
+                    rgba(45,49,66,.82) 100%);
+      }
+    
+      .carte-image .carte-titre,
+      .carte-image .carte-personne { position: relative; z-index: 2; }
+      .carte-image .carte-personne { color: rgba(255,255,255,.82); }
+    
+      /* ==========================================================================
+         6. BOUTON
+         ========================================================================== */
+      .bouton {
+        margin-top: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--e2);
+        padding: var(--e3) var(--e5);
+        border-radius: 999px;
+        background: linear-gradient(180deg, #F5946A, var(--corail));
+        color: var(--encre);            /* texte sombre : le blanc sur corail
+                                           n'atteint pas le seuil de lisibilite */
+        font-size: var(--txt-md);
+        font-weight: 650;
+        text-decoration: none;
+        box-shadow: var(--ombre-2), 0 6px 18px rgba(239,131,84,.35);
+        transition: transform var(--glisse), box-shadow var(--glisse);
+      }
+      .bouton:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--ombre-3), 0 10px 26px rgba(239,131,84,.45);
+      }
+      .bouton:active { transform: translateY(0); box-shadow: var(--ombre-1); }
+    
+      .bouton-fleche { transition: transform var(--glisse); }
+      .bouton:hover .bouton-fleche { transform: translateX(3px); }
+    
+      /* ==========================================================================
+         7. BANDEAU D'ACCUEIL
+         La profondeur vient de plusieurs degrades superposes plutot que d'une
+         image : rien a heberger, rien qui puisse etre bloque.
+         ========================================================================== */
+      .entete {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        gap: var(--e6);
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+        align-items: center;
+        padding: var(--e7);
+        border-radius: var(--rond-xl);
+        background:
+          radial-gradient(90% 130% at 8% 0%,   rgba(239,131,84,.20) 0%, transparent 55%),
+          radial-gradient(70% 120% at 100% 20%, rgba(79,93,117,.55) 0%, transparent 60%),
+          linear-gradient(150deg, #363C52 0%, var(--encre) 60%, #23283A 100%);
+        color: var(--papier);
+        box-shadow: var(--ombre-3);
+      }
+    
+      /* Fines hachures diagonales : une texture qui casse l'aplat sans se voir */
+      .entete::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(135deg,
+                    rgba(255,255,255,.035) 0 1px,
+                    transparent 1px 8px);
+        pointer-events: none;
+      }
+    
+      .entete > * { position: relative; }
+    
+      .entete-etiquette {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--e2);
+        margin-bottom: var(--e4);
+        padding: var(--e1) var(--e3) var(--e1) var(--e2);
+        border-radius: 999px;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.18);
+        font-size: var(--txt-lg);
+        font-weight: 700;
+        letter-spacing: 2px ;
+        text-transform: uppercase;
+        color: #FFD8C4;
+      }
+    
+      /* Pastille corail qui respire doucement : signale un espace vivant */
+      .entete-etiquette::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--corail);
+        box-shadow: 0 0 0 0 rgba(239,131,84,.6);
+        animation: pulsation 2.8s ease-out infinite;
+      }
+    
+      @keyframes pulsation {
+        0%   { box-shadow: 0 0 0 0   rgba(239,131,84,.6); }
+        70%  { box-shadow: 0 0 0 8px rgba(239,131,84,0);  }
+        100% { box-shadow: 0 0 0 0   rgba(239,131,84,0);  }
+      }
+    
+      .entete-titre {
+        margin: 0 0 var(--e3);
+        font-size: var(--txt-hero);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -.02em;
+      }
+      .entete-titre em { font-style: normal; color: #FBA97F; }
+    
+      .entete-description {
+        margin: 0 0 var(--e5);
+        max-width: 52ch;
+        color: rgba(255,255,255,.78);
+      }
+    
+      /* Carte "responsable", a droite du bandeau */
+      .entete-contact {
+        justify-self: end;
+        width: 100%;
+        max-width: 300px;
+        padding: var(--e4) var(--e5);
+        border-radius: var(--rond-lg);
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(255,255,255,.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+      }
+    
+      .entete-contact-label {
+        margin-bottom: var(--e3);
+        font-size: var(--txt-xs);
+        font-weight: 700;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.5);
+      }
+    
+      .entete-contact-ligne {
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+      }
+    
+      .rond-initiales {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #F5946A, var(--corail));
+        color: var(--encre);
+        font-size: var(--txt-sm);
+        font-weight: 700;
+      }
+    
+      .entete-contact-nom  { font-weight: 650; }
+      .entete-contact-role { font-size: var(--txt-sm); color: rgba(255,255,255,.6); }
+    
+      /* Quand le bandeau devient etroit, la carte contact repasse a gauche */
+      @media (max-width: 760px) {
+        .entete { padding: var(--e5); }
+        .entete-contact { justify-self: start; }
+      }
+    
+      /* ==========================================================================
+         8. ONGLETS
+         Pilotes par le petit script en bas de page. Chaque bouton dit
+         simplement "affiche le contenu qui porte cet identifiant".
+         ========================================================================== */
+      .onglets {
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-lg);
+        box-shadow: var(--ombre-1);
+        overflow: hidden;
+        margin-top: 30px ;
+      }
+    
+      /* Barre de boutons facon "interrupteur segmente" */
+      .onglets-boutons {
+        display: flex;
+        gap: var(--e1);
+        padding: var(--e2);
+        background: var(--gris-100);
+        border-bottom: 1px solid var(--gris-200);
+      }
+    
+      .onglet-bouton {
+        flex: 1;
+        padding: var(--e3) var(--e4);
+        border: 0;
+        border-radius: var(--rond-sm);
+        background: transparent;
+        font: inherit;
+        font-size: var(--txt-sm);
+        font-weight: 650;
+        color: var(--gris-600);
+        cursor: pointer;
+        transition: background var(--glisse), color var(--glisse),
+                    box-shadow var(--glisse);
+      }
+      .onglet-bouton:hover { color: var(--encre); }
+    
+      .onglet-bouton.actif {
+        background: var(--papier);
+        color: var(--encre);
+        box-shadow: var(--ombre-1);
+      }
+    
+      .onglet-contenu { display: none; padding: var(--e5); }
+    
+      .onglet-contenu.actif {
+        display: block;
+        animation: apparition 320ms cubic-bezier(.2,.7,.3,1) both;
+      }
+    
+      @keyframes apparition {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: none; }
+      }
+    
+      /* ==========================================================================
+         9. LIGNES (contenu des onglets)
+         ========================================================================== */
+      .ligne {
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+        padding: var(--e3) var(--e4);
+        margin-bottom: var(--e2);
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-md);
+        text-decoration: none;
+        color: inherit;
+        font-size: var(--txt-sm);
+        font-weight: 600;
+        transition: transform var(--glisse), border-color var(--glisse),
+                    background var(--glisse);
+      }
+      .ligne:hover {
+        transform: translateX(3px);
+        border-color: var(--corail);
+        background: #FEF6F2;
+      }
+      .ligne:last-child { margin-bottom: 0; }
+    
+      /* Le nom du responsable, pousse a droite de la ligne. margin-left:auto
+         plutot qu'une largeur fixe : les intitules n'ont pas tous la meme
+         longueur, et le nom reste malgre tout aligne a droite. */
+      .ligne-libelle { min-width: 0; }
+    
+      .ligne-personne {
+        flex: none;
+        margin-left: auto;
+        padding-left: var(--e3);
+        font-size: var(--txt-xs);
+        font-weight: 600;
+        color: var(--gris-600);
+      }
+    
+      /* Sur fond sombre (SYSTEM, Launcher), le gris ne passe plus. */
+      .ligne-titre .ligne-personne { color: rgba(255,255,255,.72); }
+    
+      /* Ligne de tete (SYSTEM, Launcher) */
+      .ligne-titre {
+        background: var(--encre);
+        border-color: transparent;
+        color: var(--papier);
+        font-size: var(--txt-md);
+        font-weight: 650;
+      }
+      .ligne-titre:hover { background: #363C52; border-color: transparent; }
+    
+      /* Les sous-lignes, rattachees par un filet vertical */
+      .sous-lignes {
+        position: relative;
+        margin: var(--e2) 0 var(--e5) var(--e4);
+        padding-left: var(--e4);
+      }
+      .sous-lignes:last-child { margin-bottom: 0; }
+    
+      /* Le filet vertical. Il s'arrete au milieu de la derniere ligne, pour
+         ne pas "depasser" dans le vide sous le dernier element. */
+      .sous-lignes::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: calc(var(--e2) * -1);
+        bottom: 21px;
+        width: 1px;
+        background: var(--gris-300);
+      }
+    
+      /* La petite encoche horizontale qui relie chaque ligne au filet */
+      .sous-lignes .ligne { position: relative; }
+      .sous-lignes .ligne::before {
+        content: "";
+        position: absolute;
+        left: calc(var(--e4) * -1);
+        top: 50%;
+        width: var(--e4);
+        height: 1px;
+        background: var(--gris-300);
+      }
+    
+      /* ==========================================================================
+         10. TUILES TRANSVERSALES
+         Le contenu de l'onglet "Transversal" n'est pas une arborescence comme
+         "Group PMO" : ce sont quatre sujets de meme niveau. Ils ont donc une
+         forme a eux, qui les distingue au premier coup d'oeil des lignes
+         hierarchiques de l'autre onglet.
+         --------------------------------------------------------------------------
+         LA FORME : le coin superieur droit est coupe en biais, et la coupe
+         laisse apparaitre un triangle de couleur. Angulaire la ou tout le reste
+         de la page est arrondi. La meme coupe est reprise, en plus petit, sur
+         la pastille de l'icone.
+    
+         POUR CHANGER LA COULEUR D'UNE TUILE
+         Une seule valeur a modifier : --tuile-accent, dans les quatre classes
+         tuile-... plus bas. Elle pilote a la fois le triangle du coin, l'icone
+         et le fond au survol.
+    
+         POUR CHANGER LA TAILLE DE LA COUPE
+         La valeur --coupe (20px par defaut).
+         ========================================================================== */
+      /* Deux colonnes, pas "autant que la place permet" : avec quatre sujets,
+         un calcul automatique donne selon la largeur 2+2 ou 3+1, et le 3+1
+         laisse une tuile isolee en bas. Deux colonnes fixes gardent toujours
+         un carre regulier. En dessous de 640px, une seule colonne. */
+      .grille-tuiles {
+        gap: var(--e3);
+        grid-template-columns: minmax(0, 1fr);
+      }
+    
+      @container jls (min-width: 640px) {
+        .grille-tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+    
+      .tuile {
+        --coupe: 20px;
+        --tuile-accent: var(--ardoise);
+    
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+        padding: var(--e3) var(--e4);
+        min-height: 78px;
+        /* Ce fond ne se voit que dans la coupe : c'est lui, le triangle. */
+        background: var(--tuile-accent);
+        clip-path: polygon(0 0, calc(100% - var(--coupe)) 0,
+                           100% var(--coupe), 100% 100%, 0 100%);
+        text-decoration: none;
+        color: var(--encre);
+        font-size: var(--txt-sm);
+        font-weight: 650;
+        line-height: 1.35;
+        transition: transform var(--glisse), color var(--glisse),
+                    filter var(--glisse);
+      }
+    
+      /* La surface de la tuile, posee par-dessus le fond colore. Sa decoupe
+         epargne le carre du coin : le triangle reste donc visible, et rien
+         d'autre. */
+      .tuile::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: var(--gris-50);
+        box-shadow: inset 0 0 0 1px var(--gris-200);
+        clip-path: polygon(0 0, calc(100% - var(--coupe)) 0,
+                           calc(100% - var(--coupe)) var(--coupe),
+                           100% var(--coupe), 100% 100%, 0 100%);
+        transition: background var(--glisse), box-shadow var(--glisse);
+      }
+    
+      .tuile > * { position: relative; z-index: 1; }
+    
+      /* Au survol la tuile se remplit de sa couleur, coupe comprise.
+         drop-shadow et non box-shadow : une ombre de boite serait rognee par
+         la decoupe, alors que drop-shadow en epouse la forme. */
+      .tuile:hover {
+        transform: translateY(-3px);
+        color: var(--papier);
+        filter: drop-shadow(0 8px 16px rgba(28,34,51,.20));
+      }
+      .tuile:hover::before {
+        background: var(--tuile-accent);
+        box-shadow: none;
+      }
+      .tuile:active { transform: translateY(-1px); }
+    
+      /* La pastille de l'icone reste claire au survol : l'icone garde sa
+         couleur et se detache du fond devenu colore. */
+      .tuile-icone {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        color: var(--tuile-accent);
+        background: var(--papier);
+        box-shadow: inset 0 0 0 1px var(--gris-200);
+        clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
+      }
+      .tuile-icone svg { width: 20px; height: 20px; }
+    
+    
+      /* Libelle et responsable empiles dans la tuile. */
+      .tuile-texte {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+    
+      .tuile-personne {
+        font-size: var(--txt-xs);
+        font-weight: 600;
+        color: var(--gris-600);
+        transition: color var(--glisse);
+      }
+      /* .94 et non .82 : sur le corail, la teinte la plus claire des quatre,
+         un blanc a 82% tombe a 3,90:1 -- sous le seuil de lisibilite. A .94 le
+         cas le plus defavorable remonte a 4,60:1. La hierarchie entre libelle
+         et nom repose donc sur la taille, pas sur la couleur. */
+      .tuile:hover .tuile-personne { color: rgba(255,255,255,.94); }
+    
+      /* --- Les quatre couleurs -------------------------------------------------
+         Choisies pour rester lisibles dans les deux etats : icone posee sur la
+         surface claire, puis libelle blanc sur la couleur au survol.          */
+      .tuile-risques      { --tuile-accent: #B8501C; }   /* corail foncé   */
+      .tuile-methode      { --tuile-accent: #2F5D8C; }   /* bleu           */
+      .tuile-securite     { --tuile-accent: #5B4B8A; }   /* violet         */
+      .tuile-amelioration { --tuile-accent: #2F6B4F; }   /* vert           */
+    
+      /* ==========================================================================
+         11. ACCESSIBILITE
+         ========================================================================== */
+    
+      /* Contour visible pour ceux qui naviguent au clavier (touche Tab) */
+      .jls a:focus-visible,
+      .jls button:focus-visible {
+        outline: 3px solid var(--corail);
+        outline-offset: 3px;
+      }
+    
+      /* Certains utilisateurs demandent moins d'animations au niveau du systeme.
+         On respecte ce reglage : les mouvements sont neutralises, le contenu
+         reste evidemment entierement visible. */
+      @media (prefers-reduced-motion: reduce) {
+        .jls *,
+        .jls *::before,
+        .jls *::after {
+          animation-duration: .01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: .01ms !important;
+        }
+        .carte:hover,
+        .bouton:hover,
+        .ligne:hover { transform: none; }
+        .tuile:hover { transform: none; filter: none; }
+        .carte-image:hover .carte-fond { transform: none; }
+      }
+    
+    </style>
+    
+    <div class="jls">
+    
+      <!-- BLOC : BANDEAU D'ACCUEIL -->
+      <section class="bloc entete">
+    
+        <div>
+          <span class="entete-etiquette">Space Transportation</span>
+          <h1 class="entete-titre">JLS &ndash; <em>Program Management Office</em></h1>
+          <p class="entete-description">
+            Espace de pilotage de l'equipe de support au management des programmes
+            de transport spatial : gouvernance, jalons, points focaux et synthese
+            multi-programmes.
+          </p>
+          <a class="bouton" href="https://atlas.fr.space.corp/confluence/pages/viewpage.action?pageId=2841785852">
+            JLS Internal Portal
+            <span class="bouton-fleche" aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
+    
+        <div class="entete-contact">
+          <p class="entete-contact-label">Head of JLS team</p>
+          <div class="entete-contact-ligne">
+            <span class="rond-initiales" aria-hidden="true">NN</span>
+            <div>
+              <p class="entete-contact-nom">Henri Picard-Destelan</p>
+              <p class="entete-contact-role">JLS 
+              </p>
+            </div>
+          </div>
+        </div>
+    
+      </section>
+    
+      <!-- BLOC : JL BOARD MEMBER FOCAL POINT -->
+      <section class="bloc">
+        <h2 class="titre-section">
+          JL Board member focal point
+          <span class="titre-compteur">5</span>
+        </h2>
+    
+        <div class="grille grille-compacte">
+            
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLV</p>
+            <p class="carte-personne">Cyril Rehel</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLE</p>
+            <p class="carte-personne">Carole Hude</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLL</p>
+            <p class="carte-personne">Maxime Breton</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLI</p>
+            <p class="carte-personne">Jessica Soumagne</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLO</p>
+            <p class="carte-personne">Erik Post</p>
+          </a>
+        </div>
+      </section>
+     
+      <div>
+            <div class="onglets">
+    
+                <div class="onglets-boutons">
+                    <button class="onglet-bouton actif"
+                        onclick="afficherOnglet(event, 'contenu-jls-organisation')">
+                        JLS Organisation
+                    </button>
+                    <button class="onglet-bouton"
+                        onclick="afficherOnglet(event, 'contenu-jl-overview')">
+                        JL Overview
+                    </button>
+                </div>
+            
+                <!-- Contenu de l'onglet "JLS Organisation" -->
+                <div id="contenu-jls-organisation" class="onglet-contenu actif">
+                
+    
+                                <!-- BLOC : CHIEF OF PMO -->
+                    <section class="bloc">
+                        <h2 class="titre-section">
+                        Chief of PMO
+                        <span class="titre-compteur">2</span>
+                        </h2>
+    
+                        <div class="grille grille-large">
+    
+                            <!-- Sur chaque carte, 2 choses a remplir :
+                                    href="..."  l'adresse de la page Confluence a ouvrir
+                                    src="..."   l'adresse de l'image de fond
+                                Pas d'image sur une carte ? Supprime sa ligne <img> et enleve
+                                "carte-image" de son class. -->
+                            <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20dev%20image.png?api=v2" alt="">
+                                <p class="carte-titre">A6 Dev</p>
+                                <p class="carte-personne">Anaïs Capiez</p>
+                            </a>
+    
+                            <a class="carte carte-moyenne carte-image" href="https://atlas.fr.space.corp/confluence/display/A6EXPLOITATION/Ariane+6+Exploitation">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20exploit%20image.png?api=v2" alt="">
+                                <p class="carte-titre">A6 Exploit</p>
+                                <p class="carte-personne">Carole Hude</p>
+                            </a>
+    
+                        </div>
+                    </section>
+    
+    
+    
+                    <!-- BLOC : PERIMETRES + MULTI-PROGRAMME SYNTHESIS (cote a cote)
+                        Ces deux ensembles partagent une meme section a deux colonnes.
+                        Chaque colonne est un <div> avec son propre titre.
+                        - Pour les remettre l'un sous l'autre : enleve "deux-colonnes" de la
+                            ligne <section class="bloc deux-colonnes"> ci-dessous.
+                        - Pour inverser gauche/droite : intervertis les deux <div> colonnes.
+                        - La largeur relative des colonnes se regle dans la feuille de style,
+                            section "COLONNES COTE A COTE". -->
+                    <section class="bloc deux-colonnes">
+    
+                        <!-- Colonne de gauche : le tableau a onglets.
+                            Le titre est un intitule provisoire, remplace-le par le terme
+                            employe dans ton equipe. -->
+                        <div>
+                        <h2 class="titre-section">Perimetres</h2>
+    
+                        <div class="onglets">
+    
+                            <div class="onglets-boutons">
+                            <button class="onglet-bouton actif"
+                                    onclick="afficherOnglet(event, 'contenu-groupe-pmo')">
+                                Group PMO
+                            </button>
+                            <button class="onglet-bouton"
+                                    onclick="afficherOnglet(event, 'contenu-transversal')">
+                                Transversal
+                            </button>
+                            </div>
+    
+                            <!-- Contenu de l'onglet "Group PMO" -->
+                            <div id="contenu-groupe-pmo" class="onglet-contenu actif">
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre"><span class="ligne-libelle">Launcher</span><span class="ligne-personne">Thomas Rubino</span></a>
+                                <div class="sous-lignes">
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">ULPM</span><span class="ligne-personne">Erik Post</span></a>
+                                <a href="https://atlas.fr.space.corp/confluence/display/LLPMA6EX" class="ligne"><span class="ligne-libelle">LLPM</span><span class="ligne-personne">Jean-Guillaume Jeremiaz</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">SPRO / ESR</span><span class="ligne-personne">Jessica Soumagne</span></a>
+                                <a href="https://atlas.fr.space.corp/confluence/display/LPROEXP" class="ligne"><span class="ligne-libelle">LPRO</span><span class="ligne-personne">Jean-Guillaume Jeremiaz</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Avionics and Flight Controls</span><span class="ligne-personne">Arnaud Marchivie</span></a>
+                                </div>
+    
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre"><span class="ligne-libelle">SYSTEM</span><span class="ligne-personne">ID</span></a>
+                                <div class="sous-lignes">
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">LIOD, Kourou Focal Point &amp; Ground Industrialists</span><span class="ligne-personne">Pierre Abraham</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Decoupling point</span><span class="ligne-personne">Cyril Dutheil</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Launcher System</span><span class="ligne-personne">ID</span></a>
+                                </div>
+    
+    
+    
+                            </div>
+    
+                            <!-- Contenu de l'onglet "Transversal"
+                                 Ces quatre sujets sont de meme niveau : ils utilisent la
+                                 TUILE (coin coupe + icone), et non la ligne hierarchique
+                                 de l'autre onglet. Chaque tuile porte sa couleur via sa
+                                 classe tuile-... ; les couleurs sont definies dans la
+                                 feuille de style, section "TUILES TRANSVERSALES". -->
+                            <div id="contenu-transversal" class="onglet-contenu">
+                            <div class="grille grille-tuiles">
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-risques">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M12 3.8 2.9 19.4h18.2L12 3.8Z"/>
+                                    <path d="M12 9.9v4.1"/>
+                                    <path d="M12 16.8h.01"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Risks Management</span>
+                                  <span class="tuile-personne">Didier Pinard</span>
+                                </span>
+                              </a>
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-methode">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M3.6 7.4h8.1M16.5 7.4h3.9"/>
+                                    <circle cx="14.1" cy="7.4" r="2.4"/>
+                                    <path d="M3.6 16.6h3.9M12.3 16.6h8.1"/>
+                                    <circle cx="9.9" cy="16.6" r="2.4"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Process Method &amp;Tools</span>
+                                  <span class="tuile-personne">Xavier Viot</span>
+                                </span>
+                              </a>
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-securite">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M12 3.2 4.8 6.1v5.4c0 4.3 2.9 7.6 7.2 9.3 4.3-1.7 7.2-5 7.2-9.3V6.1L12 3.2Z"/>
+                                    <path d="m9.4 12.2 1.9 1.9 3.5-3.6"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Doc &amp; Data Security Export Control</span>
+                                  <span class="tuile-personne">Laurent Préau</span>
+                                </span>
+                              </a>
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-amelioration">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M4.7 12a7.3 7.3 0 0 1 12.4-5.2l2.2 2.2"/>
+                                    <path d="M19.3 12a7.3 7.3 0 0 1-12.4 5.2l-2.2-2.2"/>
+                                    <path d="M19.5 4.6v4.4h-4.4"/>
+                                    <path d="M4.5 19.4V15h4.4"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Continuous Improvment</span>
+                                  <span class="tuile-personne">Henri Picard-Destelan / Ruben Sylla</span>
+                                </span>
+                              </a>
+    
+                            </div>
+                            </div>
+    
+                        </div>
+                        </div>
+    
+                        <!-- Colonne de droite : PROGRAM PMO -->
+                        <div>
+                        <h2 class="titre-section">
+                            Program PMO
+                            <span class="titre-compteur">3</span>
+                        </h2>
+    
+                        <!-- Les cartes sont empilees : c'est .pile qui les espace. -->
+                        <div class="pile">
+                            <a class="carte carte-petite carte-image" href="https://atlas.fr.space.corp/confluence/display/PROM">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Prom%C3%A9th%C3%A9e%20image.png?api=v2" alt="">
+                                <p class="carte-titre">Promethee</p>
+                                <p class="carte-personne">Maxime Breton</p>
+                            </a>
+    
+                            <a class="carte carte-petite carte-image" href="https://atlas.fr.space.corp/confluence/display/AW">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Themis%20image.png?api=v2" alt="">
+                                <p class="carte-titre">Themis</p>
+                                <p class="carte-personne">Serin Benna Escala</p>
+                            </a>
+    
+                            <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Astris%20image.png?api=v2" alt="">
+                                <p class="carte-titre">Astris</p>
+                                <p class="carte-personne">Sebastian Jordan</p>
+                            </a>
+                        </div>
+    
+    
+                        
+                        </div>
+    
+                    </section>
+                    <!-- BLOC : Multi-Programme Synthesis -->
+                    <section class="bloc">
+                        <h2 class="titre-section">
+                        Multi-Programme Synthesis
+                        <span class="titre-compteur">2</span>
+                        </h2>
+    
+                        <div class="grille">
+
+                        <a class="carte carte-petite" href="REMPLACE_PAR_LE_LIEN">
+                            <p class="carte-titre">Ariane 6</p>
+                            <p class="carte-personne">Pierre Abraham</p>
+                        </a>
+
+                        <a class="carte carte-petite" href="REMPLACE_PAR_LE_LIEN">
+                            <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
+                            <p class="carte-personne">Cyril Rehel</p>
+                        </a>
+    
+                        </div>
+                    </section>
+    
+                </div>
+    
+                <!-- Contenu de l'onglet "JL Overview" -->
+                <div id="contenu-jl-overview" class="onglet-contenu">
+                    
+    
+                </div>
+    
+            </div>
+        </div>
+    
+    
+    </div>
+    
+    <script>
+      // Renvoie les enfants DIRECTS de "parent" qui portent la classe donnee.
+      // Direct, et non "tous les descendants" : c'est ce qui permet d'imbriquer
+      // un groupe d'onglets dans un autre. Sans cela, cliquer sur un onglet
+      // exterieur eteindrait aussi les onglets interieurs, et le panneau
+      // interieur (Group PMO) reviendrait vide.
+      function enfantsDirects(parent, classe) {
+        var trouves = [];
+        for (var i = 0; i < parent.children.length; i++) {
+          if (parent.children[i].classList.contains(classe)) {
+            trouves.push(parent.children[i]);
+          }
+        }
+        return trouves;
+      }
+    
+      // Affiche le contenu d'onglet dont l'identifiant est passe en parametre,
+      // et cache les autres contenus DU MEME GROUPE d'onglets.
+      // "evenement" est fourni automatiquement par le onclick de chaque bouton.
+      function afficherOnglet(evenement, idDuContenu) {
+        var bouton = evenement.currentTarget || evenement.target;
+        var groupe = bouton.closest('.onglets');
+        var cible = document.getElementById(idDuContenu);
+    
+        // Identifiant inconnu (faute de frappe, contenu supprime) : on ne touche
+        // a rien. Mieux vaut garder l'onglet courant que tout faire disparaitre.
+        if (!groupe || !cible) { return; }
+    
+        enfantsDirects(groupe, 'onglet-contenu').forEach(function (el) {
+          el.classList.remove('actif');
+        });
+        enfantsDirects(groupe, 'onglets-boutons').forEach(function (barre) {
+          enfantsDirects(barre, 'onglet-bouton').forEach(function (b) {
+            b.classList.remove('actif');
+          });
+        });
+    
+        cible.classList.add('actif');
+        bouton.classList.add('actif');
+      }
+    </script>
