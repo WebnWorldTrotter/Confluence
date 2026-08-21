@@ -1,0 +1,89 @@
+<!-- ==========================================================================
+     BLOC 04 — ONGLETS Group PMO / Transversal
+     --------------------------------------------------------------------------
+     Les onglets fonctionnent SANS JavaScript (input[type=radio] + CSS) :
+     si le HTML Module filtre les <script>, la navigation reste operante.
+     --------------------------------------------------------------------------
+     ATTENTION : les attributs id="" doivent rester UNIQUES sur la page.
+     Si tu dupliques ce bloc, change le suffixe -gp1/-gp2 ET l'attribut name.
+     ========================================================================== -->
+
+<div class="jls">
+
+  <div class="jls-tabs" style="--jls-tab-n:2" data-jls-tabs>
+
+    <input class="jls-tabs__radio" type="radio" name="jls-pmo-tabs"
+           id="jls-tab-gp1" checked>
+    <input class="jls-tabs__radio" type="radio" name="jls-pmo-tabs"
+           id="jls-tab-gp2">
+
+    <div class="jls-tabs__list" role="tablist">
+      <span class="jls-tabs__slider" aria-hidden="true"></span>
+      <label class="jls-tabs__tab" for="jls-tab-gp1">Group PMO</label>
+      <label class="jls-tabs__tab" for="jls-tab-gp2">Transversal</label>
+    </div>
+
+    <div class="jls-tabs__panels">
+
+      <!-- ---------- Panneau 1 : Group PMO ------------------------------
+           Deux axes (SYSTEM, Launcher), chacun decline sur les memes
+           trois sujets. Le filet vertical .jls-stack--nested materialise
+           le rattachement, la ou le PowerPoint utilisait des cercles. -->
+      <section class="jls-tabs__panel" role="tabpanel"
+               aria-labelledby="jls-tab-gp1">
+
+        <div class="jls-stack">
+          <div class="jls-row jls-row--lead">
+            <span class="jls-avatar" aria-hidden="true">SY</span>
+            <span class="jls-row__label">SYSTEM</span>
+          </div>
+
+          <div class="jls-stack jls-stack--nested">
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">LIOD, Kourou Focal Point &amp; Ground Industrialists</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">Decoupling point</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">SPRO / ESR</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="jls-stack" style="margin-top:16px">
+          <div class="jls-row jls-row--lead">
+            <span class="jls-avatar" aria-hidden="true">LA</span>
+            <span class="jls-row__label">Launcher</span>
+          </div>
+
+          <div class="jls-stack jls-stack--nested">
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">LIOD, Kourou Focal Point &amp; Ground Industrialists</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">Decoupling point</span>
+            </a>
+            <a class="jls-row" href="#">
+              <span class="jls-row__label">SPRO / ESR</span>
+            </a>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------- Panneau 2 : Transversal ----------------------------
+           Contenu non lisible sur la source : structure a completer. -->
+      <section class="jls-tabs__panel" role="tabpanel"
+               aria-labelledby="jls-tab-gp2">
+        <div class="jls-stack">
+          <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 1}}</span></a>
+          <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 2}}</span></a>
+          <a class="jls-row" href="#"><span class="jls-row__label">{{Sujet transversal 3}}</span></a>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+</div>

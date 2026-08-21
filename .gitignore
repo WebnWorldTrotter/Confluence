@@ -1,0 +1,4 @@
+# sortie generee par outils/remplir-depuis-tableau.py
+page-remplie.html
+__pycache__/
+*.pyc
