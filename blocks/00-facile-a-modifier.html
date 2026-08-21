@@ -365,6 +365,15 @@
         }
       }
     
+      /* Une variante ou la colonne de gauche prend nettement plus de place.
+         Utilisee par JL Overview : un organigramme a besoin de largeur, les
+         deux blocs d'acces beaucoup moins. */
+      @container jls (min-width: 820px) {
+        .deux-colonnes-large {
+          grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
+        }
+      }
+    
       /* Le titre de chaque colonne ne doit pas ajouter d'espace au-dessus :
          les deux colonnes demarrent ainsi exactement a la meme hauteur. */
       .deux-colonnes > div > .titre-section { margin-top: 0; }
@@ -413,6 +422,20 @@
         margin-top: auto;
         font-size: var(--txt-sm);
         color: var(--gris-600);
+      }
+    
+      /* Une ligne d'explication a la place d'un nom, quand la carte ne designe
+         pas une personne (les deux grands blocs de JL Overview, par exemple).
+         Meme discretion que .carte-personne, mais le tableau des responsables
+         n'y touche pas : ce texte-la se modifie ici, dans la page. */
+      .carte-legende {
+        font-size: var(--txt-sm);
+        color: var(--gris-600);
+      }
+      .carte-image .carte-legende {
+        position: relative;
+        z-index: 2;
+        color: rgba(255,255,255,.82);
       }
     
       /* --- Les 3 tailles ------------------------------------------------------
@@ -933,7 +956,367 @@
       .tuile-amelioration { --tuile-accent: #2F6B4F; }   /* vert           */
     
       /* ==========================================================================
-         11. ACCESSIBILITE
+         11. ORGANIGRAMMES
+         Les deux arbres de l'onglet "JL Overview".
+         --------------------------------------------------------------------------
+         ATTENTION : le HTML des organigrammes n'est PAS ecrit a la main. Il est
+         produit par outils/organigrammes.py a partir de deux tableaux :
+             donnees/jl-organisation.csv   les directions et leurs entites
+             donnees/jl-programmes.csv     les portefeuilles et leurs ETC
+         Le contenu se modifie donc dans Excel, jamais dans la page. Ici, il
+         n'y a que l'apparence.
+
+         COMMENT C'EST CONSTRUIT
+         Aucune image, aucun dessin : tous les traits sont des rectangles de
+         1px poses par CSS. Trois pieces, qui se repetent a tous les niveaux :
+             .orga-sommet    la boite du haut, et le trait qui en descend
+             .orga-branches  la rangee de branches, et la barre qui les relie
+             .orga-enfants   une colonne d'entites, et son filet vertical
+         .orga-enfants s'imbrique dans lui-meme : ajouter un niveau dans le
+         tableau ne demande aucune ligne de style supplementaire.
+
+         LES TROIS REGLAGES
+             --orga-trait     la couleur des traits
+             --orga-saut      la hauteur des connecteurs verticaux
+             --orga-largeur   la largeur minimale d'une branche
+         ========================================================================== */
+      .organigramme {
+        --orga-trait: var(--gris-300);
+        --orga-saut: var(--e5);
+        --orga-largeur: 148px;
+    
+        /* La rangee de branches ne se comprime pas en dessous de cette
+           largeur : mieux vaut un organigramme qui glisse lateralement dans
+           son cadre qu'un organigramme illisible. Le nombre de branches est
+           pose par le script, dans l'attribut style de la balise. */
+        min-width: calc(var(--branches, 1) * var(--orga-largeur));
+        padding: var(--e1) 0 var(--e2);
+        font-size: var(--txt-sm);
+      }
+    
+      /* Le cadre qui porte le defilement lateral. Il est ecrit dans la page,
+         autour des reperes : le script n'y touche pas. */
+      .orga-cadre {
+        overflow-x: auto;
+        padding-bottom: var(--e2);
+      }
+    
+      /* --- La boite ------------------------------------------------------------
+         Avec un lien c'est un <a>, sans lien un <div> : une boite sur laquelle
+         il n'y a rien a cliquer ne doit pas reagir comme un lien.            */
+      .orga-noeud {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: var(--e2) var(--e3);
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-sm);
+        box-shadow: var(--ombre-1);
+        text-decoration: none;
+        color: inherit;
+        line-height: 1.3;
+      }
+    
+      a.orga-noeud {
+        transition: transform var(--glisse), border-color var(--glisse),
+                    box-shadow var(--glisse);
+      }
+      a.orga-noeud:hover {
+        transform: translateY(-2px);
+        border-color: var(--corail);
+        box-shadow: var(--ombre-2);
+      }
+      a.orga-noeud:active { transform: none; box-shadow: var(--ombre-1); }
+    
+      /* Les trois textes d'une boite : l'acronyme, le nom, le montant.
+         --------------------------------------------------------------------
+         Un seul jeu de regles sert aux DEUX organigrammes, alors que l'un a
+         des acronymes et l'autre pas. Le principe : le nom est le titre par
+         defaut ; il ne passe au second plan que s'il SUIT un acronyme, qui
+         devient alors le titre a sa place. C'est le "+" qui le dit, et il
+         n'y a rien a marquer dans le tableau pour cela.                    */
+      .orga-acronyme { font-weight: 700; letter-spacing: .01em; }
+      .orga-nom      { font-size: var(--txt-sm); font-weight: 600; }
+      .orga-acronyme + .orga-nom {
+        font-size: var(--txt-xs);
+        font-weight: 500;
+        color: var(--gris-600);
+      }
+    
+      .orga-etc {
+        margin-top: 2px;
+        font-size: var(--txt-xs);
+        font-weight: 700;
+        color: var(--corail-fonce);
+      }
+    
+      /* La petite etiquette de la colonne "mention" (exemple : Deputy) */
+      .orga-mention {
+        align-self: flex-start;
+        margin-bottom: var(--e1);
+        padding: 0 var(--e1);
+        border-radius: 999px;
+        background: var(--gris-100);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--gris-600);
+      }
+    
+      /* --- Un niveau, une teinte ----------------------------------------------
+         Du plus fonce au plus clair a mesure qu'on descend : la hierarchie se
+         lit sans avoir a suivre les traits.                                  */
+      .orga-noeud-1 {
+        align-items: center;
+        padding: var(--e3) var(--e5);
+        background: var(--encre);
+        border-color: transparent;
+        color: var(--papier);
+        text-align: center;
+        box-shadow: var(--ombre-2);
+      }
+      .orga-noeud-1 .orga-acronyme { font-size: var(--txt-lg); }
+      .orga-noeud-1 .orga-nom      { font-size: var(--txt-lg); font-weight: 700; }
+      .orga-noeud-1 .orga-acronyme + .orga-nom {
+        font-size: var(--txt-xs);
+        font-weight: 500;
+        color: rgba(255,255,255,.78);
+      }
+      .orga-noeud-1 .orga-etc      { color: #FBA97F; }
+    
+      .orga-noeud-2 {
+        background: var(--ardoise);
+        border-color: transparent;
+        color: var(--papier);
+      }
+      .orga-noeud-2 .orga-acronyme + .orga-nom { color: rgba(255,255,255,.80); }
+      .orga-noeud-2 .orga-etc { color: #FFD8C4; }
+    
+      .orga-noeud-4 { background: var(--gris-50); }
+    
+      /* --- Le sommet et le trait qui en descend ------------------------------- */
+      .orga-sommet {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        padding-bottom: var(--orga-saut);
+      }
+      .orga-sommet::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 1px;
+        height: var(--orga-saut);
+        background: var(--orga-trait);
+      }
+    
+      /* --- La rangee support / adjoint ----------------------------------------
+         Deux colonnes separees par une gouttiere large : le trait central
+         descend pile au milieu de cette gouttiere. Ce qui est pose la n'est
+         pas une branche de plus, c'est ce qui se rattache au sommet sur le
+         cote (fonction support a gauche, adjoint a droite).                  */
+      .orga-adjoints {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--e7);
+        align-items: start;
+        padding-bottom: var(--orga-saut);
+      }
+      .orga-adjoints::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--orga-trait);
+      }
+    
+      .orga-cote { display: grid; gap: var(--e3); }
+      .orga-cote-support { justify-items: end; }
+      .orga-cote-adjoint { justify-items: start; }
+      .orga-adjoint { position: relative; max-width: 260px; }
+    
+      /* L'encoche qui relie la boite au trait central : elle part du bord de
+         la boite et parcourt une demi-gouttiere, elle rejoint donc exactement
+         le milieu, quelle que soit la largeur de la page. */
+      .orga-cote .orga-adjoint > .orga-noeud::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: calc(var(--e7) / 2);
+        height: 1px;
+        background: var(--orga-trait);
+      }
+      .orga-cote-support .orga-adjoint > .orga-noeud::after { left: 100%; }
+      .orga-cote-adjoint .orga-adjoint > .orga-noeud::after { right: 100%; }
+    
+      /* Le support garde la couleur d'accent : c'est ce qui le distingue au
+         premier coup d'oeil du reste de l'organigramme. */
+      .orga-cote-support .orga-noeud-2 {
+        background: var(--corail);
+        color: var(--encre);
+      }
+      .orga-cote-support .orga-noeud-2 .orga-acronyme + .orga-nom { color: rgba(45,49,66,.75); }
+      .orga-cote-support .orga-noeud-2 .orga-etc { color: var(--encre); }
+    
+      /* --- La rangee de branches ----------------------------------------------
+         Autant de colonnes egales que de branches ; le nombre vient du script.
+         La barre horizontale n'est pas dessinee d'un seul tenant : chaque
+         branche en dessine son morceau, elargi d'une demi-gouttiere de chaque
+         cote pour que les morceaux se rejoignent par-dessus les espaces. La
+         premiere et la derniere s'arretent au milieu de leur boite -- la barre
+         ne depasse donc jamais, et cela reste vrai quel que soit le nombre de
+         branches, sans aucun calcul.                                         */
+      .orga-branches {
+        display: grid;
+        grid-template-columns: repeat(var(--branches, 1), minmax(0, 1fr));
+        gap: var(--e3);
+        align-items: start;
+        padding-top: var(--orga-saut);
+      }
+    
+      .orga-branche { position: relative; }
+    
+      .orga-branche::before {
+        content: "";
+        position: absolute;
+        top: calc(var(--orga-saut) * -1);
+        left: calc(var(--e3) / -2);
+        right: calc(var(--e3) / -2);
+        height: 1px;
+        background: var(--orga-trait);
+      }
+      .orga-branche:first-child::before { left: 50%; }
+      .orga-branche:last-child::before  { right: 50%; }
+    
+      /* Le trait qui descend de la barre vers la boite */
+      .orga-branche::after {
+        content: "";
+        position: absolute;
+        top: calc(var(--orga-saut) * -1);
+        left: 50%;
+        width: 1px;
+        height: var(--orga-saut);
+        background: var(--orga-trait);
+      }
+    
+      /* --- Une colonne d'entites accrochee sous une boite ----------------------
+         .orga-tige entoure la boite seule ; ce qui pend en dessous (les
+         niveaux plus fins) est en dehors. C'est ce qui permet a l'encoche de
+         viser le milieu de la BOITE et non le milieu de tout ce qui pend
+         dessous : le dessin reste juste quel que soit le nombre de niveaux. */
+      .orga-enfants {
+        display: grid;
+        gap: var(--e2);
+        margin: var(--e2) 0 0 var(--e3);
+      }
+    
+      .orga-enfant {
+        position: relative;
+        padding-left: var(--e3);
+      }
+    
+      /* Le filet vertical, en deux temps :
+         - tant qu'une entite en suit une autre, il traverse toute sa hauteur
+         - sur la DERNIERE, il s'arrete au milieu de la boite, pour ne pas
+           pendre dans le vide  */
+      .orga-enfant::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: calc(var(--e2) * -1);
+        bottom: 0;
+        width: 1px;
+        background: var(--orga-trait);
+      }
+      .orga-enfant:last-child::before { display: none; }
+    
+      .orga-tige { position: relative; }
+    
+      .orga-enfant:last-child > .orga-tige::before {
+        content: "";
+        position: absolute;
+        left: calc(var(--e3) * -1);
+        top: calc(var(--e2) * -1);
+        height: calc(50% + var(--e2));
+        width: 1px;
+        background: var(--orga-trait);
+      }
+    
+      /* L'encoche horizontale qui relie la boite au filet */
+      .orga-tige::after {
+        content: "";
+        position: absolute;
+        left: calc(var(--e3) * -1);
+        top: 50%;
+        width: var(--e3);
+        height: 1px;
+        background: var(--orga-trait);
+      }
+    
+      /* --- Les encadres de revue ----------------------------------------------
+         La colonne "revue" du tableau entoure la boite de pointilles et la
+         rappelle dans la legende. Les couleurs sont attribuees dans l'ordre
+         d'apparition dans le tableau.                                        */
+      .orga-revue-1 { --orga-revue: #B8501C; }   /* corail fonce */
+      .orga-revue-2 { --orga-revue: #2F6B4F; }   /* vert         */
+      .orga-revue-3 { --orga-revue: #2F5D8C; }   /* bleu         */
+      .orga-revue-4 { --orga-revue: #5B4B8A; }   /* violet       */
+    
+      .orga-noeud[class*="orga-revue-"] {
+        outline: 1px dashed var(--orga-revue);
+        outline-offset: 2px;
+      }
+    
+      .orga-legende {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: var(--e2);
+        margin-bottom: var(--e3);
+      }
+      .orga-legende-item {
+        padding: 1px var(--e2);
+        border: 1px dashed var(--orga-revue, var(--gris-300));
+        border-radius: var(--rond-sm);
+        font-size: var(--txt-xs);
+        font-weight: 600;
+        color: var(--orga-revue, var(--gris-600));
+      }
+    
+      /* --- Quand la place manque vraiment --------------------------------------
+         En dessous de cette largeur, plus aucun defilement lateral : les
+         branches s'empilent les unes sous les autres et les traits qui les
+         reliaient disparaissent (ils n'auraient plus rien a relier). Le
+         filet des entites, lui, reste : il porte encore du sens.            */
+      @container jls (max-width: 700px) {
+        .organigramme { min-width: 0; }
+    
+        .orga-branches {
+          grid-template-columns: minmax(0, 1fr);
+          gap: var(--e5);
+        }
+        .orga-branche::before,
+        .orga-branche::after { display: none; }
+    
+        .orga-adjoints {
+          grid-template-columns: minmax(0, 1fr);
+          gap: var(--e3);
+        }
+        .orga-adjoints::before { display: none; }
+        .orga-cote-support,
+        .orga-cote-adjoint { justify-items: stretch; }
+        .orga-adjoint { max-width: none; }
+        .orga-cote .orga-adjoint > .orga-noeud::after { display: none; }
+      }
+    
+      /* ==========================================================================
+         12. ACCESSIBILITE
          ========================================================================== */
     
       /* Contour visible pour ceux qui naviguent au clavier (touche Tab) */
@@ -958,6 +1341,7 @@
         .bouton:hover,
         .ligne:hover { transform: none; }
         .tuile:hover { transform: none; filter: none; }
+        a.orga-noeud:hover { transform: none; }
         .carte-image:hover .carte-fond { transform: none; }
       }
     
@@ -1271,7 +1655,651 @@
     
                 <!-- Contenu de l'onglet "JL Overview" -->
                 <div id="contenu-jl-overview" class="onglet-contenu">
-                    
+    
+                    <!-- BLOC : JL OVERVIEW
+                         A gauche les deux organigrammes, dans un groupe d'onglets a
+                         eux ; a droite les deux grands blocs d'acces.
+                         - Pour les remettre l'un sous l'autre : enleve
+                           "deux-colonnes deux-colonnes-large" de la ligne <section>.
+                         - Pour inverser gauche/droite : intervertis les deux <div>.
+                         - La largeur relative des colonnes se regle dans la feuille
+                           de style, section "COLONNES COTE A COTE".
+    
+                         ATTENTION : le contenu des deux organigrammes est ECRIT PAR
+                         UN SCRIPT, entre les lignes "ORGANIGRAMME : ..." et
+                         "FIN ORGANIGRAMME : ...". Ne rien ecrire a la main entre ces
+                         deux lignes : le passage suivant l'effacerait. Pour changer
+                         ce qui s'y affiche, modifier les tableaux
+                             donnees/jl-organisation.csv
+                             donnees/jl-programmes.csv
+                         puis lancer :   python outils/organigrammes.py           -->
+                    <section class="bloc deux-colonnes deux-colonnes-large">
+    
+                        <!-- Colonne de gauche : les deux organigrammes -->
+                        <div>
+                            <h2 class="titre-section">Organigrammes</h2>
+    
+                            <div class="onglets">
+    
+                                <div class="onglets-boutons">
+                                    <button class="onglet-bouton actif"
+                                            onclick="afficherOnglet(event, 'contenu-jl-organization')">
+                                        JL Organization
+                                    </button>
+                                    <button class="onglet-bouton"
+                                            onclick="afficherOnglet(event, 'contenu-jl-programs')">
+                                        JL Programs
+                                    </button>
+                                </div>
+    
+                                <!-- Contenu de l'onglet "JL Organization" -->
+                                <div id="contenu-jl-organization" class="onglet-contenu actif">
+                                    <div class="orga-cadre">
+                                        <!-- ORGANIGRAMME : organisation -->
+                                        <div class="organigramme" style="--branches: 5;">
+                                          <div class="orga-sommet">
+                                            <div class="orga-noeud orga-noeud-1">
+                                              <span class="orga-acronyme">JL</span>
+                                              <span class="orga-nom">Direction Lambda</span>
+                                            </div>
+                                          </div>
+                                          <div class="orga-adjoints">
+                                            <div class="orga-cote orga-cote-support">
+                                              <div class="orga-adjoint">
+                                                <div class="orga-noeud orga-noeud-2">
+                                                  <span class="orga-acronyme">JLS</span>
+                                                  <span class="orga-nom">Support Sierra</span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-cote orga-cote-adjoint">
+                                              <div class="orga-adjoint">
+                                                <div class="orga-noeud orga-noeud-2">
+                                                  <span class="orga-mention">Deputy</span>
+                                                  <span class="orga-acronyme">JLD</span>
+                                                  <span class="orga-nom">Sous-direction Delta</span>
+                                                </div>
+                                                <div class="orga-enfants">
+                                                  <div class="orga-enfant">
+                                                    <div class="orga-tige">
+                                                      <div class="orga-noeud orga-noeud-3">
+                                                        <span class="orga-acronyme">JLD1</span>
+                                                        <span class="orga-nom">Entite Delta 1</span>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfant">
+                                                    <div class="orga-tige">
+                                                      <div class="orga-noeud orga-noeud-3">
+                                                        <span class="orga-acronyme">JLD2</span>
+                                                        <span class="orga-nom">Entite Delta 2</span>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfant">
+                                                    <div class="orga-tige">
+                                                      <div class="orga-noeud orga-noeud-3">
+                                                        <span class="orga-acronyme">JLD3</span>
+                                                        <span class="orga-nom">Entite Delta 3</span>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div class="orga-branches">
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLA</span>
+                                                <span class="orga-nom">Sous-direction Alpha</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA1</span>
+                                                      <span class="orga-nom">Entite Alpha 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA2</span>
+                                                      <span class="orga-nom">Entite Alpha 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA3</span>
+                                                      <span class="orga-nom">Entite Alpha 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA4</span>
+                                                      <span class="orga-nom">Entite Alpha 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLB</span>
+                                                <span class="orga-nom">Sous-direction Bravo</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB1</span>
+                                                      <span class="orga-nom">Entite Bravo 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB2</span>
+                                                      <span class="orga-nom">Entite Bravo 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB3</span>
+                                                      <span class="orga-nom">Entite Bravo 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB4</span>
+                                                      <span class="orga-nom">Entite Bravo 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB5</span>
+                                                      <span class="orga-nom">Entite Bravo 5</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB6</span>
+                                                      <span class="orga-nom">Entite Bravo 6</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLG</span>
+                                                <span class="orga-nom">Sous-direction Golf</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG1</span>
+                                                      <span class="orga-nom">Entite Golf 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG2</span>
+                                                      <span class="orga-nom">Entite Golf 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG3</span>
+                                                      <span class="orga-nom">Entite Golf 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG4</span>
+                                                      <span class="orga-nom">Entite Golf 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLH</span>
+                                                <span class="orga-nom">Sous-direction Hotel</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH1</span>
+                                                      <span class="orga-nom">Entite Hotel 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH2</span>
+                                                      <span class="orga-nom">Entite Hotel 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH3</span>
+                                                      <span class="orga-nom">Entite Hotel 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH4</span>
+                                                      <span class="orga-nom">Entite Hotel 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLK</span>
+                                                <span class="orga-nom">Sous-direction Kilo</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLK1</span>
+                                                      <span class="orga-nom">Entite Kilo 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLK2</span>
+                                                      <span class="orga-nom">Entite Kilo 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLK3</span>
+                                                      <span class="orga-nom">Entite Kilo 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <!-- FIN ORGANIGRAMME : organisation -->
+                                    </div>
+                                </div>
+    
+                                <!-- Contenu de l'onglet "JL Programs" -->
+                                <div id="contenu-jl-programs" class="onglet-contenu">
+                                    <div class="orga-cadre">
+                                        <!-- ORGANIGRAMME : programmes -->
+                                        <div class="organigramme" style="--branches: 5;">
+                                          <div class="orga-legende">
+                                            <span class="orga-legende-item orga-revue-1">PMO/MPR reviews</span>
+                                            <span class="orga-legende-item orga-revue-2">MBR reviews</span>
+                                          </div>
+                                          <div class="orga-sommet">
+                                            <div class="orga-noeud orga-noeud-1">
+                                              <span class="orga-nom">Programmes Lambda</span>
+                                              <span class="orga-etc">ETC&nbsp;: 8 901 M€</span>
+                                            </div>
+                                          </div>
+                                          <div class="orga-branches">
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-nom">Portefeuille Alpha</span>
+                                                <span class="orga-etc">ETC&nbsp;: 752 M€</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
+                                                      <span class="orga-nom">Programme Alpha 1</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 217 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
+                                                      <span class="orga-nom">Programme Alpha 2</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 215 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
+                                                      <span class="orga-nom">Programme Alpha 3</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 139 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-nom">Programme Alpha 4</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 129 M€</span>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfants">
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
+                                                          <span class="orga-nom">Projet Alpha 4.1</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 19 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
+                                                          <span class="orga-nom">Projet Alpha 4.2</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 46 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
+                                                          <span class="orga-nom">Projet Alpha 4.3</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 54 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4">
+                                                          <span class="orga-nom">Autres Alpha 4</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 10 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-nom">Programme Alpha 5</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 52 M€</span>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfants">
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4 orga-revue-1">
+                                                          <span class="orga-nom">Projet Alpha 5.1</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 40 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4">
+                                                          <span class="orga-nom">Autres Alpha 5</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 12 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-nom">Portefeuille Bravo</span>
+                                                <span class="orga-etc">ETC&nbsp;: 6 500 M€</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
+                                                      <span class="orga-nom">Programme Bravo 1</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 1 400 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
+                                                      <span class="orga-nom">Programme Bravo 2</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 4 800 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
+                                                      <span class="orga-nom">Programme Bravo 3</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 300 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-nom">Portefeuille Charlie</span>
+                                                <span class="orga-etc">ETC&nbsp;: 455 M€</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-nom">Programme Charlie 1</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 11 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-nom">Programme Charlie 2</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 82 M€</span>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfants">
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4">
+                                                          <span class="orga-nom">Projet Charlie 2.1</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 29 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4">
+                                                          <span class="orga-nom">Autres Charlie 2</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 53 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-1">
+                                                      <span class="orga-nom">Programme Charlie 3</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 361 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-nom">Programme Charlie 4</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 1 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-nom">Portefeuille Delta</span>
+                                                <span class="orga-etc">ETC&nbsp;: 643 M€</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-nom">Programme Delta 1</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 444 M€</span>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfants">
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4 orga-revue-2">
+                                                          <span class="orga-nom">Projet Delta 1.1</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 295 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="orga-enfant">
+                                                      <div class="orga-tige">
+                                                        <div class="orga-noeud orga-noeud-4 orga-revue-2">
+                                                          <span class="orga-nom">Autres Delta 1</span>
+                                                          <span class="orga-etc">ETC&nbsp;: 149 M€</span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
+                                                      <span class="orga-nom">Programme Delta 2</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 84 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
+                                                      <span class="orga-nom">Programme Delta 3</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 70 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
+                                                      <span class="orga-nom">Programme Delta 4</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 45 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-nom">Portefeuille Echo</span>
+                                                <span class="orga-etc">ETC&nbsp;: 551 M€</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
+                                                      <span class="orga-nom">Programme Echo 1</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 177 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
+                                                      <span class="orga-nom">Programme Echo 2</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 100 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
+                                                      <span class="orga-nom">Programme Echo 3</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 170 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3 orga-revue-2">
+                                                      <span class="orga-nom">Programme Echo 4</span>
+                                                      <span class="orga-etc">ETC&nbsp;: 104 M€</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <!-- FIN ORGANIGRAMME : programmes -->
+                                    </div>
+                                </div>
+    
+                            </div>
+                        </div>
+    
+                        <!-- Colonne de droite : les deux grands blocs d'acces.
+                             Ils n'ont pas encore d'image de fond : la classe
+                             "carte-image" leur donne le fond sombre en attendant.
+                             Des que la colonne "image" du tableau des responsables
+                             est renseignee, remplir-depuis-tableau.py pose la balise
+                             <img> tout seul -- il n'y a rien a preparer ici. -->
+                        <div>
+                            <h2 class="titre-section">Acces rapides</h2>
+    
+                            <!-- Les cartes sont empilees : c'est .pile qui les espace. -->
+                            <div class="pile">
+                                <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                    <p class="carte-titre">DASHBOARDs HUB</p>
+                                    <p class="carte-legende">Tableaux de bord multi-programmes</p>
+                                </a>
+    
+                                <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                    <p class="carte-titre">Program ID CARD</p>
+                                    <p class="carte-legende">Fiche d'identite de chaque programme</p>
+                                </a>
+                            </div>
+                        </div>
+    
+                    </section>
     
                 </div>
     

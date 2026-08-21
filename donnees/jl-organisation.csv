@@ -1,0 +1,27 @@
+﻿direction;acronyme;sous-direction;acronyme sous-direction;sous-sous-direction;acronyme sous-sous-direction;place;mention;lien
+Direction Lambda;JL;Support Sierra;JLS;;;support;;
+Direction Lambda;JL;Sous-direction Delta;JLD;;;adjoint;Deputy;
+Direction Lambda;JL;Sous-direction Delta;JLD;Entite Delta 1;JLD1;adjoint;;
+Direction Lambda;JL;Sous-direction Delta;JLD;Entite Delta 2;JLD2;adjoint;;
+Direction Lambda;JL;Sous-direction Delta;JLD;Entite Delta 3;JLD3;adjoint;;
+Direction Lambda;JL;Sous-direction Alpha;JLA;Entite Alpha 1;JLA1;;;
+Direction Lambda;JL;Sous-direction Alpha;JLA;Entite Alpha 2;JLA2;;;
+Direction Lambda;JL;Sous-direction Alpha;JLA;Entite Alpha 3;JLA3;;;
+Direction Lambda;JL;Sous-direction Alpha;JLA;Entite Alpha 4;JLA4;;;
+Direction Lambda;JL;Sous-direction Bravo;JLB;Entite Bravo 1;JLB1;;;
+Direction Lambda;JL;Sous-direction Bravo;JLB;Entite Bravo 2;JLB2;;;
+Direction Lambda;JL;Sous-direction Bravo;JLB;Entite Bravo 3;JLB3;;;
+Direction Lambda;JL;Sous-direction Bravo;JLB;Entite Bravo 4;JLB4;;;
+Direction Lambda;JL;Sous-direction Bravo;JLB;Entite Bravo 5;JLB5;;;
+Direction Lambda;JL;Sous-direction Bravo;JLB;Entite Bravo 6;JLB6;;;
+Direction Lambda;JL;Sous-direction Golf;JLG;Entite Golf 1;JLG1;;;
+Direction Lambda;JL;Sous-direction Golf;JLG;Entite Golf 2;JLG2;;;
+Direction Lambda;JL;Sous-direction Golf;JLG;Entite Golf 3;JLG3;;;
+Direction Lambda;JL;Sous-direction Golf;JLG;Entite Golf 4;JLG4;;;
+Direction Lambda;JL;Sous-direction Hotel;JLH;Entite Hotel 1;JLH1;;;
+Direction Lambda;JL;Sous-direction Hotel;JLH;Entite Hotel 2;JLH2;;;
+Direction Lambda;JL;Sous-direction Hotel;JLH;Entite Hotel 3;JLH3;;;
+Direction Lambda;JL;Sous-direction Hotel;JLH;Entite Hotel 4;JLH4;;;
+Direction Lambda;JL;Sous-direction Kilo;JLK;Entite Kilo 1;JLK1;;;
+Direction Lambda;JL;Sous-direction Kilo;JLK;Entite Kilo 2;JLK2;;;
+Direction Lambda;JL;Sous-direction Kilo;JLK;Entite Kilo 3;JLK3;;;
