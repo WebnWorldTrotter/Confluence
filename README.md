@@ -143,6 +143,11 @@ variante foncée.
 
 - **Carte** : dupliquer un bloc `<a class="jls-node">`. La grille se réorganise
   seule, aucune largeur à calculer.
+
+> **Ce qui espace les cartes, c'est leur conteneur, jamais la carte.** Une carte
+> ne porte aucune marge : `.grille` répartit sur autant de colonnes que la place
+> le permet, `.pile` garde une colonne unique, et des cartes posées directement
+> dans un `<div>` ordinaire se touchent.
 - **Onglet** : ajouter un `<input class="jls-tabs__radio">`, son `<label>` et sa
   `<section class="jls-tabs__panel">`, puis passer `--jls-tab-n` à la nouvelle
   valeur. Le CSS gère jusqu'à 4 onglets ; au-delà, prolonger les sélecteurs

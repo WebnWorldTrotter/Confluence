@@ -34,6 +34,12 @@
         juste apres une carte existante, dans la meme <div class="grille">.
         Pour en supprimer une, efface le bloc <a>...</a> correspondant.
 
+        Ce qui espace les cartes, c'est leur CONTENEUR, jamais la carte
+        elle-meme :
+           <div class="grille">   autant de colonnes que la place permet
+           <div class="pile">     toujours une seule colonne
+        Des cartes posees directement dans un <div> ordinaire se touchent.
+
      4. LES 3 TAILLES DE CARTE
           <a class="carte">                 taille normale
           <a class="carte carte-moyenne">   plus haute
@@ -268,6 +274,21 @@
   .grille-compacte .carte { min-height: 78px; padding: var(--e3) var(--e4); }
   .grille-compacte .carte-titre { font-size: var(--txt-md); }
   .grille-compacte .carte::after { bottom: var(--e2); right: var(--e3); font-size: 15px; }
+
+  /* --- Cartes empilees ----------------------------------------------------
+     Une colonne, quelle que soit la largeur disponible, avec le meme
+     espacement que la grille.
+
+     A utiliser des qu'on met plusieurs cartes les unes sous les autres :
+     une carte ne porte aucune marge, l'espace vient toujours du conteneur.
+     Sans .pile (ou sans .grille), les cartes se touchent.
+
+     .grille  ->  autant de colonnes que la place le permet
+     .pile    ->  toujours une seule colonne                              */
+  .pile {
+    display: grid;
+    gap: var(--e4);
+  }
 
   /* ==========================================================================
      COLONNES COTE A COTE
@@ -912,26 +933,27 @@
         Program PMO
         <span class="titre-compteur">3</span>
       </h2>
-      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Prom%C3%A9th%C3%A9e%20image.png?api=v2" alt="">
-        <p class="carte-titre">Promethee</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
 
-      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Themis%20image.png?api=v2" alt="">
-        <p class="carte-titre">Themis</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
+      <!-- Les cartes sont empilees : c'est .pile qui les espace. -->
+      <div class="pile">
+        <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+          <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Prom%C3%A9th%C3%A9e%20image.png?api=v2" alt="">
+          <p class="carte-titre">Promethee</p>
+          <p class="carte-personne">{{Prenom Nom}}</p>
+        </a>
 
-      <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
-        <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Astris%20image.png?api=v2" alt="">
-        <p class="carte-titre">Astris</p>
-        <p class="carte-personne">{{Prenom Nom}}</p>
-      </a>
+        <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+          <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Themis%20image.png?api=v2" alt="">
+          <p class="carte-titre">Themis</p>
+          <p class="carte-personne">{{Prenom Nom}}</p>
+        </a>
 
-
-      
+        <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+          <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Astris%20image.png?api=v2" alt="">
+          <p class="carte-titre">Astris</p>
+          <p class="carte-personne">{{Prenom Nom}}</p>
+        </a>
+      </div>
     </div>
 
   </section>
