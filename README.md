@@ -92,6 +92,12 @@ Le script dit ce qu'il a lu et ce qu'il attendait ; il ne s'arrete plus au
 premier probleme, l'autre organigramme est refait normalement et celui qui
 echoue reste dans la page tel qu'il y etait.
 
+La sortie commence par le **chemin du script** et les intitules qu'il
+attend. Si ce chemin n'est pas celui du fichier ouvert dans l'editeur, la
+correction a ete faite dans un fichier et un autre a ete lance : inutile de
+chercher ailleurs. Meme chose pour les intitules : ils disent ce que le
+script cherchera, avant meme d'ouvrir les tableaux.
+
 Trois causes reviennent, dans l'ordre :
 
 1. **Le nom du sommet n'est rempli que sur la premiere ligne.** Chaque ligne

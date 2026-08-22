@@ -21,6 +21,11 @@ pas la meme chose :
 UTILISATION
     python3 outils/organigrammes.py
 
+    La sortie commence par le CHEMIN DU SCRIPT et les intitules qu'il
+    attend. Si ce chemin n'est pas celui du fichier ouvert dans l'editeur,
+    c'est qu'une correction a ete faite dans un fichier et qu'un autre a
+    ete lance : inutile de chercher plus loin.
+
     Ou en precisant la page :
     python3 outils/organigrammes.py ma-page.html
 
@@ -71,10 +76,10 @@ LE TABLEAU DE L'ORGANISATION  (jl-organisation.csv)
 LE TABLEAU DES PROGRAMMES  (jl-programmes.csv)
     Meme principe, avec un montant a chaque niveau.
 
-    compagnie portfolio niveau un / etc niveau un        la boite de gauche
-    compagnie portfolio niveau deux / etc niveau deux    le 2e niveau
-    compagnie portfolio niveau trois / etc niveau trois  le 3e niveau
-    main programme / etc niveau quatre                   le 4e niveau
+    Company Portfolio nv1 / ETC nv1     la boite de gauche
+    Company Portfolio nv2 / ETC nv2     le 2e niveau
+    Company Portfolio nv3 / ETC nv3     le 3e niveau
+    Main Programs / ETC nv4             le 4e niveau
     lien      l'adresse de la page Confluence a ouvrir
 
     Ces intitules ne sont pas graves dans le marbre : ils sont ecrits une
@@ -151,14 +156,17 @@ DOSSIER = Path(__file__).resolve().parent        # ou vit ce script
 RACINE = DOSSIER.parent                          # la racine du depot
 TRAVAIL = Path.cwd()                             # d'ou la commande est lancee
 
-NOM_HTML = "00-facile-a-modifier.html"
+# Les noms de page reconnus, dans l'ordre de preference. En ajouter un ne
+# coute rien ; et de toute facon, si le dossier ne contient qu'une seule
+# page .html, c'est celle-la qui est prise, quel que soit son nom.
+NOMS_HTML = ("Espace JLS.html", "00-facile-a-modifier.html")
 NOM_SORTIE = "page-remplie.html"
 
-PISTES_HTML = [
-    RACINE / "blocks" / NOM_HTML,     # arborescence du depot
-    DOSSIER / NOM_HTML,               # a cote du script
-    TRAVAIL / NOM_HTML,               # dans le dossier courant
-]
+PISTES_HTML = [dossier / nom
+               for nom in NOMS_HTML
+               for dossier in (RACINE / "blocks",   # arborescence du depot
+                               DOSSIER,             # a cote du script
+                               TRAVAIL)]            # dans le dossier courant
 
 
 # ---------------------------------------------------------------------------
@@ -202,10 +210,10 @@ ORGANIGRAMMES = [
         "csv": "jl-programmes.csv",
         "rendu": "flux",
         "niveaux": [
-            {"nom": "compagnie portfolio niveau un",    "etc": "etc niveau un"},
-            {"nom": "compagnie portfolio niveau deux",  "etc": "etc niveau deux"},
-            {"nom": "compagnie portfolio niveau trois", "etc": "etc niveau trois"},
-            {"nom": "main programme",                   "etc": "etc niveau quatre"},
+            {"nom": "Company Portfolio nv1", "etc": "ETC nv1"},
+            {"nom": "Company Portfolio nv2", "etc": "ETC nv2"},
+            {"nom": "Company Portfolio nv3", "etc": "ETC nv3"},
+            {"nom": "Main Programs",         "etc": "ETC nv4"},
         ],
         "extras": ["lien"],
         "place": False,
@@ -1155,7 +1163,16 @@ def main():
     html, encodage_page, _ = lire_texte(page)
     crlf = "\r\n" in html
 
-    print("Page : %s" % page)
+    # Le chemin du script AVANT tout le reste. Editer un fichier et en
+    # lancer un autre est l'erreur la plus couteuse qui soit : on cherche
+    # pendant une heure une correction qui, en realite, n'a jamais tourne.
+    # La premiere ligne de la sortie tranche la question.
+    print("Script : %s" % Path(__file__).resolve())
+    print("Page   : %s" % page)
+    for config in ORGANIGRAMMES:
+        print("  %-14s attend : %s"
+              % (config["cle"],
+                 ", ".join('"%s"' % n["nom"] for n in config["niveaux"])))
     print()
 
     alertes = []
