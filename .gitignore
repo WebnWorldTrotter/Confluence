@@ -1,3 +1,8 @@
 # Produit par outils/remplir-depuis-tableau.py, a coller dans Confluence.
 # C'est un resultat, pas une source : il se refabrique en une commande.
 page-remplie.html
+
+# Cache que Python depose a cote d'un script importe comme module.
+# C'est un produit derive : il se refabrique tout seul.
+__pycache__/
+*.pyc
