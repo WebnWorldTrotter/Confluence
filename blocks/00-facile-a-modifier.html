@@ -378,6 +378,57 @@
          les deux colonnes demarrent ainsi exactement a la meme hauteur. */
       .deux-colonnes > div > .titre-section { margin-top: 0; }
     
+      /* --------------------------------------------------------------------
+         JL OVERVIEW : LES DEUX COLONNES SE TERMINENT ENSEMBLE
+
+         La colonne de droite tient deux blocs d'acces : sa hauteur est donc
+         connue d'avance (deux cartes hautes, plus la gouttiere entre elles).
+         On la donne au panneau de gauche, et le cadre du diagramme prend
+         tout ce qui reste une fois la barre d'onglets, la marge interieure
+         et la note de deplacement deduites.
+
+         Rien n'est calcule a la main : --acces-carte pilote a la fois la
+         hauteur des deux blocs et celle du cadre. Pour des blocs plus hauts
+         ou plus courts, cette seule valeur suffit -- le diagramme suit.
+
+         Le :has() limite tout cela a l'onglet du diagramme. L'arbre de
+         l'autre onglet se lit d'un seul tenant, sans hauteur imposee ni
+         defilement. Un navigateur qui ignore :has() ignore tout ce bloc et
+         retombe sur le max-height du cadre : rien ne casse.
+         -------------------------------------------------------------------- */
+      .deux-colonnes-large { --acces-carte: 400px; }
+    
+      .deux-colonnes-large .carte-grande { min-height: var(--acces-carte); }
+    
+      /* Les deux colonnes demarrent a la meme hauteur : sans cela, aligner
+         les bas laisserait un decalage de 10px en haut. */
+      .deux-colonnes-large .pile { margin-top: 30px; }
+    
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre) {
+        display: flex;
+        flex-direction: column;
+        height: calc(2 * var(--acces-carte) + var(--e4));
+      }
+    
+      /* La barre d'onglets garde sa hauteur, le panneau prend le reste. */
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre)
+        > .onglets-boutons { flex: none; }
+    
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre)
+        > .onglet-contenu.actif {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;      /* sans cela, un enfant trop grand refuse de retrecir */
+      }
+    
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre)
+        .flux-cadre {
+        flex: 1;
+        min-height: 0;
+        max-height: none;   /* c'est la colonne de droite qui commande, desormais */
+      }
+    
       /* ==========================================================================
          5. CARTE
          ========================================================================== */
@@ -1291,6 +1342,9 @@
          donc dans les deux sens, a la molette comme au curseur.             */
       .flux-cadre {
         overflow: auto;
+        /* Repli : la hauteur reelle est donnee par la colonne de droite,
+           section "JL OVERVIEW : LES DEUX COLONNES SE TERMINENT ENSEMBLE".
+           Cette valeur ne sert qu'aux navigateurs qui ignorent :has(). */
         max-height: 600px;
         border: 1px solid var(--gris-200);
         border-radius: var(--rond-md);
