@@ -1,0 +1,2420 @@
+<!-- ============================================================================
+     JLS PMO — VERSION FACILE A MODIFIER
+     ----------------------------------------------------------------------
+     Ce fichier n'est PAS genere par build.sh : c'est une version ecrite a
+     la main, volontairement simple, pour que tu puisses la reprendre et la
+     modifier sans connaitre le CSS.
+     ----------------------------------------------------------------------
+     GUIDE RAPIDE — A LIRE AVANT DE MODIFIER
+
+     1. LA PAGE EST DECOUPEE EN "BLOCS"
+        Chaque partie visible de la page (le bandeau sombre, "Chief of PMO",
+        "Program PMO", le tableau a onglets, etc.) est un bloc qui commence
+        par :   <section class="bloc">
+        et se termine par :   </section>
+        Un commentaire en majuscules annonce chaque bloc (BLOC : PROGRAM PMO).
+
+     2. POUR DEPLACER UN BLOC ENTIER
+        - Repere la ligne "BLOC : ..." (en commentaire) qui commence le bloc
+        - Repere la balise </section> qui le termine (juste avant le
+          prochain "BLOC : ...")
+        - Selectionne TOUT depuis <section jusqu'a </section> inclus
+        - Coupe, colle a l'endroit voulu, entre deux autres blocs
+        - NE COUPE JAMAIS un morceau au milieu d'un bloc : le tableau a
+          onglets par exemple a besoin de ses boutons ET de son contenu
+          ensemble, sinon plus rien ne s'affiche.
+
+     3. POUR AJOUTER / SUPPRIMER UNE CARTE
+        Une carte ressemble a ca :
+          <a class="carte carte-moyenne" href="ADRESSE_DE_LA_PAGE">
+            <p class="carte-titre">Nom du programme</p>
+            <p class="carte-personne">Prenom Nom</p>
+          </a>
+        Pour en ajouter une, copie ce bloc entier (de <a a </a>) et colle-le
+        juste apres une carte existante, dans la meme <div class="grille">.
+        Pour en supprimer une, efface le bloc <a>...</a> correspondant.
+
+        Ce qui espace les cartes, c'est leur CONTENEUR, jamais la carte
+        elle-meme :
+           <div class="grille">   autant de colonnes que la place permet
+           <div class="pile">     toujours une seule colonne
+        Des cartes posees directement dans un <div> ordinaire se touchent.
+
+     4. LES 3 TAILLES DE CARTE
+          <a class="carte">                 taille normale
+          <a class="carte carte-moyenne">   plus haute
+          <a class="carte carte-grande">    la plus haute
+        Une seule de ces classes a la fois.
+
+     5. LES ACCOLADES {{ }}
+        Tout ce qui ressemble a {{Prenom Nom}} est un texte a remplacer par
+        une vraie valeur. Les {{ }} eux-memes doivent disparaitre.
+
+     6. LES LIENS VERS D'AUTRES PAGES CONFLUENCE
+        Les cartes et les boutons sont deja des liens (balise <a>). Remplace
+        ce qu'il y a entre les guillemets de href="..." :
+
+          AVANT :  href="REMPLACE_PAR_LE_LIEN"
+          APRES :  href="/confluence/display/JLS/A6+Dev"
+
+        Ouvre la page cible, copie l'adresse dans la barre du navigateur,
+        colle-la. Adresse complete ou partie apres le nom du serveur, les
+        deux marchent. ATTENTION : ne laisse pas de diese (#) devant
+        l'adresse, sinon le lien ne mene nulle part.
+        Pour ouvrir dans un nouvel onglet, ajoute  target="_blank".
+
+     7. LES IMAGES DE FOND
+        Elles se mettent dans la carte, en PREMIERE ligne, avec une balise
+        <img> ordinaire :
+          <img class="carte-fond" src="ADRESSE_DE_L_IMAGE" alt="">
+        Si l'image n'apparait pas, ouvre son adresse seule dans un onglet du
+        navigateur : si tu tombes sur une erreur ou un ecran de connexion,
+        c'est l'adresse ou les droits d'acces qui posent probleme, pas ce
+        code. L'adresse doit commencer par /confluence/... ou https://...
+        (une adresse en "data:" est bloquee par Confluence).
+
+     8. LES COULEURS ET LES ESPACEMENTS
+        Tout est regle en haut de la feuille de style, dans "REGLAGES
+        GENERAUX". Change une valeur la-bas, elle change partout.
+
+        Ce qui porte un nom de responsable :
+           les cartes         <p class="carte-personne">
+           les lignes         <span class="ligne-personne">   (Group PMO)
+           les tuiles         <span class="tuile-personne">   (Transversal)
+           le bandeau         <p class="entete-contact-nom">
+
+        A cote de chaque nom, un libelle sert de repere au tableau :
+        carte-titre pour les cartes, ligne-libelle et tuile-libelle pour
+        les autres. Ne change pas ce libelle sans changer la colonne
+        "carte" du tableau, sinon la correspondance est perdue.
+
+     9. TOUT PILOTER DEPUIS UN TABLEAU EXCEL
+        Plutot que de modifier ce fichier a chaque changement, tu peux
+        tenir un tableau a quatre colonnes :
+
+           carte    l'intitule affiche sur la page (sert de repere)
+           nom      le titulaire
+           lien     l'adresse de la page Confluence a ouvrir
+           image    l'adresse de l'image de fond
+
+        Exemple :
+
+           carte        nom          lien                    image
+           A6 Dev       Prenom Nom   https://.../A6+Dev      https://.../a6.png
+           JLV          Prenom Nom   https://.../JLV
+           SYSTEM                    https://.../System
+
+        Une cellule vide veut dire "ne change rien" : on ne remplit que ce
+        qui bouge. Une carte qui n'a pas encore d'image en recoit une
+        automatiquement des que la colonne image est renseignee.
+
+        Le tableau couvre les cartes, les lignes des onglets et le bouton
+        du bandeau : plus aucune adresse a chercher dans ce fichier.
+
+        Sur ton poste :
+           python3 outils/remplir-depuis-tableau.py --cartes
+              fabrique le tableau a partir de cette page. Les intitules
+              sont releves ici, tu n'en tapes aucun ; les adresses et les
+              images deja en place y sont reportees ; ce que tu avais
+              deja saisi est conserve.
+           python3 outils/remplir-depuis-tableau.py
+              produit page-remplie.html, a copier-coller dans Confluence
+
+        Le script signale les intitules du tableau qui ne correspondent a
+        rien dans la page, et inversement. Voir README.md.
+
+    10. LES TUILES DE L'ONGLET TRANSVERSAL
+        Les quatre sujets de cet onglet n'utilisent pas la ligne des autres
+        onglets mais la TUILE : coin superieur droit coupe, triangle de
+        couleur dans la coupe, icone a gauche.
+
+          <a href="..." class="tuile tuile-risques">
+            <span class="tuile-icone" aria-hidden="true"> ...icone... </span>
+            <span class="tuile-texte">
+              <span class="tuile-libelle">Risks Management</span>
+              <span class="tuile-personne">{{Prenom Nom}}</span>
+            </span>
+          </a>
+
+        POUR CHANGER LA COULEUR D'UNE TUILE
+        Change sa deuxieme classe : tuile-risques, tuile-methode,
+        tuile-securite, tuile-amelioration. Pour changer la teinte elle-meme,
+        va dans la feuille de style, section "TUILES TRANSVERSALES" : une
+        seule valeur par tuile, --tuile-accent.
+
+        POUR CHANGER UNE ICONE
+        Remplace ce qu'il y a entre <svg> et </svg>. Les icones sont
+        dessinees directement dans la page (pas de fichier a heberger, rien
+        que Confluence puisse bloquer). Elles prennent automatiquement la
+        couleur de leur tuile.
+
+        POUR AJOUTER UNE 5e TUILE
+        Copie un bloc <a class="tuile ..."> entier et colle-le dans la meme
+        <div class="grille grille-tuiles">. La grille reste sur deux
+        colonnes.
+
+     ============================================================================ -->
+
+     <style>
+
+      /* ==========================================================================
+         1. REGLAGES GENERAUX  —  le seul endroit a modifier pour changer
+            l'apparence de toute la page
+         ========================================================================== */
+      .jls {
+    
+        /* --- Couleurs de la charte ------------------------------------------- */
+        --encre:          #2D3142;   /* texte principal, fonds sombres */
+        --ardoise:        #4F5D75;   /* texte secondaire */
+        --corail:         #EF8354;   /* accent : bouton principal, onglet actif */
+        --corail-fonce:   #B8501C;   /* accent pour du TEXTE (le corail clair
+                                        n'est pas assez lisible sur blanc) */
+        --papier:         #FFFFFF;
+    
+        /* --- Gris derives ----------------------------------------------------
+           Une gamme reguliere du plus clair au plus fonce. Utiliser ces gris
+           plutot que des valeurs au hasard est ce qui donne une impression
+           d'ensemble coherent.                                                */
+        --gris-50:        #F7F8FA;   /* fond de page */
+        --gris-100:       #EFF1F5;   /* fonds creuses (barre d'onglets) */
+        --gris-200:       #E3E6EC;   /* bordures */
+        --gris-300:       #CBD0DA;   /* bordures marquees */
+        --gris-500:       #7A8496;   /* texte tertiaire */
+        --gris-600:       #5F6B80;   /* texte secondaire */
+    
+        /* --- Espacements ------------------------------------------------------
+           Une echelle reguliere. Utiliser TOUJOURS une de ces valeurs (jamais
+           17px ou 23px au hasard) est le principal secret d'une page qui
+           parait "propre".                                                     */
+        --e1:  4px;
+        --e2:  8px;
+        --e3: 12px;
+        --e4: 16px;
+        --e5: 24px;
+        --e6: 32px;
+        --e7: 48px;
+        --e8: 64px;
+    
+        /* --- Tailles de texte -------------------------------------------------
+           Meme principe : une echelle, pas des valeurs au hasard.             */
+        --txt-xs:  11px;   /* petites majuscules */
+        --txt-sm:  13px;   /* texte secondaire, noms */
+        --txt-md:  15px;   /* texte courant */
+        --txt-lg:  17px;   /* titres de carte */
+        --txt-xl:  20px;   /* titres de section */
+        --txt-hero: clamp(26px, 3.4vw, 38px);   /* titre du bandeau, s'adapte
+                                                   a la largeur de l'ecran */
+    
+        /* --- Coins arrondis --------------------------------------------------- */
+        --rond-sm:  8px;
+        --rond-md: 12px;
+        --rond-lg: 16px;
+        --rond-xl: 24px;
+    
+        /* --- Ombres -----------------------------------------------------------
+           Deux couches par ombre : une tres serree qui "pose" l'element sur la
+           page, une plus large et diffuse qui cree la profondeur. C'est ce
+           doublage qui fait la difference avec une ombre plate.               */
+        --ombre-1: 0 1px 2px rgba(28,34,51,.05),
+                   0 1px 3px rgba(28,34,51,.06);
+        --ombre-2: 0 2px 4px rgba(28,34,51,.04),
+                   0 8px 18px rgba(28,34,51,.09);
+        --ombre-3: 0 4px 8px rgba(28,34,51,.05),
+                   0 18px 36px rgba(28,34,51,.13);
+    
+        /* --- Animations -------------------------------------------------------
+           Une seule courbe pour toute la page : les mouvements se ressemblent,
+           l'ensemble parait plus soigne.                                      */
+        --glisse: 220ms cubic-bezier(.2, .7, .3, 1);
+    
+        /* Permet aux colonnes de reagir a la largeur de CE bloc plutot qu'a
+           celle de la fenetre : utile si la page vit dans une colonne etroite
+           de la Content Layout Macro. */
+        container-type: inline-size;
+        container-name: jls;
+    
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                     "Helvetica Neue", Arial, sans-serif;
+        font-size: var(--txt-md);
+        line-height: 1.55;
+        color: var(--encre);
+        -webkit-font-smoothing: antialiased;
+      }
+    
+      .jls, .jls * { box-sizing: border-box; }
+      .jls p { margin: 0; }
+    
+      /* ==========================================================================
+         2. RYTHME VERTICAL
+         Un seul espacement entre les blocs : c'est ce qui donne la sensation
+         de regularite quand on fait defiler la page.
+         ========================================================================== */
+      .bloc { margin-top: var(--e7); }
+      .bloc:first-child { margin-top: 0; }
+    
+      /* ==========================================================================
+         3. TITRE DE SECTION
+         Titre + compteur optionnel + filet qui occupe la place restante.
+         Le filet aligne visuellement toutes les sections entre elles.
+         ========================================================================== */
+      .titre-section {
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+        margin: 0 0 var(--e4);
+        font-size: var(--txt-xl);
+        font-weight: 650;
+        letter-spacing: -.01em;
+        color: var(--encre);
+      }
+    
+      /* Le petit compteur rond a cote du titre (facultatif) */
+      .titre-compteur {
+        flex: none;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 var(--e2);
+        border-radius: 999px;
+        background: var(--gris-100);
+        border: 1px solid var(--gris-200);
+        font-size: var(--txt-xs);
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+        color: var(--gris-600);
+      }
+    
+      /* Le filet degrade qui remplit l'espace restant */
+      .titre-section::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(to right, var(--gris-200), transparent);
+      }
+    
+      /* ==========================================================================
+         4. GRILLE DE CARTES
+         Les colonnes se calculent toutes seules selon la place disponible.
+         Les cartes remplissent toujours leur colonne : toutes les rangees ont
+         donc la meme largeur de carte, ce qui evite l'effet "patchwork".
+         --------------------------------------------------------------------------
+         Pour des cartes plus larges ou plus etroites, change la valeur
+         --carte-min de la grille concernee.
+         ========================================================================== */
+      .grille {
+        display: grid;
+        gap: var(--e4);
+        grid-template-columns: repeat(auto-fit,
+                               minmax(min(100%, var(--carte-min, 240px)), 1fr));
+        margin-bottom: 40px;
+        margin-top: 30px
+      }
+    
+      .grille-large   { --carte-min: 300px; }  /* peu de cartes, larges */
+      .grille-compacte{ --carte-min: 150px; }  /* beaucoup de petites cartes */
+    
+      /* Les cartes d'une grille compacte n'ont que 2 lignes de texte : on
+         reduit leur hauteur plancher pour qu'elles ne paraissent pas vides. */
+      .grille-compacte .carte { min-height: 78px; padding: var(--e3) var(--e4); }
+      .grille-compacte .carte-titre { font-size: var(--txt-md); }
+      .grille-compacte .carte::after { bottom: var(--e2); right: var(--e3); font-size: 15px; }
+    
+      /* --- Cartes empilees ----------------------------------------------------
+         Une colonne, quelle que soit la largeur disponible, avec le meme
+         espacement que la grille.
+    
+         A utiliser des qu'on met plusieurs cartes les unes sous les autres :
+         une carte ne porte aucune marge, l'espace vient toujours du conteneur.
+         Sans .pile (ou sans .grille), les cartes se touchent.
+    
+         .grille  ->  autant de colonnes que la place le permet
+         .pile    ->  toujours une seule colonne                              */
+      .pile {
+        display: grid;
+        gap: var(--e4);
+        margin-top: 40px;
+      }
+    
+      /* ==========================================================================
+         COLONNES COTE A COTE
+         Met deux ensembles l'un a cote de l'autre, alignes par le HAUT.
+         --------------------------------------------------------------------------
+         Par defaut les colonnes sont empilees ; elles passent cote a cote des
+         que la place le permet. Les deux colonnes gardent leur hauteur propre :
+         la plus courte ne s'etire pas pour rattraper la plus longue.
+    
+         POUR REGLER LA LARGEUR DES COLONNES
+         Change les deux chiffres "fr" plus bas :
+            1.5fr et 1fr  -> la colonne de gauche est 1,5 fois plus large
+            1fr   et 1fr  -> les deux colonnes font la meme largeur
+            1fr   et 1.5fr-> c'est la colonne de droite qui est plus large
+    
+         POUR REMETTRE LES DEUX ENSEMBLES L'UN SOUS L'AUTRE
+         Enleve simplement "deux-colonnes" du <section> concerne dans le HTML.
+         ========================================================================== */
+      .deux-colonnes {
+        display: grid;
+        gap: var(--e5);
+        align-items: start;                  /* alignes par le haut */
+        grid-template-columns: minmax(0, 1fr);   /* empilees par defaut */
+      }
+    
+      @container jls (min-width: 820px) {
+        .deux-colonnes {
+          grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        }
+      }
+    
+      /* Une variante ou la colonne de gauche prend nettement plus de place.
+         Utilisee par JL Overview : un organigramme a besoin de largeur, les
+         deux blocs d'acces beaucoup moins. */
+      @container jls (min-width: 820px) {
+        .deux-colonnes-large {
+          grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
+        }
+      }
+    
+      /* Le titre de chaque colonne ne doit pas ajouter d'espace au-dessus :
+         les deux colonnes demarrent ainsi exactement a la meme hauteur. */
+      .deux-colonnes > div > .titre-section { margin-top: 0; }
+    
+      /* --------------------------------------------------------------------
+         JL OVERVIEW : LES DEUX COLONNES SE TERMINENT ENSEMBLE
+
+         La colonne de droite tient deux blocs d'acces : sa hauteur est donc
+         connue d'avance (deux cartes hautes, plus la gouttiere entre elles).
+         On la donne au panneau de gauche, et le cadre du diagramme prend
+         tout ce qui reste une fois la barre d'onglets, la marge interieure
+         et la note de deplacement deduites.
+
+         Rien n'est calcule a la main : --acces-carte pilote a la fois la
+         hauteur des deux blocs et celle du cadre. Pour des blocs plus hauts
+         ou plus courts, cette seule valeur suffit -- le diagramme suit.
+
+         Le :has() limite tout cela a l'onglet du diagramme. L'arbre de
+         l'autre onglet se lit d'un seul tenant, sans hauteur imposee ni
+         defilement. Un navigateur qui ignore :has() ignore tout ce bloc et
+         retombe sur le max-height du cadre : rien ne casse.
+         -------------------------------------------------------------------- */
+      .deux-colonnes-large { --acces-carte: 400px; }
+    
+      .deux-colonnes-large .carte-grande { min-height: var(--acces-carte); }
+    
+      /* Les deux colonnes demarrent a la meme hauteur : sans cela, aligner
+         les bas laisserait un decalage de 10px en haut. */
+      .deux-colonnes-large .pile { margin-top: 30px; }
+    
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre) {
+        display: flex;
+        flex-direction: column;
+        height: calc(2 * var(--acces-carte) + var(--e4));
+      }
+    
+      /* La barre d'onglets garde sa hauteur, le panneau prend le reste. */
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre)
+        > .onglets-boutons { flex: none; }
+    
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre)
+        > .onglet-contenu.actif {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;      /* sans cela, un enfant trop grand refuse de retrecir */
+      }
+    
+      .deux-colonnes-large .onglets:has(> .onglet-contenu.actif > .flux-cadre)
+        .flux-cadre {
+        flex: 1;
+        min-height: 0;
+        max-height: none;   /* c'est la colonne de droite qui commande, desormais */
+      }
+    
+      /* ==========================================================================
+         5. CARTE
+         ========================================================================== */
+      .carte {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: var(--e5);
+        padding: var(--e4);
+        min-height: 92px;
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-lg);
+        box-shadow: var(--ombre-1);
+        text-decoration: none;
+        color: inherit;
+        overflow: hidden;
+        transition: transform var(--glisse),
+                    box-shadow var(--glisse),
+                    border-color var(--glisse);
+      }
+    
+      .carte:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--ombre-3);
+        border-color: var(--gris-300);
+      }
+    
+      /* La carte se "repose" quand on clique : petit retour tactile */
+      .carte:active { transform: translateY(-1px); box-shadow: var(--ombre-1); }
+    
+      .carte-titre {
+        font-size: var(--txt-lg);
+        font-weight: 650;
+        letter-spacing: -.005em;
+        line-height: 1.3;
+      }
+    
+      /* Le nom de la personne est pousse en bas de la carte : toutes les cartes
+         d'une rangee alignent donc leur nom sur la meme ligne. */
+      .carte-personne {
+        margin-top: auto;
+        font-size: var(--txt-sm);
+        color: var(--gris-600);
+      }
+    
+      /* Une ligne d'explication a la place d'un nom, quand la carte ne designe
+         pas une personne (les deux grands blocs de JL Overview, par exemple).
+         Meme discretion que .carte-personne, mais le tableau des responsables
+         n'y touche pas : ce texte-la se modifie ici, dans la page. */
+      .carte-legende {
+        font-size: var(--txt-sm);
+        color: var(--gris-600);
+      }
+      .carte-image .carte-legende {
+        position: relative;
+        z-index: 2;
+        color: rgba(255,255,255,.82);
+      }
+    
+      /* --- Les 3 tailles ------------------------------------------------------
+         Le padding ET la hauteur augmentent ensemble : les proportions internes
+         restent les memes d'une taille a l'autre.                             */
+      .carte-petite { min-height: 200px; padding: var(--e5);    gap: var(--e5); }
+      .carte-moyenne { min-height: 300px; padding: var(--e5);    gap: var(--e5);}
+      .carte-grande  { min-height: 400px; padding: var(--e5);    gap: var(--e5);
+     }
+    
+      .carte-grande .carte-titre { font-size: var(--txt-xl); }
+      .carte-moyenne .carte-titre { font-size: var(--txt-xl); }
+      .carte-petite .carte-titre { font-size: var(--txt-xl); }
+      /* --- La fleche "ce lien mene quelque part" -------------------------------
+         Presente sur TOUTES les cartes : une affordance identique partout, au
+         lieu d'un signal present sur certaines cartes seulement.              */
+      .carte::after {
+        content: "\2192";
+        position: absolute;
+        right: var(--e4);
+        bottom: var(--e3);
+        z-index: 2;
+        font-size: 17px;
+        line-height: 1;
+        color: var(--corail);
+        opacity: .55;
+        transition: transform var(--glisse), opacity var(--glisse);
+      }
+      .carte:hover::after { transform: translateX(3px); opacity: 1; }
+    
+      .carte-moyenne::after,
+      .carte-grande::after { right: var(--e5); bottom: var(--e4); }
+    
+      /* --- Carte sombre (mise en avant) --------------------------------------- */
+      .carte-sombre {
+        background:
+          radial-gradient(120% 140% at 100% 0%, #3C4359 0%, transparent 60%),
+          var(--encre);
+        border-color: transparent;
+        color: var(--papier);
+      }
+      .carte-sombre .carte-personne { color: rgba(255,255,255,.72); }
+      .carte-sombre:hover { border-color: rgba(239,131,84,.5); }
+    
+      /* --- Carte avec image de fond -------------------------------------------
+         Trois couches empilees : l'image (z-index 0), un voile sombre (1), le
+         texte (2). Le voile garantit que le texte blanc reste lisible meme sur
+         une image tres claire.                                                */
+      .carte-image {
+        border-color: transparent;
+        color: var(--papier);
+        background: var(--encre);   /* visible tant qu'aucune image n'est mise */
+      }
+    
+      .carte-fond {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;          /* remplit sans deformer */
+        object-position: center;
+        transition: transform 600ms cubic-bezier(.2,.7,.3,1);
+      }
+    
+      /* Leger zoom de l'image au survol — effet discret, jamais brutal */
+      .carte-image:hover .carte-fond { transform: scale(1.05); }
+    
+      .carte-image::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        /* Voile plus dense en bas qu'en haut : l'image respire, et le texte
+           (qui est en haut) comme le nom (en bas) restent lisibles.
+           Ne pas descendre en dessous de .72 en bas sans reverifier. */
+        background: linear-gradient(180deg,
+                    rgba(45,49,66,.70) 0%,
+                    rgba(45,49,66,.82) 100%);
+      }
+    
+      .carte-image .carte-titre,
+      .carte-image .carte-personne { position: relative; z-index: 2; }
+      .carte-image .carte-personne { color: rgba(255,255,255,.82); }
+    
+      /* ==========================================================================
+         6. BOUTON
+         ========================================================================== */
+      .bouton {
+        margin-top: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--e2);
+        padding: var(--e3) var(--e5);
+        border-radius: 999px;
+        background: linear-gradient(180deg, #F5946A, var(--corail));
+        color: var(--encre);            /* texte sombre : le blanc sur corail
+                                           n'atteint pas le seuil de lisibilite */
+        font-size: var(--txt-md);
+        font-weight: 650;
+        text-decoration: none;
+        box-shadow: var(--ombre-2), 0 6px 18px rgba(239,131,84,.35);
+        transition: transform var(--glisse), box-shadow var(--glisse);
+      }
+      .bouton:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--ombre-3), 0 10px 26px rgba(239,131,84,.45);
+      }
+      .bouton:active { transform: translateY(0); box-shadow: var(--ombre-1); }
+    
+      .bouton-fleche { transition: transform var(--glisse); }
+      .bouton:hover .bouton-fleche { transform: translateX(3px); }
+    
+      /* ==========================================================================
+         7. BANDEAU D'ACCUEIL
+         La profondeur vient de plusieurs degrades superposes plutot que d'une
+         image : rien a heberger, rien qui puisse etre bloque.
+         ========================================================================== */
+      .entete {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        gap: var(--e6);
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+        align-items: center;
+        padding: var(--e7);
+        border-radius: var(--rond-xl);
+        background:
+          radial-gradient(90% 130% at 8% 0%,   rgba(239,131,84,.20) 0%, transparent 55%),
+          radial-gradient(70% 120% at 100% 20%, rgba(79,93,117,.55) 0%, transparent 60%),
+          linear-gradient(150deg, #363C52 0%, var(--encre) 60%, #23283A 100%);
+        color: var(--papier);
+        box-shadow: var(--ombre-3);
+      }
+    
+      /* Fines hachures diagonales : une texture qui casse l'aplat sans se voir */
+      .entete::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(135deg,
+                    rgba(255,255,255,.035) 0 1px,
+                    transparent 1px 8px);
+        pointer-events: none;
+      }
+    
+      .entete > * { position: relative; }
+    
+      .entete-etiquette {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--e2);
+        margin-bottom: var(--e4);
+        padding: var(--e1) var(--e3) var(--e1) var(--e2);
+        border-radius: 999px;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.18);
+        font-size: var(--txt-lg);
+        font-weight: 700;
+        letter-spacing: 2px ;
+        text-transform: uppercase;
+        color: #FFD8C4;
+      }
+    
+      /* Pastille corail qui respire doucement : signale un espace vivant */
+      .entete-etiquette::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--corail);
+        box-shadow: 0 0 0 0 rgba(239,131,84,.6);
+        animation: pulsation 2.8s ease-out infinite;
+      }
+    
+      @keyframes pulsation {
+        0%   { box-shadow: 0 0 0 0   rgba(239,131,84,.6); }
+        70%  { box-shadow: 0 0 0 8px rgba(239,131,84,0);  }
+        100% { box-shadow: 0 0 0 0   rgba(239,131,84,0);  }
+      }
+    
+      .entete-titre {
+        margin: 0 0 var(--e3);
+        font-size: var(--txt-hero);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -.02em;
+      }
+      .entete-titre em { font-style: normal; color: #FBA97F; }
+    
+      .entete-description {
+        margin: 0 0 var(--e5);
+        max-width: 52ch;
+        color: rgba(255,255,255,.78);
+      }
+    
+      /* Carte "responsable", a droite du bandeau */
+      .entete-contact {
+        justify-self: end;
+        width: 100%;
+        max-width: 300px;
+        padding: var(--e4) var(--e5);
+        border-radius: var(--rond-lg);
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(255,255,255,.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+      }
+    
+      .entete-contact-label {
+        margin-bottom: var(--e3);
+        font-size: var(--txt-xs);
+        font-weight: 700;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.5);
+      }
+    
+      .entete-contact-ligne {
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+      }
+    
+      .rond-initiales {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #F5946A, var(--corail));
+        color: var(--encre);
+        font-size: var(--txt-sm);
+        font-weight: 700;
+      }
+    
+      .entete-contact-nom  { font-weight: 650; }
+      .entete-contact-role { font-size: var(--txt-sm); color: rgba(255,255,255,.6); }
+    
+      /* Quand le bandeau devient etroit, la carte contact repasse a gauche */
+      @media (max-width: 760px) {
+        .entete { padding: var(--e5); }
+        .entete-contact { justify-self: start; }
+      }
+    
+      /* ==========================================================================
+         8. ONGLETS
+         Pilotes par le petit script en bas de page. Chaque bouton dit
+         simplement "affiche le contenu qui porte cet identifiant".
+         ========================================================================== */
+      .onglets {
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-lg);
+        box-shadow: var(--ombre-1);
+        overflow: hidden;
+        margin-top: 30px ;
+      }
+    
+      /* Barre de boutons facon "interrupteur segmente" */
+      .onglets-boutons {
+        display: flex;
+        gap: var(--e1);
+        padding: var(--e2);
+        background: var(--gris-100);
+        border-bottom: 1px solid var(--gris-200);
+      }
+    
+      .onglet-bouton {
+        flex: 1;
+        padding: var(--e3) var(--e4);
+        border: 0;
+        border-radius: var(--rond-sm);
+        background: transparent;
+        font: inherit;
+        font-size: var(--txt-sm);
+        font-weight: 650;
+        color: var(--gris-600);
+        cursor: pointer;
+        transition: background var(--glisse), color var(--glisse),
+                    box-shadow var(--glisse);
+      }
+      .onglet-bouton:hover { color: var(--encre); }
+    
+      .onglet-bouton.actif {
+        background: var(--papier);
+        color: var(--encre);
+        box-shadow: var(--ombre-1);
+      }
+    
+      .onglet-contenu { display: none; padding: var(--e5); }
+    
+      .onglet-contenu.actif {
+        display: block;
+        animation: apparition 320ms cubic-bezier(.2,.7,.3,1) both;
+      }
+    
+      @keyframes apparition {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: none; }
+      }
+    
+      /* ==========================================================================
+         9. LIGNES (contenu des onglets)
+         ========================================================================== */
+      .ligne {
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+        padding: var(--e3) var(--e4);
+        margin-bottom: var(--e2);
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-md);
+        text-decoration: none;
+        color: inherit;
+        font-size: var(--txt-sm);
+        font-weight: 600;
+        transition: transform var(--glisse), border-color var(--glisse),
+                    background var(--glisse);
+      }
+      .ligne:hover {
+        transform: translateX(3px);
+        border-color: var(--corail);
+        background: #FEF6F2;
+      }
+      .ligne:last-child { margin-bottom: 0; }
+    
+      /* Le nom du responsable, pousse a droite de la ligne. margin-left:auto
+         plutot qu'une largeur fixe : les intitules n'ont pas tous la meme
+         longueur, et le nom reste malgre tout aligne a droite. */
+      .ligne-libelle { min-width: 0; }
+    
+      .ligne-personne {
+        flex: none;
+        margin-left: auto;
+        padding-left: var(--e3);
+        font-size: var(--txt-xs);
+        font-weight: 600;
+        color: var(--gris-600);
+      }
+    
+      /* Sur fond sombre (SYSTEM, Launcher), le gris ne passe plus. */
+      .ligne-titre .ligne-personne { color: rgba(255,255,255,.72); }
+    
+      /* Ligne de tete (SYSTEM, Launcher) */
+      .ligne-titre {
+        background: var(--encre);
+        border-color: transparent;
+        color: var(--papier);
+        font-size: var(--txt-md);
+        font-weight: 650;
+      }
+      .ligne-titre:hover { background: #363C52; border-color: transparent; }
+    
+      /* Les sous-lignes, rattachees par un filet vertical */
+      .sous-lignes {
+        position: relative;
+        margin: var(--e2) 0 var(--e5) var(--e4);
+        padding-left: var(--e4);
+      }
+      .sous-lignes:last-child { margin-bottom: 0; }
+    
+      /* Le filet vertical. Il s'arrete au milieu de la derniere ligne, pour
+         ne pas "depasser" dans le vide sous le dernier element. */
+      .sous-lignes::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: calc(var(--e2) * -1);
+        bottom: 21px;
+        width: 1px;
+        background: var(--gris-300);
+      }
+    
+      /* La petite encoche horizontale qui relie chaque ligne au filet */
+      .sous-lignes .ligne { position: relative; }
+      .sous-lignes .ligne::before {
+        content: "";
+        position: absolute;
+        left: calc(var(--e4) * -1);
+        top: 50%;
+        width: var(--e4);
+        height: 1px;
+        background: var(--gris-300);
+      }
+    
+      /* ==========================================================================
+         10. TUILES TRANSVERSALES
+         Le contenu de l'onglet "Transversal" n'est pas une arborescence comme
+         "Group PMO" : ce sont quatre sujets de meme niveau. Ils ont donc une
+         forme a eux, qui les distingue au premier coup d'oeil des lignes
+         hierarchiques de l'autre onglet.
+         --------------------------------------------------------------------------
+         LA FORME : le coin superieur droit est coupe en biais, et la coupe
+         laisse apparaitre un triangle de couleur. Angulaire la ou tout le reste
+         de la page est arrondi. La meme coupe est reprise, en plus petit, sur
+         la pastille de l'icone.
+    
+         POUR CHANGER LA COULEUR D'UNE TUILE
+         Une seule valeur a modifier : --tuile-accent, dans les quatre classes
+         tuile-... plus bas. Elle pilote a la fois le triangle du coin, l'icone
+         et le fond au survol.
+    
+         POUR CHANGER LA TAILLE DE LA COUPE
+         La valeur --coupe (20px par defaut).
+         ========================================================================== */
+      /* Deux colonnes, pas "autant que la place permet" : avec quatre sujets,
+         un calcul automatique donne selon la largeur 2+2 ou 3+1, et le 3+1
+         laisse une tuile isolee en bas. Deux colonnes fixes gardent toujours
+         un carre regulier. En dessous de 640px, une seule colonne. */
+      .grille-tuiles {
+        gap: var(--e3);
+        grid-template-columns: minmax(0, 1fr);
+      }
+    
+      @container jls (min-width: 640px) {
+        .grille-tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+    
+      .tuile {
+        --coupe: 20px;
+        --tuile-accent: var(--ardoise);
+    
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: var(--e3);
+        padding: var(--e3) var(--e4);
+        min-height: 78px;
+        /* Ce fond ne se voit que dans la coupe : c'est lui, le triangle. */
+        background: var(--tuile-accent);
+        clip-path: polygon(0 0, calc(100% - var(--coupe)) 0,
+                           100% var(--coupe), 100% 100%, 0 100%);
+        text-decoration: none;
+        color: var(--encre);
+        font-size: var(--txt-sm);
+        font-weight: 650;
+        line-height: 1.35;
+        transition: transform var(--glisse), color var(--glisse),
+                    filter var(--glisse);
+      }
+    
+      /* La surface de la tuile, posee par-dessus le fond colore. Sa decoupe
+         epargne le carre du coin : le triangle reste donc visible, et rien
+         d'autre. */
+      .tuile::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: var(--gris-50);
+        box-shadow: inset 0 0 0 1px var(--gris-200);
+        clip-path: polygon(0 0, calc(100% - var(--coupe)) 0,
+                           calc(100% - var(--coupe)) var(--coupe),
+                           100% var(--coupe), 100% 100%, 0 100%);
+        transition: background var(--glisse), box-shadow var(--glisse);
+      }
+    
+      .tuile > * { position: relative; z-index: 1; }
+    
+      /* Au survol la tuile se remplit de sa couleur, coupe comprise.
+         drop-shadow et non box-shadow : une ombre de boite serait rognee par
+         la decoupe, alors que drop-shadow en epouse la forme. */
+      .tuile:hover {
+        transform: translateY(-3px);
+        color: var(--papier);
+        filter: drop-shadow(0 8px 16px rgba(28,34,51,.20));
+      }
+      .tuile:hover::before {
+        background: var(--tuile-accent);
+        box-shadow: none;
+      }
+      .tuile:active { transform: translateY(-1px); }
+    
+      /* La pastille de l'icone reste claire au survol : l'icone garde sa
+         couleur et se detache du fond devenu colore. */
+      .tuile-icone {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        color: var(--tuile-accent);
+        background: var(--papier);
+        box-shadow: inset 0 0 0 1px var(--gris-200);
+        clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
+      }
+      .tuile-icone svg { width: 20px; height: 20px; }
+    
+    
+      /* Libelle et responsable empiles dans la tuile. */
+      .tuile-texte {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+    
+      .tuile-personne {
+        font-size: var(--txt-xs);
+        font-weight: 600;
+        color: var(--gris-600);
+        transition: color var(--glisse);
+      }
+      /* .94 et non .82 : sur le corail, la teinte la plus claire des quatre,
+         un blanc a 82% tombe a 3,90:1 -- sous le seuil de lisibilite. A .94 le
+         cas le plus defavorable remonte a 4,60:1. La hierarchie entre libelle
+         et nom repose donc sur la taille, pas sur la couleur. */
+      .tuile:hover .tuile-personne { color: rgba(255,255,255,.94); }
+    
+      /* --- Les quatre couleurs -------------------------------------------------
+         Choisies pour rester lisibles dans les deux etats : icone posee sur la
+         surface claire, puis libelle blanc sur la couleur au survol.          */
+      .tuile-risques      { --tuile-accent: #B8501C; }   /* corail foncé   */
+      .tuile-methode      { --tuile-accent: #2F5D8C; }   /* bleu           */
+      .tuile-securite     { --tuile-accent: #5B4B8A; }   /* violet         */
+      .tuile-amelioration { --tuile-accent: #2F6B4F; }   /* vert           */
+    
+      /* ==========================================================================
+         11. ORGANIGRAMMES
+         Les deux arbres de l'onglet "JL Overview".
+         --------------------------------------------------------------------------
+         ATTENTION : le HTML des organigrammes n'est PAS ecrit a la main. Il est
+         produit par outils/organigrammes.py a partir de deux tableaux :
+             donnees/jl-organisation.csv   les directions et leurs entites
+             donnees/jl-programmes.csv     les portefeuilles et leurs ETC
+         Le contenu se modifie donc dans Excel, jamais dans la page. Ici, il
+         n'y a que l'apparence.
+
+         COMMENT C'EST CONSTRUIT
+         Aucune image, aucun dessin : tous les traits sont des rectangles de
+         1px poses par CSS. Trois pieces, qui se repetent a tous les niveaux :
+             .orga-sommet    la boite du haut, et le trait qui en descend
+             .orga-branches  la rangee de branches, et la barre qui les relie
+             .orga-enfants   une colonne d'entites, et son filet vertical
+         .orga-enfants s'imbrique dans lui-meme : ajouter un niveau dans le
+         tableau ne demande aucune ligne de style supplementaire.
+
+         LES TROIS REGLAGES
+             --orga-trait     la couleur des traits
+             --orga-saut      la hauteur des connecteurs verticaux
+             --orga-largeur   la largeur minimale d'une branche
+         ========================================================================== */
+      .organigramme {
+        --orga-trait: var(--gris-300);
+        --orga-saut: var(--e5);
+        --orga-largeur: 148px;
+    
+        /* La rangee de branches ne se comprime pas en dessous de cette
+           largeur : mieux vaut un organigramme qui glisse lateralement dans
+           son cadre qu'un organigramme illisible. Le nombre de branches est
+           pose par le script, dans l'attribut style de la balise. */
+        min-width: calc(var(--branches, 1) * var(--orga-largeur));
+        padding: var(--e1) 0 var(--e2);
+        font-size: var(--txt-sm);
+      }
+    
+      /* Le cadre qui porte le defilement lateral. Il est ecrit dans la page,
+         autour des reperes : le script n'y touche pas. */
+      .orga-cadre {
+        overflow-x: auto;
+        padding-bottom: var(--e2);
+      }
+    
+      /* --- La boite ------------------------------------------------------------
+         Avec un lien c'est un <a>, sans lien un <div> : une boite sur laquelle
+         il n'y a rien a cliquer ne doit pas reagir comme un lien.            */
+      .orga-noeud {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: var(--e2) var(--e3);
+        background: var(--papier);
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-sm);
+        box-shadow: var(--ombre-1);
+        text-decoration: none;
+        color: inherit;
+        line-height: 1.3;
+      }
+    
+      a.orga-noeud {
+        transition: transform var(--glisse), border-color var(--glisse),
+                    box-shadow var(--glisse);
+      }
+      a.orga-noeud:hover {
+        transform: translateY(-2px);
+        border-color: var(--corail);
+        box-shadow: var(--ombre-2);
+      }
+      a.orga-noeud:active { transform: none; box-shadow: var(--ombre-1); }
+    
+      /* Les trois textes d'une boite : l'acronyme, le nom, le montant.
+         --------------------------------------------------------------------
+         Un seul jeu de regles sert aux DEUX organigrammes, alors que l'un a
+         des acronymes et l'autre pas. Le principe : le nom est le titre par
+         defaut ; il ne passe au second plan que s'il SUIT un acronyme, qui
+         devient alors le titre a sa place. C'est le "+" qui le dit, et il
+         n'y a rien a marquer dans le tableau pour cela.                    */
+      .orga-acronyme { font-weight: 700; letter-spacing: .01em; }
+      .orga-nom      { font-size: var(--txt-sm); font-weight: 600; }
+      .orga-acronyme + .orga-nom {
+        font-size: var(--txt-xs);
+        font-weight: 500;
+        color: var(--gris-600);
+      }
+    
+      .orga-etc {
+        margin-top: 2px;
+        font-size: var(--txt-xs);
+        font-weight: 700;
+        color: var(--corail-fonce);
+      }
+    
+      /* La petite etiquette de la colonne "mention" (exemple : Deputy) */
+      .orga-mention {
+        align-self: flex-start;
+        margin-bottom: var(--e1);
+        padding: 0 var(--e1);
+        border-radius: 999px;
+        background: var(--gris-100);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--gris-600);
+      }
+    
+      /* --- Un niveau, une teinte ----------------------------------------------
+         Du plus fonce au plus clair a mesure qu'on descend : la hierarchie se
+         lit sans avoir a suivre les traits.                                  */
+      .orga-noeud-1 {
+        align-items: center;
+        padding: var(--e3) var(--e5);
+        background: var(--encre);
+        border-color: transparent;
+        color: var(--papier);
+        text-align: center;
+        box-shadow: var(--ombre-2);
+      }
+      .orga-noeud-1 .orga-acronyme { font-size: var(--txt-lg); }
+      .orga-noeud-1 .orga-nom      { font-size: var(--txt-lg); font-weight: 700; }
+      .orga-noeud-1 .orga-acronyme + .orga-nom {
+        font-size: var(--txt-xs);
+        font-weight: 500;
+        color: rgba(255,255,255,.78);
+      }
+      .orga-noeud-1 .orga-etc      { color: #FBA97F; }
+    
+      .orga-noeud-2 {
+        background: var(--ardoise);
+        border-color: transparent;
+        color: var(--papier);
+      }
+      .orga-noeud-2 .orga-acronyme + .orga-nom { color: rgba(255,255,255,.80); }
+      .orga-noeud-2 .orga-etc { color: #FFD8C4; }
+    
+      .orga-noeud-4 { background: var(--gris-50); }
+    
+      /* --- Le sommet et le trait qui en descend ------------------------------- */
+      .orga-sommet {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        padding-bottom: var(--orga-saut);
+      }
+      .orga-sommet::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 1px;
+        height: var(--orga-saut);
+        background: var(--orga-trait);
+      }
+    
+      /* --- La rangee support / adjoint ----------------------------------------
+         Deux colonnes separees par une gouttiere large : le trait central
+         descend pile au milieu de cette gouttiere. Ce qui est pose la n'est
+         pas une branche de plus, c'est ce qui se rattache au sommet sur le
+         cote (fonction support a gauche, adjoint a droite).                  */
+      .orga-adjoints {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--e7);
+        align-items: start;
+        padding-bottom: var(--orga-saut);
+      }
+      .orga-adjoints::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--orga-trait);
+      }
+    
+      .orga-cote { display: grid; gap: var(--e3); }
+      .orga-cote-support { justify-items: end; }
+      .orga-cote-adjoint { justify-items: start; }
+      .orga-adjoint { position: relative; max-width: 260px; }
+    
+      /* L'encoche qui relie la boite au trait central : elle part du bord de
+         la boite et parcourt une demi-gouttiere, elle rejoint donc exactement
+         le milieu, quelle que soit la largeur de la page. */
+      .orga-cote .orga-adjoint > .orga-noeud::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: calc(var(--e7) / 2);
+        height: 1px;
+        background: var(--orga-trait);
+      }
+      .orga-cote-support .orga-adjoint > .orga-noeud::after { left: 100%; }
+      .orga-cote-adjoint .orga-adjoint > .orga-noeud::after { right: 100%; }
+    
+      /* Le support garde la couleur d'accent : c'est ce qui le distingue au
+         premier coup d'oeil du reste de l'organigramme. */
+      .orga-cote-support .orga-noeud-2 {
+        background: var(--corail);
+        color: var(--encre);
+      }
+      .orga-cote-support .orga-noeud-2 .orga-acronyme + .orga-nom { color: rgba(45,49,66,.75); }
+      .orga-cote-support .orga-noeud-2 .orga-etc { color: var(--encre); }
+    
+      /* --- La rangee de branches ----------------------------------------------
+         Autant de colonnes egales que de branches ; le nombre vient du script.
+         La barre horizontale n'est pas dessinee d'un seul tenant : chaque
+         branche en dessine son morceau, elargi d'une demi-gouttiere de chaque
+         cote pour que les morceaux se rejoignent par-dessus les espaces. La
+         premiere et la derniere s'arretent au milieu de leur boite -- la barre
+         ne depasse donc jamais, et cela reste vrai quel que soit le nombre de
+         branches, sans aucun calcul.                                         */
+      .orga-branches {
+        display: grid;
+        grid-template-columns: repeat(var(--branches, 1), minmax(0, 1fr));
+        gap: var(--e3);
+        align-items: start;
+        padding-top: var(--orga-saut);
+      }
+    
+      .orga-branche { position: relative; }
+    
+      .orga-branche::before {
+        content: "";
+        position: absolute;
+        top: calc(var(--orga-saut) * -1);
+        left: calc(var(--e3) / -2);
+        right: calc(var(--e3) / -2);
+        height: 1px;
+        background: var(--orga-trait);
+      }
+      .orga-branche:first-child::before { left: 50%; }
+      .orga-branche:last-child::before  { right: 50%; }
+    
+      /* Le trait qui descend de la barre vers la boite */
+      .orga-branche::after {
+        content: "";
+        position: absolute;
+        top: calc(var(--orga-saut) * -1);
+        left: 50%;
+        width: 1px;
+        height: var(--orga-saut);
+        background: var(--orga-trait);
+      }
+    
+      /* --- Une colonne d'entites accrochee sous une boite ----------------------
+         .orga-tige entoure la boite seule ; ce qui pend en dessous (les
+         niveaux plus fins) est en dehors. C'est ce qui permet a l'encoche de
+         viser le milieu de la BOITE et non le milieu de tout ce qui pend
+         dessous : le dessin reste juste quel que soit le nombre de niveaux. */
+      .orga-enfants {
+        display: grid;
+        gap: var(--e2);
+        margin: var(--e2) 0 0 var(--e3);
+      }
+    
+      .orga-enfant {
+        position: relative;
+        padding-left: var(--e3);
+      }
+    
+      /* Le filet vertical, en deux temps :
+         - tant qu'une entite en suit une autre, il traverse toute sa hauteur
+         - sur la DERNIERE, il s'arrete au milieu de la boite, pour ne pas
+           pendre dans le vide  */
+      .orga-enfant::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: calc(var(--e2) * -1);
+        bottom: 0;
+        width: 1px;
+        background: var(--orga-trait);
+      }
+      .orga-enfant:last-child::before { display: none; }
+    
+      .orga-tige { position: relative; }
+    
+      .orga-enfant:last-child > .orga-tige::before {
+        content: "";
+        position: absolute;
+        left: calc(var(--e3) * -1);
+        top: calc(var(--e2) * -1);
+        height: calc(50% + var(--e2));
+        width: 1px;
+        background: var(--orga-trait);
+      }
+    
+      /* L'encoche horizontale qui relie la boite au filet */
+      .orga-tige::after {
+        content: "";
+        position: absolute;
+        left: calc(var(--e3) * -1);
+        top: 50%;
+        width: var(--e3);
+        height: 1px;
+        background: var(--orga-trait);
+      }
+    
+      /* ==========================================================================
+         DIAGRAMME DE FLUX  (organigramme des programmes)
+         Une colonne par niveau, de gauche a droite, et un ruban par
+         rattachement dont l'EPAISSEUR suit l'ETC.
+         --------------------------------------------------------------------------
+         Le dessin est un SVG ecrit par outils/organigrammes.py. Ici, rien que
+         les couleurs, le texte et le cadre qui porte le deplacement.
+
+         POURQUOI UN DIAGRAMME ET PAS UN ARBRE
+         Un arbre repond a "qui depend de qui". Ici la question est "ou passe
+         l'argent" : c'est l'epaisseur qui porte l'information, la position ne
+         fait que la ranger.
+
+         LES SIX TEINTES
+         Une par branche de premier niveau, attribuees dans l'ordre du tableau
+         et reprises par tout ce qui en descend. Ce sont les memes couleurs
+         que les tuiles transversales : la page garde une seule palette.
+         ========================================================================== */
+      .flux-teinte-0 { --flux-teinte: var(--encre);   }   /* le sommet      */
+      .flux-teinte-1 { --flux-teinte: #2F5D8C;        }   /* bleu           */
+      .flux-teinte-2 { --flux-teinte: #B8501C;        }   /* corail fonce   */
+      .flux-teinte-3 { --flux-teinte: #2F6B4F;        }   /* vert           */
+      .flux-teinte-4 { --flux-teinte: #5B4B8A;        }   /* violet         */
+      .flux-teinte-5 { --flux-teinte: #4F5D75;        }   /* ardoise        */
+      .flux-teinte-6 { --flux-teinte: #8A6A2F;        }   /* bronze         */
+    
+      /* --- Le cadre : on saisit, on tire, le dessin suit ----------------------
+         Le diagramme est plus large que la place disponible, et c'est voulu :
+         le comprimer rendrait les petits montants invisibles. Le cadre defile
+         donc dans les deux sens, a la molette comme au curseur.             */
+      .flux-cadre {
+        overflow: auto;
+        /* Repli : la hauteur reelle est donnee par la colonne de droite,
+           section "JL OVERVIEW : LES DEUX COLONNES SE TERMINENT ENSEMBLE".
+           Cette valeur ne sert qu'aux navigateurs qui ignorent :has(). */
+        max-height: 600px;
+        border: 1px solid var(--gris-200);
+        border-radius: var(--rond-md);
+        background: var(--gris-50);
+        cursor: grab;
+        overscroll-behavior: contain;   /* la page ne part pas avec le dessin */
+      }
+      .flux-cadre.cadre-saisi { cursor: grabbing; }
+    
+      /* Pendant qu'on tire, le curseur ne doit pas selectionner les libelles. */
+      .flux-cadre.cadre-saisi .flux { user-select: none; }
+    
+      .flux { display: block; }
+    
+      /* --- Les rubans ----------------------------------------------------------
+         Assez pales pour que les libelles restent lisibles par-dessus, assez
+         francs pour qu'on suive un flux du regard. Au survol, celui qu'on
+         designe se detache du reste.                                        */
+      .flux-lien {
+        fill: var(--flux-teinte, var(--ardoise));
+        /* Le lisere a la couleur du fond : deux rubans qui se touchent
+           restent distincts, et sur le pourtour il ne se voit pas. */
+        stroke: var(--gris-50);
+        stroke-width: 1px;
+        opacity: .20;
+        transition: opacity var(--glisse);
+      }
+      .flux-lien:hover { opacity: .52; }
+    
+      /* --- Les boites ---------------------------------------------------------
+         Un simple trait epais a l'entree de chaque colonne : la boite n'est
+         pas le sujet, elle marque le passage.                               */
+      .flux-noeud {
+        fill: var(--flux-teinte, var(--ardoise));
+        transition: opacity var(--glisse);
+      }
+      .flux-noeud-sommet { fill: var(--encre); }
+      .flux-boite:hover .flux-noeud { opacity: .75; }
+      .flux-boite a { cursor: pointer; }
+      .flux-boite a:hover .flux-nom { text-decoration: underline; }
+    
+      /* --- Les libelles -------------------------------------------------------
+         Ils sont poses PAR-DESSUS les rubans : un lisere blanc les detache du
+         fond quel qu'il soit. paint-order fait passer ce liseré sous la
+         lettre, sinon il la mangerait.                                      */
+      .flux-nom,
+      .flux-etc {
+        stroke: var(--gris-50);
+        stroke-width: 3px;
+        paint-order: stroke;
+        pointer-events: none;
+        font-family: inherit;
+      }
+      .flux-nom {
+        fill: var(--encre);
+        font-size: 12px;
+        font-weight: 650;
+      }
+      .flux-nom-court { font-size: 11px; font-weight: 600; }
+      .flux-etc {
+        fill: var(--corail-fonce);
+        font-size: 11px;
+        font-weight: 700;
+      }
+    
+      /* La note qui annonce qu'on peut deplacer le dessin. */
+      .flux-note {
+        display: flex;
+        align-items: center;
+        gap: var(--e2);
+        margin-bottom: var(--e2);
+        font-size: var(--txt-xs);
+        color: var(--gris-500);
+      }
+    
+      /* --- Quand la place manque vraiment --------------------------------------
+         En dessous de cette largeur, plus aucun defilement lateral : les
+         branches s'empilent les unes sous les autres et les traits qui les
+         reliaient disparaissent (ils n'auraient plus rien a relier). Le
+         filet des entites, lui, reste : il porte encore du sens.            */
+      @container jls (max-width: 700px) {
+        .organigramme { min-width: 0; }
+    
+        .orga-branches {
+          grid-template-columns: minmax(0, 1fr);
+          gap: var(--e5);
+        }
+        .orga-branche::before,
+        .orga-branche::after { display: none; }
+    
+        .orga-adjoints {
+          grid-template-columns: minmax(0, 1fr);
+          gap: var(--e3);
+        }
+        .orga-adjoints::before { display: none; }
+        .orga-cote-support,
+        .orga-cote-adjoint { justify-items: stretch; }
+        .orga-adjoint { max-width: none; }
+        .orga-cote .orga-adjoint > .orga-noeud::after { display: none; }
+      }
+    
+      /* ==========================================================================
+         12. ACCESSIBILITE
+         ========================================================================== */
+    
+      /* Contour visible pour ceux qui naviguent au clavier (touche Tab) */
+      .jls a:focus-visible,
+      .jls button:focus-visible {
+        outline: 3px solid var(--corail);
+        outline-offset: 3px;
+      }
+    
+      /* Certains utilisateurs demandent moins d'animations au niveau du systeme.
+         On respecte ce reglage : les mouvements sont neutralises, le contenu
+         reste evidemment entierement visible. */
+      @media (prefers-reduced-motion: reduce) {
+        .jls *,
+        .jls *::before,
+        .jls *::after {
+          animation-duration: .01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: .01ms !important;
+        }
+        .carte:hover,
+        .bouton:hover,
+        .ligne:hover { transform: none; }
+        .tuile:hover { transform: none; filter: none; }
+        a.orga-noeud:hover { transform: none; }
+        .carte-image:hover .carte-fond { transform: none; }
+      }
+    
+    </style>
+    
+    <div class="jls">
+    
+      <!-- BLOC : BANDEAU D'ACCUEIL -->
+      <section class="bloc entete">
+    
+        <div>
+          <span class="entete-etiquette">Space Transportation</span>
+          <h1 class="entete-titre">JLS &ndash; <em>Program Management Office</em></h1>
+          <p class="entete-description">
+            Espace de pilotage de l'equipe de support au management des programmes
+            de transport spatial : gouvernance, jalons, points focaux et synthese
+            multi-programmes.
+          </p>
+          <a class="bouton" href="https://atlas.fr.space.corp/confluence/pages/viewpage.action?pageId=2841785852">
+            JLS Internal Portal
+            <span class="bouton-fleche" aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
+    
+        <div class="entete-contact">
+          <p class="entete-contact-label">Head of JLS team</p>
+          <div class="entete-contact-ligne">
+            <span class="rond-initiales" aria-hidden="true">NN</span>
+            <div>
+              <p class="entete-contact-nom">Henri Picard-Destelan</p>
+              <p class="entete-contact-role">JLS 
+              </p>
+            </div>
+          </div>
+        </div>
+    
+      </section>
+    
+      <!-- BLOC : JL BOARD MEMBER FOCAL POINT -->
+      <section class="bloc">
+        <h2 class="titre-section">
+          JL Board member focal point
+          <span class="titre-compteur">5</span>
+        </h2>
+    
+        <div class="grille grille-compacte">
+            
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLV</p>
+            <p class="carte-personne">Cyril Rehel</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLE</p>
+            <p class="carte-personne">Carole Hude</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLL</p>
+            <p class="carte-personne">Maxime Breton</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLI</p>
+            <p class="carte-personne">Jessica Soumagne</p>
+          </a>
+    
+          <a class="carte" href="REMPLACE_PAR_LE_LIEN">
+            <p class="carte-titre">JLO</p>
+            <p class="carte-personne">Erik Post</p>
+          </a>
+        </div>
+      </section>
+     
+      <div>
+            <div class="onglets">
+    
+                <div class="onglets-boutons">
+                    <button class="onglet-bouton actif"
+                        onclick="afficherOnglet(event, 'contenu-jls-organisation')">
+                        JLS Organisation
+                    </button>
+                    <button class="onglet-bouton"
+                        onclick="afficherOnglet(event, 'contenu-jl-overview')">
+                        JL Overview
+                    </button>
+                </div>
+            
+                <!-- Contenu de l'onglet "JLS Organisation" -->
+                <div id="contenu-jls-organisation" class="onglet-contenu actif">
+                
+    
+                                <!-- BLOC : CHIEF OF PMO -->
+                    <section class="bloc">
+                        <h2 class="titre-section">
+                        Chief of PMO
+                        <span class="titre-compteur">2</span>
+                        </h2>
+    
+                        <div class="grille grille-large">
+    
+                            <!-- Sur chaque carte, 2 choses a remplir :
+                                    href="..."  l'adresse de la page Confluence a ouvrir
+                                    src="..."   l'adresse de l'image de fond
+                                Pas d'image sur une carte ? Supprime sa ligne <img> et enleve
+                                "carte-image" de son class. -->
+                            <a class="carte carte-moyenne carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20dev%20image.png?api=v2" alt="">
+                                <p class="carte-titre">A6 Dev</p>
+                                <p class="carte-personne">Anaïs Capiez</p>
+                            </a>
+    
+                            <a class="carte carte-moyenne carte-image" href="https://atlas.fr.space.corp/confluence/display/A6EXPLOITATION/Ariane+6+Exploitation">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/A6%20exploit%20image.png?api=v2" alt="">
+                                <p class="carte-titre">A6 Exploit</p>
+                                <p class="carte-personne">Carole Hude</p>
+                            </a>
+    
+                        </div>
+                    </section>
+    
+    
+    
+                    <!-- BLOC : PERIMETRES + MULTI-PROGRAMME SYNTHESIS (cote a cote)
+                        Ces deux ensembles partagent une meme section a deux colonnes.
+                        Chaque colonne est un <div> avec son propre titre.
+                        - Pour les remettre l'un sous l'autre : enleve "deux-colonnes" de la
+                            ligne <section class="bloc deux-colonnes"> ci-dessous.
+                        - Pour inverser gauche/droite : intervertis les deux <div> colonnes.
+                        - La largeur relative des colonnes se regle dans la feuille de style,
+                            section "COLONNES COTE A COTE". -->
+                    <section class="bloc deux-colonnes">
+    
+                        <!-- Colonne de gauche : le tableau a onglets.
+                            Le titre est un intitule provisoire, remplace-le par le terme
+                            employe dans ton equipe. -->
+                        <div>
+                        <h2 class="titre-section">Perimetres</h2>
+    
+                        <div class="onglets">
+    
+                            <div class="onglets-boutons">
+                            <button class="onglet-bouton actif"
+                                    onclick="afficherOnglet(event, 'contenu-groupe-pmo')">
+                                Group PMO
+                            </button>
+                            <button class="onglet-bouton"
+                                    onclick="afficherOnglet(event, 'contenu-transversal')">
+                                Transversal
+                            </button>
+                            </div>
+    
+                            <!-- Contenu de l'onglet "Group PMO" -->
+                            <div id="contenu-groupe-pmo" class="onglet-contenu actif">
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre"><span class="ligne-libelle">Launcher</span><span class="ligne-personne">Thomas Rubino</span></a>
+                                <div class="sous-lignes">
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">ULPM</span><span class="ligne-personne">Erik Post</span></a>
+                                <a href="https://atlas.fr.space.corp/confluence/display/LLPMA6EX" class="ligne"><span class="ligne-libelle">LLPM</span><span class="ligne-personne">Jean-Guillaume Jeremiaz</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">SPRO / ESR</span><span class="ligne-personne">Jessica Soumagne</span></a>
+                                <a href="https://atlas.fr.space.corp/confluence/display/LPROEXP" class="ligne"><span class="ligne-libelle">LPRO</span><span class="ligne-personne">Jean-Guillaume Jeremiaz</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Avionics and Flight Controls</span><span class="ligne-personne">Arnaud Marchivie</span></a>
+                                </div>
+    
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne ligne-titre"><span class="ligne-libelle">SYSTEM</span><span class="ligne-personne">ID</span></a>
+                                <div class="sous-lignes">
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">LIOD, Kourou Focal Point &amp; Ground Industrialists</span><span class="ligne-personne">Pierre Abraham</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Decoupling point</span><span class="ligne-personne">Cyril Dutheil</span></a>
+                                <a href="REMPLACE_PAR_LE_LIEN" class="ligne"><span class="ligne-libelle">Launcher System</span><span class="ligne-personne">ID</span></a>
+                                </div>
+    
+    
+    
+                            </div>
+    
+                            <!-- Contenu de l'onglet "Transversal"
+                                 Ces quatre sujets sont de meme niveau : ils utilisent la
+                                 TUILE (coin coupe + icone), et non la ligne hierarchique
+                                 de l'autre onglet. Chaque tuile porte sa couleur via sa
+                                 classe tuile-... ; les couleurs sont definies dans la
+                                 feuille de style, section "TUILES TRANSVERSALES". -->
+                            <div id="contenu-transversal" class="onglet-contenu">
+                            <div class="grille grille-tuiles">
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-risques">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M12 3.8 2.9 19.4h18.2L12 3.8Z"/>
+                                    <path d="M12 9.9v4.1"/>
+                                    <path d="M12 16.8h.01"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Risks Management</span>
+                                  <span class="tuile-personne">Didier Pinard</span>
+                                </span>
+                              </a>
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-methode">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M3.6 7.4h8.1M16.5 7.4h3.9"/>
+                                    <circle cx="14.1" cy="7.4" r="2.4"/>
+                                    <path d="M3.6 16.6h3.9M12.3 16.6h8.1"/>
+                                    <circle cx="9.9" cy="16.6" r="2.4"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Process Method &amp;Tools</span>
+                                  <span class="tuile-personne">Xavier Viot</span>
+                                </span>
+                              </a>
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-securite">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M12 3.2 4.8 6.1v5.4c0 4.3 2.9 7.6 7.2 9.3 4.3-1.7 7.2-5 7.2-9.3V6.1L12 3.2Z"/>
+                                    <path d="m9.4 12.2 1.9 1.9 3.5-3.6"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Doc &amp; Data Security Export Control</span>
+                                  <span class="tuile-personne">Laurent Préau</span>
+                                </span>
+                              </a>
+    
+                              <a href="REMPLACE_PAR_LE_LIEN" class="tuile tuile-amelioration">
+                                <span class="tuile-icone" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                       stroke-width="1.8" stroke-linecap="round"
+                                       stroke-linejoin="round">
+                                    <path d="M4.7 12a7.3 7.3 0 0 1 12.4-5.2l2.2 2.2"/>
+                                    <path d="M19.3 12a7.3 7.3 0 0 1-12.4 5.2l-2.2-2.2"/>
+                                    <path d="M19.5 4.6v4.4h-4.4"/>
+                                    <path d="M4.5 19.4V15h4.4"/>
+                                  </svg>
+                                </span>
+                                <span class="tuile-texte">
+                                  <span class="tuile-libelle">Continuous Improvment</span>
+                                  <span class="tuile-personne">Henri Picard-Destelan / Ruben Sylla</span>
+                                </span>
+                              </a>
+    
+                            </div>
+                            </div>
+    
+                        </div>
+                        </div>
+    
+                        <!-- Colonne de droite : PROGRAM PMO -->
+                        <div>
+                        <h2 class="titre-section">
+                            Program PMO
+                            <span class="titre-compteur">3</span>
+                        </h2>
+    
+                        <!-- Les cartes sont empilees : c'est .pile qui les espace. -->
+                        <div class="pile">
+                            <a class="carte carte-petite carte-image" href="https://atlas.fr.space.corp/confluence/display/PROM">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Prom%C3%A9th%C3%A9e%20image.png?api=v2" alt="">
+                                <p class="carte-titre">Promethee</p>
+                                <p class="carte-personne">Maxime Breton</p>
+                            </a>
+    
+                            <a class="carte carte-petite carte-image" href="https://atlas.fr.space.corp/confluence/display/AW">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Themis%20image.png?api=v2" alt="">
+                                <p class="carte-titre">Themis</p>
+                                <p class="carte-personne">Serin Benna Escala</p>
+                            </a>
+    
+                            <a class="carte carte-petite carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                <img class="carte-fond" src="https://atlas.fr.space.corp/confluence/download/attachments/2841783280/Astris%20image.png?api=v2" alt="">
+                                <p class="carte-titre">Astris</p>
+                                <p class="carte-personne">Sebastian Jordan</p>
+                            </a>
+                        </div>
+    
+    
+                        
+                        </div>
+    
+                    </section>
+                    <!-- BLOC : Multi-Programme Synthesis -->
+                    <section class="bloc">
+                        <h2 class="titre-section">
+                        Multi-Programme Synthesis
+                        <span class="titre-compteur">2</span>
+                        </h2>
+    
+                        <div class="grille">
+
+                        <a class="carte carte-petite" href="REMPLACE_PAR_LE_LIEN">
+                            <p class="carte-titre">Ariane 6</p>
+                            <p class="carte-personne">Pierre Abraham</p>
+                        </a>
+
+                        <a class="carte carte-petite" href="REMPLACE_PAR_LE_LIEN">
+                            <p class="carte-titre">Promethee &middot; Maia &middot; Themis</p>
+                            <p class="carte-personne">Cyril Rehel</p>
+                        </a>
+    
+                        </div>
+                    </section>
+    
+                </div>
+    
+                <!-- Contenu de l'onglet "JL Overview" -->
+                <div id="contenu-jl-overview" class="onglet-contenu">
+    
+                    <!-- BLOC : JL OVERVIEW
+                         A gauche les deux organigrammes, dans un groupe d'onglets a
+                         eux ; a droite les deux grands blocs d'acces.
+                         - Pour les remettre l'un sous l'autre : enleve
+                           "deux-colonnes deux-colonnes-large" de la ligne <section>.
+                         - Pour inverser gauche/droite : intervertis les deux <div>.
+                         - La largeur relative des colonnes se regle dans la feuille
+                           de style, section "COLONNES COTE A COTE".
+    
+                         ATTENTION : le contenu des deux organigrammes est ECRIT PAR
+                         UN SCRIPT, entre les lignes "ORGANIGRAMME : ..." et
+                         "FIN ORGANIGRAMME : ...". Ne rien ecrire a la main entre ces
+                         deux lignes : le passage suivant l'effacerait. Pour changer
+                         ce qui s'y affiche, modifier les tableaux
+                             donnees/jl-organisation.csv
+                             donnees/jl-programmes.csv
+                         puis lancer :   python outils/organigrammes.py           -->
+                    <section class="bloc deux-colonnes deux-colonnes-large">
+    
+                        <!-- Colonne de gauche : les deux organigrammes -->
+                        <div>
+                            <h2 class="titre-section">Organigrammes</h2>
+    
+                            <div class="onglets">
+    
+                                <div class="onglets-boutons">
+                                    <button class="onglet-bouton actif"
+                                            onclick="afficherOnglet(event, 'contenu-jl-organization')">
+                                        JL Organization
+                                    </button>
+                                    <button class="onglet-bouton"
+                                            onclick="afficherOnglet(event, 'contenu-jl-programs')">
+                                        JL Programs
+                                    </button>
+                                </div>
+    
+                                <!-- Contenu de l'onglet "JL Organization" -->
+                                <div id="contenu-jl-organization" class="onglet-contenu actif">
+                                    <div class="orga-cadre">
+                                        <!-- ORGANIGRAMME : organisation -->
+                                        <div class="organigramme" style="--branches: 5;">
+                                          <div class="orga-sommet">
+                                            <div class="orga-noeud orga-noeud-1">
+                                              <span class="orga-acronyme">JL</span>
+                                              <span class="orga-nom">Direction Lambda</span>
+                                            </div>
+                                          </div>
+                                          <div class="orga-adjoints">
+                                            <div class="orga-cote orga-cote-support">
+                                              <div class="orga-adjoint">
+                                                <div class="orga-noeud orga-noeud-2">
+                                                  <span class="orga-acronyme">JLS</span>
+                                                  <span class="orga-nom">Support Sierra</span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-cote orga-cote-adjoint">
+                                              <div class="orga-adjoint">
+                                                <div class="orga-noeud orga-noeud-2">
+                                                  <span class="orga-mention">Deputy</span>
+                                                  <span class="orga-acronyme">JLD</span>
+                                                  <span class="orga-nom">Sous-direction Delta</span>
+                                                </div>
+                                                <div class="orga-enfants">
+                                                  <div class="orga-enfant">
+                                                    <div class="orga-tige">
+                                                      <div class="orga-noeud orga-noeud-3">
+                                                        <span class="orga-acronyme">JLD1</span>
+                                                        <span class="orga-nom">Entite Delta 1</span>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfant">
+                                                    <div class="orga-tige">
+                                                      <div class="orga-noeud orga-noeud-3">
+                                                        <span class="orga-acronyme">JLD2</span>
+                                                        <span class="orga-nom">Entite Delta 2</span>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <div class="orga-enfant">
+                                                    <div class="orga-tige">
+                                                      <div class="orga-noeud orga-noeud-3">
+                                                        <span class="orga-acronyme">JLD3</span>
+                                                        <span class="orga-nom">Entite Delta 3</span>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div class="orga-branches">
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLA</span>
+                                                <span class="orga-nom">Sous-direction Alpha</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA1</span>
+                                                      <span class="orga-nom">Entite Alpha 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA2</span>
+                                                      <span class="orga-nom">Entite Alpha 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA3</span>
+                                                      <span class="orga-nom">Entite Alpha 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLA4</span>
+                                                      <span class="orga-nom">Entite Alpha 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLB</span>
+                                                <span class="orga-nom">Sous-direction Bravo</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB1</span>
+                                                      <span class="orga-nom">Entite Bravo 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB2</span>
+                                                      <span class="orga-nom">Entite Bravo 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB3</span>
+                                                      <span class="orga-nom">Entite Bravo 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB4</span>
+                                                      <span class="orga-nom">Entite Bravo 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB5</span>
+                                                      <span class="orga-nom">Entite Bravo 5</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLB6</span>
+                                                      <span class="orga-nom">Entite Bravo 6</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLG</span>
+                                                <span class="orga-nom">Sous-direction Golf</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG1</span>
+                                                      <span class="orga-nom">Entite Golf 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG2</span>
+                                                      <span class="orga-nom">Entite Golf 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG3</span>
+                                                      <span class="orga-nom">Entite Golf 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLG4</span>
+                                                      <span class="orga-nom">Entite Golf 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLH</span>
+                                                <span class="orga-nom">Sous-direction Hotel</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH1</span>
+                                                      <span class="orga-nom">Entite Hotel 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH2</span>
+                                                      <span class="orga-nom">Entite Hotel 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH3</span>
+                                                      <span class="orga-nom">Entite Hotel 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLH4</span>
+                                                      <span class="orga-nom">Entite Hotel 4</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="orga-branche">
+                                              <div class="orga-noeud orga-noeud-2">
+                                                <span class="orga-acronyme">JLK</span>
+                                                <span class="orga-nom">Sous-direction Kilo</span>
+                                              </div>
+                                              <div class="orga-enfants">
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLK1</span>
+                                                      <span class="orga-nom">Entite Kilo 1</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLK2</span>
+                                                      <span class="orga-nom">Entite Kilo 2</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div class="orga-enfant">
+                                                  <div class="orga-tige">
+                                                    <div class="orga-noeud orga-noeud-3">
+                                                      <span class="orga-acronyme">JLK3</span>
+                                                      <span class="orga-nom">Entite Kilo 3</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <!-- FIN ORGANIGRAMME : organisation -->
+                                    </div>
+                                </div>
+    
+                                <!-- Contenu de l'onglet "JL Programs" -->
+                                <div id="contenu-jl-programs" class="onglet-contenu">
+                                    <p class="flux-note">
+                                        <span aria-hidden="true">&#8596;</span>
+                                        Cliquer-glisser dans le cadre pour deplacer le diagramme.
+                                        L'epaisseur des rubans suit l'ETC.
+                                    </p>
+                                    <!-- ORGANIGRAMME : programmes -->
+                                    <div class="flux-cadre" data-deplacable="oui" tabindex="0" role="group" aria-label="Diagramme de repartition de l'ETC">
+                                      <svg class="flux" role="img" viewBox="0 0 961 816" width="961" height="816" aria-label="Repartition de l'ETC, du sommet vers les projets">
+                                        <g class="flux-liens">
+                                          <path class="flux-lien flux-teinte-1" d="M31,169.8 C150.5,169.8 150.5,155.8 270,155.8 L270,196 C150.5,196 150.5,210 31,210 Z"><title>Portefeuille Alpha  ·  752 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M31,210 C150.5,210 150.5,203 270,203 L270,551 C150.5,551 150.5,558 31,558 Z"><title>Portefeuille Bravo  ·  6 500 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M31,558 C150.5,558 150.5,558 270,558 L270,582.3 C150.5,582.3 150.5,582.3 31,582.3 Z"><title>Portefeuille Charlie  ·  455 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M31,582.3 C150.5,582.3 150.5,589.3 270,589.3 L270,623.8 C150.5,623.8 150.5,616.8 31,616.8 Z"><title>Portefeuille Delta  ·  643 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M31,616.8 C150.5,616.8 150.5,630.8 270,630.8 L270,660.2 C150.5,660.2 150.5,646.2 31,646.2 Z"><title>Portefeuille Echo  ·  551 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,133.4 C402.5,133.4 402.5,18 522,18 L522,35 C402.5,35 402.5,150.4 283,150.4 Z"><title>Programme Alpha 1  ·  217 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,150.4 C402.5,150.4 402.5,42 522,42 L522,59 C402.5,59 402.5,167.4 283,167.4 Z"><title>Programme Alpha 2  ·  215 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,167.4 C402.5,167.4 402.5,66 522,66 L522,83 C402.5,83 402.5,184.4 283,184.4 Z"><title>Programme Alpha 3  ·  139 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,184.4 C402.5,184.4 402.5,90 522,90 L522,107 C402.5,107 402.5,201.4 283,201.4 Z"><title>Programme Alpha 4  ·  129 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M283,201.4 C402.5,201.4 402.5,114 522,114 L522,131 C402.5,131 402.5,218.4 283,218.4 Z"><title>Programme Alpha 5  ·  52 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M283,202.5 C402.5,202.5 402.5,138 522,138 L522,212.9 C402.5,212.9 402.5,277.5 283,277.5 Z"><title>Programme Bravo 1  ·  1 400 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M283,277.5 C402.5,277.5 402.5,219.9 522,219.9 L522,476.9 C402.5,476.9 402.5,534.4 283,534.4 Z"><title>Programme Bravo 2  ·  4 800 M€</title></path>
+                                          <path class="flux-lien flux-teinte-2" d="M283,534.4 C402.5,534.4 402.5,483.9 522,483.9 L522,500.9 C402.5,500.9 402.5,551.4 283,551.4 Z"><title>Programme Bravo 3  ·  300 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,535 C402.5,535 402.5,507.9 522,507.9 L522,524.9 C402.5,524.9 402.5,552 283,552 Z"><title>Programme Charlie 1  ·  11 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,552 C402.5,552 402.5,531.9 522,531.9 L522,548.9 C402.5,548.9 402.5,569 283,569 Z"><title>Programme Charlie 2  ·  82 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,569 C402.5,569 402.5,555.9 522,555.9 L522,575.2 C402.5,575.2 402.5,588.3 283,588.3 Z"><title>Programme Charlie 3  ·  361 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M283,588.3 C402.5,588.3 402.5,582.2 522,582.2 L522,599.2 C402.5,599.2 402.5,605.3 283,605.3 Z"><title>Programme Charlie 4  ·  1 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,569.2 C402.5,569.2 402.5,606.2 522,606.2 L522,630 C402.5,630 402.5,592.9 283,592.9 Z"><title>Programme Delta 1  ·  444 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,592.9 C402.5,592.9 402.5,637 522,637 L522,654 C402.5,654 402.5,609.9 283,609.9 Z"><title>Programme Delta 2  ·  84 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,609.9 C402.5,609.9 402.5,661 522,661 L522,678 C402.5,678 402.5,626.9 283,626.9 Z"><title>Programme Delta 3  ·  70 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M283,626.9 C402.5,626.9 402.5,685 522,685 L522,702 C402.5,702 402.5,643.9 283,643.9 Z"><title>Programme Delta 4  ·  45 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,611.5 C402.5,611.5 402.5,709 522,709 L522,726 C402.5,726 402.5,628.5 283,628.5 Z"><title>Programme Echo 1  ·  177 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,628.5 C402.5,628.5 402.5,733 522,733 L522,750 C402.5,750 402.5,645.5 283,645.5 Z"><title>Programme Echo 2  ·  100 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,645.5 C402.5,645.5 402.5,757 522,757 L522,774 C402.5,774 402.5,662.5 283,662.5 Z"><title>Programme Echo 3  ·  170 M€</title></path>
+                                          <path class="flux-lien flux-teinte-5" d="M283,662.5 C402.5,662.5 402.5,781 522,781 L522,798 C402.5,798 402.5,679.5 283,679.5 Z"><title>Programme Echo 4  ·  104 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,64.5 C654.5,64.5 654.5,54 774,54 L774,71 C654.5,71 654.5,81.5 535,81.5 Z"><title>Projet Alpha 4.1  ·  19 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,81.5 C654.5,81.5 654.5,78 774,78 L774,95 C654.5,95 654.5,98.5 535,98.5 Z"><title>Projet Alpha 4.2  ·  46 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,98.5 C654.5,98.5 654.5,102 774,102 L774,119 C654.5,119 654.5,115.5 535,115.5 Z"><title>Projet Alpha 4.3  ·  54 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,115.5 C654.5,115.5 654.5,126 774,126 L774,143 C654.5,143 654.5,132.5 535,132.5 Z"><title>Autres Alpha 4  ·  10 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,105.5 C654.5,105.5 654.5,150 774,150 L774,167 C654.5,167 654.5,122.5 535,122.5 Z"><title>Projet Alpha 5.1  ·  40 M€</title></path>
+                                          <path class="flux-lien flux-teinte-1" d="M535,122.5 C654.5,122.5 654.5,174 774,174 L774,191 C654.5,191 654.5,139.5 535,139.5 Z"><title>Autres Alpha 5  ·  12 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M535,523.4 C654.5,523.4 654.5,519.9 774,519.9 L774,536.9 C654.5,536.9 654.5,540.4 535,540.4 Z"><title>Projet Charlie 2.1  ·  29 M€</title></path>
+                                          <path class="flux-lien flux-teinte-3" d="M535,540.4 C654.5,540.4 654.5,543.9 774,543.9 L774,560.9 C654.5,560.9 654.5,557.4 535,557.4 Z"><title>Autres Charlie 2  ·  53 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M535,601.1 C654.5,601.1 654.5,597.6 774,597.6 L774,614.6 C654.5,614.6 654.5,618.1 535,618.1 Z"><title>Projet Delta 1.1  ·  295 M€</title></path>
+                                          <path class="flux-lien flux-teinte-4" d="M535,618.1 C654.5,618.1 654.5,621.6 774,621.6 L774,638.6 C654.5,638.6 654.5,635.1 535,635.1 Z"><title>Autres Delta 1  ·  149 M€</title></path>
+                                        </g>
+                                        <g class="flux-noeuds">
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-0 flux-noeud-sommet" x="18" y="169.8" width="13" height="476.5" rx="3"><title>Programmes Lambda  ·  8 901 M€</title></rect>
+                                            <text class="flux-nom" x="39" y="406">Programmes Lambda</text>
+                                            <text class="flux-etc" x="39" y="420">8 901 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="270" y="155.8" width="13" height="40.3" rx="3"><title>Portefeuille Alpha  ·  752 M€</title></rect>
+                                            <text class="flux-nom" x="291" y="173.9">Portefeuille Alpha</text>
+                                            <text class="flux-etc" x="291" y="187.9">752 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="270" y="203" width="13" height="348" rx="3"><title>Portefeuille Bravo  ·  6 500 M€</title></rect>
+                                            <text class="flux-nom" x="291" y="375">Portefeuille Bravo</text>
+                                            <text class="flux-etc" x="291" y="389">6 500 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="270" y="558" width="13" height="24.4" rx="3"><title>Portefeuille Charlie  ·  455 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="291" y="574.2">Portefeuille Charlie  ·  455 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="270" y="589.3" width="13" height="34.4" rx="3"><title>Portefeuille Delta  ·  643 M€</title></rect>
+                                            <text class="flux-nom" x="291" y="604.5">Portefeuille Delta</text>
+                                            <text class="flux-etc" x="291" y="618.5">643 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="270" y="630.8" width="13" height="29.5" rx="3"><title>Portefeuille Echo  ·  551 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="291" y="649.5">Portefeuille Echo  ·  551 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="18" width="13" height="17" rx="3"><title>Programme Alpha 1  ·  217 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="30.5">Programme Alpha 1  ·  217 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="42" width="13" height="17" rx="3"><title>Programme Alpha 2  ·  215 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="54.5">Programme Alpha 2  ·  215 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="66" width="13" height="17" rx="3"><title>Programme Alpha 3  ·  139 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="78.5">Programme Alpha 3  ·  139 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="90" width="13" height="17" rx="3"><title>Programme Alpha 4  ·  129 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="102.5">Programme Alpha 4  ·  129 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="522" y="114" width="13" height="17" rx="3"><title>Programme Alpha 5  ·  52 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="126.5">Programme Alpha 5  ·  52 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="522" y="138" width="13" height="74.9" rx="3"><title>Programme Bravo 1  ·  1 400 M€</title></rect>
+                                            <text class="flux-nom" x="543" y="173.5">Programme Bravo 1</text>
+                                            <text class="flux-etc" x="543" y="187.5">1 400 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="522" y="219.9" width="13" height="257" rx="3"><title>Programme Bravo 2  ·  4 800 M€</title></rect>
+                                            <text class="flux-nom" x="543" y="346.4">Programme Bravo 2</text>
+                                            <text class="flux-etc" x="543" y="360.4">4 800 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-2" x="522" y="483.9" width="13" height="17" rx="3"><title>Programme Bravo 3  ·  300 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="496.4">Programme Bravo 3  ·  300 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="507.9" width="13" height="17" rx="3"><title>Programme Charlie 1  ·  11 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="520.4">Programme Charlie 1  ·  11 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="531.9" width="13" height="17" rx="3"><title>Programme Charlie 2  ·  82 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="544.4">Programme Charlie 2  ·  82 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="555.9" width="13" height="19.3" rx="3"><title>Programme Charlie 3  ·  361 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="569.6">Programme Charlie 3  ·  361 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="522" y="582.2" width="13" height="17" rx="3"><title>Programme Charlie 4  ·  1 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="594.7">Programme Charlie 4  ·  1 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="606.2" width="13" height="23.8" rx="3"><title>Programme Delta 1  ·  444 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="622.1">Programme Delta 1  ·  444 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="637" width="13" height="17" rx="3"><title>Programme Delta 2  ·  84 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="649.5">Programme Delta 2  ·  84 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="661" width="13" height="17" rx="3"><title>Programme Delta 3  ·  70 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="673.5">Programme Delta 3  ·  70 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="522" y="685" width="13" height="17" rx="3"><title>Programme Delta 4  ·  45 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="697.5">Programme Delta 4  ·  45 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="709" width="13" height="17" rx="3"><title>Programme Echo 1  ·  177 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="721.5">Programme Echo 1  ·  177 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="733" width="13" height="17" rx="3"><title>Programme Echo 2  ·  100 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="745.5">Programme Echo 2  ·  100 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="757" width="13" height="17" rx="3"><title>Programme Echo 3  ·  170 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="769.5">Programme Echo 3  ·  170 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-5" x="522" y="781" width="13" height="17" rx="3"><title>Programme Echo 4  ·  104 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="543" y="793.5">Programme Echo 4  ·  104 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="54" width="13" height="17" rx="3"><title>Projet Alpha 4.1  ·  19 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="66.5">Projet Alpha 4.1  ·  19 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="78" width="13" height="17" rx="3"><title>Projet Alpha 4.2  ·  46 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="90.5">Projet Alpha 4.2  ·  46 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="102" width="13" height="17" rx="3"><title>Projet Alpha 4.3  ·  54 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="114.5">Projet Alpha 4.3  ·  54 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="126" width="13" height="17" rx="3"><title>Autres Alpha 4  ·  10 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="138.5">Autres Alpha 4  ·  10 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="150" width="13" height="17" rx="3"><title>Projet Alpha 5.1  ·  40 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="162.5">Projet Alpha 5.1  ·  40 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-1" x="774" y="174" width="13" height="17" rx="3"><title>Autres Alpha 5  ·  12 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="186.5">Autres Alpha 5  ·  12 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="774" y="519.9" width="13" height="17" rx="3"><title>Projet Charlie 2.1  ·  29 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="532.4">Projet Charlie 2.1  ·  29 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-3" x="774" y="543.9" width="13" height="17" rx="3"><title>Autres Charlie 2  ·  53 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="556.4">Autres Charlie 2  ·  53 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="774" y="597.6" width="13" height="17" rx="3"><title>Projet Delta 1.1  ·  295 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="610.1">Projet Delta 1.1  ·  295 M€</text>
+                                          </g>
+                                          <g class="flux-boite">
+                                            <rect class="flux-noeud flux-teinte-4" x="774" y="621.6" width="13" height="17" rx="3"><title>Autres Delta 1  ·  149 M€</title></rect>
+                                            <text class="flux-nom flux-nom-court" x="795" y="634.1">Autres Delta 1  ·  149 M€</text>
+                                          </g>
+                                        </g>
+                                      </svg>
+                                    </div>
+                                    <!-- FIN ORGANIGRAMME : programmes -->
+                                </div>
+    
+                            </div>
+                        </div>
+    
+                        <!-- Colonne de droite : les deux grands blocs d'acces.
+                             Ils n'ont pas encore d'image de fond : la classe
+                             "carte-image" leur donne le fond sombre en attendant.
+                             Des que la colonne "image" du tableau des responsables
+                             est renseignee, remplir-depuis-tableau.py pose la balise
+                             <img> tout seul -- il n'y a rien a preparer ici. -->
+                        <div>
+                            <h2 class="titre-section">Acces rapides</h2>
+    
+                            <!-- Les cartes sont empilees : c'est .pile qui les espace. -->
+                            <div class="pile">
+                                <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                    <p class="carte-titre">DASHBOARDs HUB</p>
+                                    <p class="carte-legende">Tableaux de bord multi-programmes</p>
+                                </a>
+    
+                                <a class="carte carte-grande carte-image" href="REMPLACE_PAR_LE_LIEN">
+                                    <p class="carte-titre">Program ID CARD</p>
+                                    <p class="carte-legende">Fiche d'identite de chaque programme</p>
+                                </a>
+                            </div>
+                        </div>
+    
+                    </section>
+    
+                </div>
+    
+            </div>
+        </div>
+    
+    
+    </div>
+    
+    <script>
+      // Renvoie les enfants DIRECTS de "parent" qui portent la classe donnee.
+      // Direct, et non "tous les descendants" : c'est ce qui permet d'imbriquer
+      // un groupe d'onglets dans un autre. Sans cela, cliquer sur un onglet
+      // exterieur eteindrait aussi les onglets interieurs, et le panneau
+      // interieur (Group PMO) reviendrait vide.
+      function enfantsDirects(parent, classe) {
+        var trouves = [];
+        for (var i = 0; i < parent.children.length; i++) {
+          if (parent.children[i].classList.contains(classe)) {
+            trouves.push(parent.children[i]);
+          }
+        }
+        return trouves;
+      }
+    
+      // Affiche le contenu d'onglet dont l'identifiant est passe en parametre,
+      // et cache les autres contenus DU MEME GROUPE d'onglets.
+      // "evenement" est fourni automatiquement par le onclick de chaque bouton.
+      function afficherOnglet(evenement, idDuContenu) {
+        var bouton = evenement.currentTarget || evenement.target;
+        var groupe = bouton.closest('.onglets');
+        var cible = document.getElementById(idDuContenu);
+    
+        // Identifiant inconnu (faute de frappe, contenu supprime) : on ne touche
+        // a rien. Mieux vaut garder l'onglet courant que tout faire disparaitre.
+        if (!groupe || !cible) { return; }
+    
+        enfantsDirects(groupe, 'onglet-contenu').forEach(function (el) {
+          el.classList.remove('actif');
+        });
+        enfantsDirects(groupe, 'onglets-boutons').forEach(function (barre) {
+          enfantsDirects(barre, 'onglet-bouton').forEach(function (b) {
+            b.classList.remove('actif');
+          });
+        });
+    
+        cible.classList.add('actif');
+        bouton.classList.add('actif');
+      }
+    
+      // ----------------------------------------------------------------------
+      // DEPLACER UN CADRE AU CURSEUR
+      // Le diagramme de flux est plus large que la place disponible. La barre
+      // de defilement suffirait, mais on attrape mal une barre horizontale a
+      // la souris : on rend donc le cadre lui-meme saisissable, comme une
+      // carte qu'on ferait glisser sur une table.
+      //
+      // Les deux ecoutes de deplacement et de relachement sont posees sur la
+      // FENETRE, pas sur le cadre : sans cela, sortir du cadre en tirant
+      // laisserait le dessin colle au curseur.
+      // ----------------------------------------------------------------------
+      function rendreDeplacable(cadre) {
+        var saisi = false, departX = 0, departY = 0, gauche = 0, haut = 0;
+    
+        cadre.addEventListener('mousedown', function (evenement) {
+          if (evenement.button !== 0) { return; }   // clic gauche seulement
+          saisi = true;
+          departX = evenement.clientX;
+          departY = evenement.clientY;
+          gauche = cadre.scrollLeft;
+          haut = cadre.scrollTop;
+          cadre.classList.add('cadre-saisi');
+          evenement.preventDefault();
+        });
+    
+        window.addEventListener('mousemove', function (evenement) {
+          if (!saisi) { return; }
+          cadre.scrollLeft = gauche - (evenement.clientX - departX);
+          cadre.scrollTop = haut - (evenement.clientY - departY);
+        });
+    
+        window.addEventListener('mouseup', function () {
+          if (!saisi) { return; }
+          saisi = false;
+          cadre.classList.remove('cadre-saisi');
+        });
+      }
+    
+      // Sur telephone et tablette, le defilement au doigt fait deja ce
+      // travail : rien a ajouter.
+      var cadres = document.querySelectorAll('[data-deplacable]');
+      for (var i = 0; i < cadres.length; i++) { rendreDeplacable(cadres[i]); }
+    </script>
