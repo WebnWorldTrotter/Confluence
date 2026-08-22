@@ -71,11 +71,15 @@ LE TABLEAU DE L'ORGANISATION  (jl-organisation.csv)
 LE TABLEAU DES PROGRAMMES  (jl-programmes.csv)
     Meme principe, avec un montant a chaque niveau.
 
-    racine / etc racine                         le sommet
-    portefeuille nv1 / etc nv1                  le portefeuille
-    programme nv2 / etc nv2                     le programme
-    projet nv3 / etc nv3                        le projet
+    compagnie portfolio niveau un / etc niveau un        la boite de gauche
+    compagnie portfolio niveau deux / etc niveau deux    le 2e niveau
+    compagnie portfolio niveau trois / etc niveau trois  le 3e niveau
+    main programme / etc niveau quatre                   le 4e niveau
     lien      l'adresse de la page Confluence a ouvrir
+
+    Ces intitules ne sont pas graves dans le marbre : ils sont ecrits une
+    seule fois, dans le bloc ORGANIGRAMMES en tete de ce script. Les
+    renommer la suffit. Casse, accents et tirets sont sans importance.
 
     Les ETC s'ecrivent en MILLIONS D'EUROS, en chiffres seulement : 752.
     Le script se charge de l'affichage (752 M€, 6 500 M€).
@@ -94,10 +98,40 @@ L'ECHELLE DU DIAGRAMME DE FLUX
 
 CE QUE LE SCRIPT SIGNALE
     - un repere absent de la page                    -> ATTENTION
-    - une colonne attendue absente du tableau        -> ATTENTION
+    - une colonne de niveau absente de l'entete      -> ATTENTION
+    - une colonne que le script ne connait pas (souvent une faute de frappe)
     - un niveau vide alors qu'un niveau plus bas est rempli
     - deux sommets differents dans le meme tableau
     - un ETC manquant ou illisible dans les programmes
+
+    Un tableau illisible n'empeche jamais l'autre d'etre refait : chaque
+    organigramme est traite pour lui-meme, et celui qui echoue reste dans la
+    page tel qu'il y etait.
+
+SI UN ORGANIGRAMME NE SE FAIT PAS
+    Le script dit ce qu'il a lu et ce qu'il attendait. Les trois causes qui
+    reviennent, dans l'ordre :
+
+    1. Le nom du sommet n'est rempli que sur la premiere ligne.
+       Chaque ligne porte sa lignee COMPLETE, du sommet jusqu'a l'entite la
+       plus fine : le nom du sommet se repete donc sur toutes les lignes.
+       Ce n'est pas un titre, c'est ce qui rattache la ligne a son
+       organigramme. Dans Excel : remplir la premiere cellule, puis tirer
+       vers le bas.
+
+    2. La ligne d'entete a ete modifiee.
+       Les intitules sont libres de casse, d'accents et de tirets
+       ("Sous-Direction", "sous direction" et "SOUS_DIRECTION" sont la meme
+       colonne), mais les MOTS doivent y etre. Le script affiche l'entete
+       qu'il a trouvee a cote de celle qu'il attendait : la comparaison
+       saute aux yeux.
+
+    3. Le fichier ne contient que son entete.
+       Il faut au moins une ligne de donnees en dessous.
+
+    Les colonnes facultatives (place, mention, lien) peuvent etre retirees
+    sans rien casser : la fonction correspondante ne s'affiche simplement
+    plus.
 =============================================================================
 """
 
@@ -105,6 +139,8 @@ import csv
 import html as html_module
 import re
 import sys
+import difflib
+import unicodedata
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -128,9 +164,22 @@ PISTES_HTML = [
 # ---------------------------------------------------------------------------
 # Les deux organigrammes
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# C'EST ICI, ET NULLE PART AILLEURS, QUE VIVENT LES NOMS DE COLONNES.
+# Renommer une colonne dans Excel ? Reporter le nouvel intitule ci-dessous,
+# et c'est tout : aucun autre endroit du script ne les cite.
+#
+# La casse, les accents, les tirets et les soulignes n'ont aucune importance
+# de part et d'autre : "Compagnie Portfolio Niveau Un", "compagnie portfolio
+# niveau un" et "COMPAGNIE_PORTFOLIO_NIVEAU_UN" designent la meme colonne.
+# Seuls les mots comptent.
+#
 # Un niveau = le nom affiche, l'acronyme (facultatif) et le montant
 # (facultatif). Ajouter un niveau, c'est ajouter une ligne ici et les
 # colonnes correspondantes dans le tableau : le reste du script suit.
+# L'ORDRE fait tout : le premier niveau est la boite du haut (ou de gauche
+# pour le flux), le dernier est l'entite la plus fine.
+# ---------------------------------------------------------------------------
 
 ORGANIGRAMMES = [
     {
@@ -153,10 +202,10 @@ ORGANIGRAMMES = [
         "csv": "jl-programmes.csv",
         "rendu": "flux",
         "niveaux": [
-            {"nom": "racine",           "etc": "etc racine"},
-            {"nom": "portefeuille nv1", "etc": "etc nv1"},
-            {"nom": "programme nv2",    "etc": "etc nv2"},
-            {"nom": "projet nv3",       "etc": "etc nv3"},
+            {"nom": "compagnie portfolio niveau un",    "etc": "etc niveau un"},
+            {"nom": "compagnie portfolio niveau deux",  "etc": "etc niveau deux"},
+            {"nom": "compagnie portfolio niveau trois", "etc": "etc niveau trois"},
+            {"nom": "main programme",                   "etc": "etc niveau quatre"},
         ],
         "extras": ["lien"],
         "place": False,
@@ -216,7 +265,7 @@ def lire_texte(chemin):
 
 
 def lire_tableau(chemin):
-    """Renvoie (liste de lignes, liste des colonnes trouvees).
+    """Renvoie (lignes, colonnes comparables, intitules tels qu'ecrits).
 
     Chaque ligne est un dictionnaire dont les cles sont les intitules de
     colonnes en minuscules, espaces reduits. Le separateur est detecte :
@@ -232,24 +281,65 @@ def lire_tableau(chemin):
     separateur = ";" if premiere.count(";") > premiere.count(",") else ","
 
     lecteur = csv.DictReader(brutes, delimiter=separateur)
-    colonnes = [nettoyer(c) for c in (lecteur.fieldnames or [])]
+    entete = [c for c in (lecteur.fieldnames or []) if c is not None]
+    colonnes = [nettoyer(c) for c in entete]
 
     lignes = []
     for brut in lecteur:
         lignes.append({nettoyer(k): (v or "").strip()
                        for k, v in brut.items() if k is not None})
-    return lignes, colonnes
+    # Les intitules bruts servent au diagnostic : c'est eux que l'on relit
+    # dans Excel, pas leur version normalisee.
+    return lignes, colonnes, entete
 
 
 def nettoyer(intitule):
-    """La forme comparable d'un intitule de colonne : minuscules, un seul
-    espace entre les mots. Excel ajoute volontiers des espaces invisibles."""
+    """La forme comparable d'un intitule de COLONNE.
+
+    On ne se contente pas de la casse et des espaces surnumeraires : les
+    tirets, les soulignes et les accents sont ramenes au meme rang.
+    "Sous-Direction", "sous direction" et "SOUS_DIRECTION" designent donc la
+    meme colonne. Personne ne devrait avoir a deviner la ponctuation exacte
+    d'un intitule pour que son tableau soit lu.
+    """
+    texte = unicodedata.normalize("NFD", intitule or "")
+    texte = "".join(c for c in texte if unicodedata.category(c) != "Mn")
+    texte = re.sub(r"[-_/]+", " ", texte)
+    return re.sub(r"\s+", " ", texte).strip().lower()
+
+
+def cle_noeud(intitule):
+    """La forme comparable d'un NOM d'entite.
+
+    Volontairement moins souple que pour les colonnes : ici, deux libelles
+    qui ne different que par un tiret ou un accent sont probablement deux
+    entites differentes. Les confondre en fusionnerait deux branches.
+    """
     return re.sub(r"\s+", " ", (intitule or "")).strip().lower()
 
 
 # ---------------------------------------------------------------------------
 # Construction de l'arbre
 # ---------------------------------------------------------------------------
+
+def resumer_lignes(numeros):
+    """[3, 4, 5, 9] -> "3 a 5, 9".
+
+    Une meme erreur repetee sur trente lignes ne se lit pas trente fois. On
+    la dit une fois, et on donne les lignes en plages.
+    """
+    numeros = sorted(set(numeros))
+    plages, debut, precedent = [], numeros[0], numeros[0]
+    for numero in numeros[1:]:
+        if numero == precedent + 1:
+            precedent = numero
+            continue
+        plages.append((debut, precedent))
+        debut = precedent = numero
+    plages.append((debut, precedent))
+    return ", ".join(str(a) if a == b else "%d a %d" % (a, b)
+                     for a, b in plages)
+
 
 def nouveau_noeud(nom, acronyme, etc):
     return {"nom": nom, "acronyme": acronyme, "etc": etc,
@@ -264,7 +354,7 @@ def rattacher(parent, nom, acronyme, etc):
     tableau est conserve : ce qu'on lit dans Excel de haut en bas se
     retrouve de haut en bas sur la page.
     """
-    cle = nettoyer(nom) + "|" + nettoyer(acronyme)
+    cle = cle_noeud(nom) + "|" + cle_noeud(acronyme)
     if cle in parent["index"]:
         noeud = parent["index"][cle]
         if etc and not noeud["etc"]:
@@ -286,6 +376,8 @@ def construire_arbre(lignes, config, alertes):
     """
     niveaux = config["niveaux"]
     faux_parent = nouveau_noeud("", "", "")
+    trous = {}      # colonne vide -> numeros de lignes concernees
+    places = {}     # valeur inconnue -> numeros de lignes concernees
 
     for numero, ligne in enumerate(lignes, start=2):   # 2 : l'entete est en 1
         chaine = []
@@ -293,9 +385,9 @@ def construire_arbre(lignes, config, alertes):
         arrete = False
 
         for rang, niveau in enumerate(niveaux):
-            nom = ligne.get(niveau["nom"], "")
-            acronyme = ligne.get(niveau.get("acronyme", ""), "")
-            etc = ligne.get(niveau.get("etc", ""), "")
+            nom = ligne.get(nettoyer(niveau["nom"]), "")
+            acronyme = ligne.get(nettoyer(niveau.get("acronyme", "")), "")
+            etc = ligne.get(nettoyer(niveau.get("etc", "")), "")
 
             if not nom and not acronyme:
                 arrete = True
@@ -303,12 +395,10 @@ def construire_arbre(lignes, config, alertes):
 
             if arrete:
                 # Un trou dans le chemin : impossible de savoir a quoi
-                # rattacher cette entite. On le dit plutot que de la poser
-                # au hasard.
-                alertes.append(
-                    "ligne %d : \"%s\" est renseigne alors que le niveau "
-                    "au-dessus (%s) est vide." % (numero, nom or acronyme,
-                                                  niveaux[rang - 1]["nom"]))
+                # rattacher cette entite. On le note plutot que de la poser
+                # au hasard -- et on regroupe, car la meme maladresse se
+                # repete en general sur tout le fichier.
+                trous.setdefault(niveaux[rang - 1]["nom"], []).append(numero)
                 break
 
             parent = rattacher(parent, nom, acronyme, etc)
@@ -335,12 +425,30 @@ def construire_arbre(lignes, config, alertes):
                 if place in PLACES:
                     chaine[1]["place"] = place
                 else:
-                    alertes.append(
-                        "ligne %d : place = \"%s\" inconnue (attendu : %s)."
-                        % (numero, ligne.get("place", ""), " ou ".join(PLACES)))
+                    places.setdefault(ligne.get("place", ""), []).append(numero)
 
+    for colonne, numeros in trous.items():
+        alertes.append(
+            '%d ligne(s) ne sont rattachees a rien : la colonne "%s" y est '
+            "vide alors qu'une colonne plus a droite est remplie.\n"
+            "  Lignes concernees : %s\n"
+            "  -> chaque ligne porte sa lignee COMPLETE, du sommet jusqu'a "
+            "l'entite la plus fine. Le nom du niveau du dessus se repete "
+            "donc sur CHAQUE ligne : ce n'est pas un titre a poser une "
+            "seule fois en haut de la colonne."
+            % (len(numeros), colonne, resumer_lignes(numeros)))
+
+    for valeur, numeros in places.items():
+        alertes.append(
+            'place = "%s" inconnue (attendu : %s, ou rien du tout).\n'
+            "  Lignes concernees : %s"
+            % (valeur, " ou ".join(PLACES), resumer_lignes(numeros)))
+
+    # Un tableau qui ne donne rien n'est pas une raison d'abandonner : les
+    # AUTRES organigrammes, eux, sont peut-etre parfaitement lisibles. On
+    # rend None, l'appelant expliquera et passera a la suite.
     if not faux_parent["enfants"]:
-        raise SystemExit("Aucune donnee exploitable dans le tableau.")
+        return None
 
     if len(faux_parent["enfants"]) > 1:
         autres = ", ".join(n["nom"] for n in faux_parent["enfants"][1:])
@@ -352,15 +460,104 @@ def construire_arbre(lignes, config, alertes):
     return faux_parent["enfants"][0]
 
 
-def colonnes_manquantes(config, colonnes):
-    """Les colonnes attendues que le tableau ne contient pas."""
+def colonnes_attendues(config):
+    """Tous les intitules que le script sait exploiter, forme comparable."""
     attendues = []
     for niveau in config["niveaux"]:
         for role in ("nom", "acronyme", "etc"):
             if niveau.get(role):
-                attendues.append(niveau[role])
-    attendues += config["extras"]
-    return [c for c in attendues if c not in colonnes]
+                attendues.append(nettoyer(niveau[role]))
+    return attendues + [nettoyer(c) for c in config["extras"]]
+
+
+def controler_colonnes(config, colonnes, entete):
+    """Renvoie (colonnes de niveau manquantes, colonnes inconnues).
+
+    Deux controles, et deux seulement :
+
+    - une colonne de NIVEAU absente est un vrai probleme : sans elle, tout
+      un etage de l'organigramme disparait.
+    - une colonne que le script ne connait pas est signalee sans drame :
+      neuf fois sur dix c'est une faute de frappe dans l'entete (lein pour
+      lien), une fois sur dix c'est une note personnelle, et le script la
+      laisse tranquille.
+
+    Les colonnes facultatives absentes ne sont PAS signalees : retirer
+    "mention" parce qu'on n'a pas de Deputy a afficher est un choix
+    legitime, pas une erreur.
+    """
+    manquantes = ['colonne de niveau "%s" absente de l\'entete.' % n["nom"]
+                  for n in config["niveaux"]
+                  if nettoyer(n["nom"]) not in colonnes]
+
+    connues = colonnes_attendues(config)
+    inconnues = [brut for brut, propre in zip(entete, colonnes)
+                 if propre not in connues and propre]
+    if inconnues:
+        inconnues = ['colonne(s) non utilisee(s) par le script : %s.\n'
+                     '  Si c\'est une faute de frappe dans l\'entete, la '
+                     'corriger ; sinon, rien a faire.'
+                     % ", ".join('"%s"' % c for c in inconnues)]
+    return manquantes, inconnues
+
+
+def plus_proche(attendu, entete):
+    """L'intitule du fichier qui ressemble le plus a celui qu'on cherchait.
+
+    Une faute de frappe dans une entete se voit mal a l'oeil quand la ligne
+    fait quatre-vingts caracteres. Autant la montrer du doigt.
+    """
+    candidats = {nettoyer(c): c for c in entete}
+    trouve = difflib.get_close_matches(nettoyer(attendu), list(candidats),
+                                       n=1, cutoff=.6)
+    return candidats[trouve[0]] if trouve else ""
+
+
+def diagnostic_vide(config, lignes, entete):
+    """Explique pourquoi un tableau n'a donne aucune boite.
+
+    "Aucune donnee exploitable" tout court n'aide personne : il faut dire ce
+    qui a ete lu, ce qui etait attendu, et ou regarder.
+    """
+    sommet = config["niveaux"][0]["nom"]
+    propres = [nettoyer(c) for c in entete]
+
+    detail = [
+        "aucune boite n'a pu etre construite.",
+        "  %d ligne(s) lue(s) apres l'entete." % len(lignes),
+        '  Colonne du sommet attendue : "%s"' % sommet,
+        "  Entete trouvee dans le fichier : %s"
+        % (", ".join('"%s"' % c for c in entete) if entete else "vide"),
+    ]
+
+    if nettoyer(sommet) not in propres:
+        detail.append(
+            '  -> cette colonne manque. Verifie la PREMIERE ligne du '
+            'fichier : elle doit porter les intitules %s.'
+            % ", ".join('"%s"' % n["nom"] for n in config["niveaux"]))
+        proche = plus_proche(sommet, entete)
+        if proche:
+            detail.append('     Le plus ressemblant dans ton fichier : "%s". '
+                          "Est-ce celle-la ?" % proche)
+        detail.append(
+            "     Si tes colonnes portent volontairement d'autres noms, ce "
+            "n'est pas le fichier qu'il faut changer mais le bloc "
+            "ORGANIGRAMMES, en tete de ce script : les intitules attendus "
+            "s'y trouvent, et nulle part ailleurs.")
+    elif not lignes:
+        detail.append(
+            "  -> le fichier ne contient que son entete. Il faut au moins "
+            "une ligne de donnees en dessous.")
+    else:
+        detail.append(
+            '  -> la colonne existe mais elle est vide sur toutes les '
+            'lignes. Le nom du sommet se repete sur CHAQUE ligne : ce '
+            'n\'est pas un titre a mettre une fois en haut, c\'est ce qui '
+            'rattache chaque ligne au meme organigramme.')
+
+    detail.append("  Cet organigramme n'a pas ete refait : ce qui etait "
+                  "dans la page reste en place.")
+    return "\n".join(detail)
 
 
 # ---------------------------------------------------------------------------
@@ -962,32 +1159,44 @@ def main():
     print()
 
     alertes = []
+    poses = 0
     for config in ORGANIGRAMMES:
         chemin = chercher_tableau(page, config["csv"])
-        lignes, colonnes = lire_tableau(chemin)
+        lignes, colonnes, entete = lire_tableau(chemin)
 
-        for absente in colonnes_manquantes(config, colonnes):
-            alertes.append("%s : colonne \"%s\" absente du tableau."
-                           % (config["csv"], absente))
+        manquantes, inconnues = controler_colonnes(config, colonnes, entete)
+        soucis = list(inconnues)
+        racine = construire_arbre(lignes, config, soucis)
 
-        propres = []
-        racine = construire_arbre(lignes, config, propres)
-        dessiner = RENDUS[config["rendu"]]
-        html, pose = injecter(
-            html, config["cle"],
-            lambda marge, r=racine, p=propres: dessiner(r, marge, p))
-        alertes += ["%s : %s" % (config["csv"], p) for p in propres]
+        etat = "-"
+        if racine is None:
+            # Inutile d'egrener les colonnes manquantes : le diagnostic qui
+            # suit redonne l'entete attendue en entier.
+            # Un tableau illisible n'empeche pas les autres d'etre refaits :
+            # on laisse simplement CET organigramme tel qu'il est dans la
+            # page, et on dit pourquoi.
+            soucis.append(diagnostic_vide(config, lignes, entete))
+        else:
+            soucis = manquantes + soucis
+            dessiner = RENDUS[config["rendu"]]
+            html, pose = injecter(
+                html, config["cle"],
+                lambda marge, r=racine, s=soucis: dessiner(r, marge, s))
+            if pose:
+                poses += 1
+                etat = "  ->  ".join(
+                    "%d au niveau %d" % (n, i + 1)
+                    for i, n in enumerate(compter(racine)))
+            else:
+                soucis.append(
+                    'repere "<!-- ORGANIGRAMME : %s -->" introuvable dans '
+                    "la page : cet organigramme n'a pas ete pose."
+                    % config["cle"])
 
-        compte = compter(racine)
-        print("  %-14s %-6s %s"
-              % (config["cle"], "(%s)" % config["rendu"],
-                 "  ->  ".join("%d au niveau %d" % (n, i + 1)
-                               for i, n in enumerate(compte))))
-        print("  %-14s %-6s tableau : %s" % ("", "", chemin))
-        if not pose:
-            alertes.append(
-                "repere \"<!-- ORGANIGRAMME : %s -->\" introuvable dans la "
-                "page : cet organigramme n'a pas ete pose." % config["cle"])
+        print("  %-14s %-7s %s"
+              % (config["cle"], "(%s)" % config["rendu"], etat))
+        print("  %-14s %-7s tableau : %s" % ("", "", chemin))
+        alertes += ["%s : %s" % (config["csv"], s) for s in soucis]
         print()
 
     if crlf:
@@ -999,13 +1208,20 @@ def main():
 
     if alertes:
         print("  ATTENTION :")
-        for a in alertes:
-            print("    - %s" % a)
+        for alerte in alertes:
+            morceaux = alerte.split("\n")
+            print("    - %s" % morceaux[0])
+            for suite in morceaux[1:]:
+                print("    %s" % suite)
         print()
 
-    print("Page mise a jour. Pour produire le fichier a coller dans")
-    print("Confluence :  python %s"
-          % (Path("outils") / "remplir-depuis-tableau.py"))
+    if poses:
+        print("Page mise a jour. Pour produire le fichier a coller dans")
+        print("Confluence :  python %s"
+              % (Path("outils") / "remplir-depuis-tableau.py"))
+    else:
+        print("Aucun organigramme n'a pu etre refait : la page est")
+        print("inchangee. Corrige les points ci-dessus et relance.")
 
 
 if __name__ == "__main__":
